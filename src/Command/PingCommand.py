@@ -1,0 +1,17 @@
+import discord
+from discord import Interaction
+
+from src.Command.BaseCommand import BaseCommand
+
+
+class PingBaseCommand(BaseCommand):
+
+    def register(self):
+        @self.tree.command(name="ping", description="Pong!", guild=discord.Object(438689788585967616))
+        async def ping(interaction: Interaction):
+            await self.notifyBefore()
+
+            # TODO dont send response here
+            await interaction.response.send_message("Pong!")
+
+            await self.notifyAfter()
