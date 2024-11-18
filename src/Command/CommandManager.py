@@ -1,9 +1,12 @@
 from discord.app_commands import CommandTree
 
 from src.Command.CommandWorker import CommandWorker
-from src.Command.PingCommand import PingBaseCommand
+from src.Command.PingCommand import PingCommand
+from src.Logging.Logger import Logger
 from src.Types.ClientListenerType import ClientListenerType
 from src.Types.CommandListenerType import CommandListenerType
+
+logger = Logger("CommandManager")
 
 
 class CommandManager:
@@ -25,24 +28,25 @@ class CommandManager:
     def registerListeners(self):
         self.client.addListener(self.onBotReady, ClientListenerType.READY)
 
+        logger.debug("registered ready listener to Client")
+
     def addCommands(self):
         # TODO dont hardcode the commands
-        command = PingBaseCommand(self.tree)
+        command = PingCommand(self.tree)
         self.commands.append(command)
         command.addListener(self.commandWorker.prepareCommand, CommandListenerType.BEFORE)
         command.addListener(self.commandWorker.afterCommand, CommandListenerType.AFTER)
 
     async def syncCommands(self):
+        logger.debug("Syncing commands...")
         await self.tree.sync(guild=self.client.get_guild(438689788585967616))
+        logger.info("Commands synced")
 
     async def removeCommands(self):
         self.tree.clear_commands(guild=self.client.get_guild(438689788585967616))
 
-        await self.tree.sync(guild=self.client.get_guild(438689788585967616))
+        await self.syncCommands()
 
     async def onBotReady(self):
-        print("Syncing commands...")
-        # await self.syncCommands()
-        print("Bot is ready and commands are synced")
-
-        await self.removeCommands()
+        await self.syncCommands()
+        # await self.removeCommands()

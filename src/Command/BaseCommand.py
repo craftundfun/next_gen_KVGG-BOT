@@ -3,7 +3,11 @@ from inspect import iscoroutinefunction
 
 from discord.app_commands import CommandTree
 
+from src.Helpers.FunctionName import listenerName
+from src.Logging.Logger import Logger
 from src.Types.CommandListenerType import CommandListenerType
+
+logger = Logger("BaseCommand")
 
 
 class BaseCommand(ABC):
@@ -30,6 +34,8 @@ class BaseCommand(ABC):
         :return:
         """
         if not iscoroutinefunction(listener):
+            logger.error(f"Listener is not an asynchronous function: {listener}")
+
             raise Exception("Listener must be a coroutine function")
 
         match listenerType:
@@ -38,6 +44,8 @@ class BaseCommand(ABC):
             case CommandListenerType.AFTER:
                 self.afterListener.append(listener)
             case _:
+                logger.error(f"Invalid listener type: {listenerType}")
+
                 raise ValueError(f"Invalid listener type: {listenerType}")
 
     async def notifyBefore(self):
@@ -48,6 +56,7 @@ class BaseCommand(ABC):
         """
         for listener in self.beforeListener:
             await listener()
+            logger.debug(f"notified before listener: {listenerName(listener)}")
 
     async def notifyAfter(self):
         """
@@ -57,3 +66,4 @@ class BaseCommand(ABC):
         """
         for listener in self.afterListener:
             await listener()
+            logger.debug(f"notified after listener: {listenerName(listener)}")

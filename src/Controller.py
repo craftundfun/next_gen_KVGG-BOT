@@ -4,6 +4,9 @@ from discord import Intents
 
 from src.Client.Client import Client
 from src.Command.CommandManager import CommandManager
+from src.Logging.Logger import Logger
+
+logger = Logger("Controller")
 
 
 class Controller:
@@ -12,7 +15,8 @@ class Controller:
         self.token = environ.get("DISCORD_TOKEN")
 
         if not self.token:
-            print("No token provided")
+            logger.error("No token found in .env file")
+
             exit(1)
 
         self.client = Client(self, intents=Intents.all())
@@ -27,5 +31,6 @@ class Controller:
         try:
             self.client.run(self.token, reconnect=True)
         except Exception as error:
-            print(f"Error: {error}")
+            logger.error("Error while running client", exc_info=error)
+
             exit(1)

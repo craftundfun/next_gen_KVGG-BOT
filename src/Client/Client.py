@@ -4,7 +4,11 @@ from typing import Any
 from discord import Client as discordClient
 from discord import Intents
 
+from src.Helpers.FunctionName import listenerName
+from src.Logging.Logger import Logger
 from src.Types.ClientListenerType import ClientListenerType
+
+logger = Logger("Client")
 
 
 class Client(discordClient):
@@ -30,24 +34,22 @@ class Client(discordClient):
         :param listenerType: Type
         :return:
         """
-        print("Hey")
-
         if not iscoroutinefunction(listener):
+            logger.error(f"Listener is not an asynchronous function: {listener}")
+
             raise ValueError(f"Listener is not async")
 
         match listenerType:
             case ClientListenerType.READY:
                 self.readyListener.append(listener)
             case _:
+                logger.error(f"Invalid listener type: {listenerType}")
+
                 raise ValueError(f"Invalid listener type: {listenerType}")
 
-        print("Listener successfully added")
+        logger.debug(f"Listener successfully added: {listenerName(listener)}")
 
     async def on_ready(self):
-        print("Bot is ready in Client class")
-        print("Listener: ", self.readyListener)
-
         for listener in self.readyListener:
-            print("before listener")
             await listener()
-            print("after listener")
+            logger.debug(f"notified ready listener: {listenerName(listener)}")

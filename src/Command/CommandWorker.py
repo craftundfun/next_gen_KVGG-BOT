@@ -1,5 +1,9 @@
 from discord import Client
 
+from src.Logging.Logger import Logger
+
+logger = Logger("CommandWorker")
+
 
 class CommandWorker:
 
@@ -7,7 +11,7 @@ class CommandWorker:
         self.client = client
 
     async def prepareCommand(self, **kwargs):
-        print("before command")
+        logger.debug("before command")
 
     async def afterCommand(self):
-        print("after command")
+        logger.debug("after command")

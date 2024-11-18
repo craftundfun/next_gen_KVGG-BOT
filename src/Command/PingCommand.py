@@ -2,9 +2,12 @@ import discord
 from discord import Interaction
 
 from src.Command.BaseCommand import BaseCommand
+from src.Logging.Logger import Logger
+
+logger = Logger("PingCommand")
 
 
-class PingBaseCommand(BaseCommand):
+class PingCommand(BaseCommand):
 
     def register(self):
         @self.tree.command(name="ping", description="Pong!", guild=discord.Object(438689788585967616))
@@ -15,3 +18,6 @@ class PingBaseCommand(BaseCommand):
             await interaction.response.send_message("Pong!")
 
             await self.notifyAfter()
+
+        # TODO: maybe let that handle the CommandManager
+        logger.debug("Registered command: ping")
