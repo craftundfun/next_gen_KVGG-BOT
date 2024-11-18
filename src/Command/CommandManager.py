@@ -4,7 +4,6 @@ from src.Command.CommandWorker import CommandWorker
 from src.Command.PingCommand import PingCommand
 from src.Logging.Logger import Logger
 from src.Types.ClientListenerType import ClientListenerType
-from src.Types.CommandListenerType import CommandListenerType
 
 logger = Logger("CommandManager")
 
@@ -34,8 +33,7 @@ class CommandManager:
         # TODO dont hardcode the commands
         command = PingCommand(self.tree)
         self.commands.append(command)
-        command.addListener(self.commandWorker.prepareCommand, CommandListenerType.BEFORE)
-        command.addListener(self.commandWorker.afterCommand, CommandListenerType.AFTER)
+        self.commandWorker.registerListenersAtCommand(command)
 
     async def syncCommands(self):
         logger.debug("Syncing commands...")

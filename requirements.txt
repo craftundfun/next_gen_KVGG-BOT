@@ -1,2 +1,4 @@
 discord.py[voice]
 python-dotenv
+sqlalchemy
+mysql-connector-python
