@@ -1,0 +1,21 @@
+USE next_gen_beta;
+
+CREATE TABLE IF NOT EXISTS guild (
+	guild_id BIGINT UNSIGNED UNIQUE NOT NULL,
+	name     VARCHAR(255)           NOT NULL,
+
+	PRIMARY KEY (guild_id)
+)
+	ENGINE = InnoDB
+	CHARSET = UTF8MB4;
+
+DROP TABLE IF EXISTS guild_discord_user_mapping;
+
+CREATE TABLE IF NOT EXISTS guild_discord_user_mapping (
+	guild_id        BIGINT UNSIGNED NOT NULL,
+	discord_user_id BIGINT UNSIGNED NOT NULL,
+
+	PRIMARY KEY (guild_id, discord_user_id)
+)
+	ENGINE = InnoDB
+	CHARSET = UTF8MB4;

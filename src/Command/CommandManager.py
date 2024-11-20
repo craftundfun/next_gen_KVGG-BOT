@@ -46,5 +46,5 @@ class CommandManager:
         await self.syncCommands()
 
     async def onBotReady(self):
-        await self.syncCommands()
-        # await self.removeCommands()
+        # await self.syncCommands()
+        await self.removeCommands()
