@@ -27,7 +27,7 @@ class CommandManager:
     def registerListeners(self):
         self.client.addListener(self.onBotReady, ClientListenerType.READY)
 
-        logger.debug("registered ready listener to Client")
+        logger.debug("Registered ready listener to Client")
 
     def addCommands(self):
         # TODO dont hardcode the commands

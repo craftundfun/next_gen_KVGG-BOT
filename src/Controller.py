@@ -4,6 +4,7 @@ from discord import Intents
 
 from src.Client.Client import Client
 from src.Command.CommandManager import CommandManager
+from src.Guild.GuildManager import GuildManager
 from src.Logging.Logger import Logger
 
 logger = Logger("Controller")
@@ -21,6 +22,7 @@ class Controller:
 
         self.client = Client(self, intents=Intents.all())
         self.commandManager = CommandManager(self.client)
+        self.guildManager = GuildManager(self.client)
 
         self.registerListeners()
 

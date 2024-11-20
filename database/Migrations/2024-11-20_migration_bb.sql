@@ -1,5 +1,7 @@
 USE next_gen_beta;
 
+DROP TABLE IF EXISTS guild;
+
 CREATE TABLE IF NOT EXISTS guild (
 	guild_id BIGINT UNSIGNED UNIQUE NOT NULL,
 	name     VARCHAR(255)           NOT NULL,
