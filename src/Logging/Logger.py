@@ -22,19 +22,16 @@ class Logger(BaseLogger):
                                                                 when="midnight",
                                                                 backupCount=int(os.getenv("LOG_BACKUP_COUNT", 5)), )
         fileHandler.setFormatter(CustomFormatterFile())
+        fileHandler.setLevel(os.getenv("LOG_LEVEL_FILE", "DEBUG"))
 
         consoleHandler = logging.StreamHandler(sys.stdout)
         consoleHandler.setFormatter(CustomFormatterConsole())
+        consoleHandler.setLevel(os.getenv("LOG_LEVEL_CONSOLE", "INFO"))
 
         self.addHandler(fileHandler)
         self.addHandler(consoleHandler)
 
-        logLevel = os.getenv("LOG_LEVEL")
-
-        if not logLevel:
-            logLevel = "DEBUG"
-
-            self.warning("No log level found in .env file. Using default log level DEBUG")
+        logLevel = os.getenv("LOG_LEVEL", "DEBUG")
 
         self.setLevel(logLevel)
         self.propagate = False

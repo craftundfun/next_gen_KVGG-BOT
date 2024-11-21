@@ -11,6 +11,7 @@ logger = Logger("GuildManager")
 
 
 class GuildManager:
+    startUpGuildCheck = []
 
     def __init__(self, client: Client):
         self.client = client
@@ -25,6 +26,9 @@ class GuildManager:
 
         self.registerListeners()
 
+    def addGuildManagerListener(self, listener: callable):
+        self.startUpGuildCheck.append(listener)
+
     async def onBotStart(self):
         """
         Traverse all guilds the bot is in and evaluate if they are in the database
@@ -35,13 +39,17 @@ class GuildManager:
             databaseGuild = self.guildRepository.getGuild(guild)
 
             if not databaseGuild:
-                logger.error(f"Guild {guild.name} not found in database")
+                logger.error(f"Guild {guild.name, guild.id} not found in database")
 
                 continue
 
-            logger.debug(f"Guild {guild.name} found in database")
+            logger.debug(f"Guild {guild.name, guild.id} found in database")
 
+            # TODO maybe remove repository and add method to GuildManager
             await self.updateGuildOnStart(guild, databaseGuild)
+
+            for listener in self.startUpGuildCheck:
+                await listener(guild)
 
     async def updateGuildOnStart(self, guild: DiscordGuild, databaseGuild: Guild):
         """

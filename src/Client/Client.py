@@ -3,6 +3,7 @@ from typing import Any
 
 from discord import Client as discordClient, Guild
 from discord import Intents
+from discord.abc import GuildChannel
 
 from src.Helpers.FunctionName import listenerName
 from src.Logging.Logger import Logger
@@ -15,6 +16,8 @@ class Client(discordClient):
     _self = None
     readyListener = []
     guildUpdate = []
+    channelCreateListener = []
+    channelDeleteListener = []
 
     def __new__(cls, *args, **kwargs) -> "Client":
         if not cls._self:
@@ -45,6 +48,10 @@ class Client(discordClient):
                 self.readyListener.append(listener)
             case ClientListenerType.GUILD_UPDATE:
                 self.guildUpdate.append(listener)
+            case ClientListenerType.CHANNEL_CREATE:
+                self.channelCreateListener.append(listener)
+            case ClientListenerType.CHANNEL_DELETE:
+                self.channelDeleteListener.append(listener)
             case _:
                 logger.error(f"Invalid listener type: {listenerType}")
 
@@ -60,7 +67,7 @@ class Client(discordClient):
         """
         for listener in self.readyListener:
             await listener()
-            logger.debug(f"notified ready listener: {listenerName(listener)}")
+            logger.debug(f"Notified ready listener: {listenerName(listener)}")
 
     async def on_guild_update(self, before: Guild, after: Guild):
         """
@@ -72,4 +79,26 @@ class Client(discordClient):
         """
         for listener in self.guildUpdate:
             await listener(before, after)
-            logger.debug(f"notified guild update listener: {listenerName(listener)}")
+            logger.debug(f"Notified guild update listener: {listenerName(listener)}")
+
+    async def on_guild_channel_create(self, channel: GuildChannel):
+        """
+        Notify all listeners that a channel has been created
+
+        :param channel: Channel that was created
+        :return:
+        """
+        for listener in self.channelCreateListener:
+            await listener(channel)
+            logger.debug(f"Notified channel create listener: {listenerName(listener)}")
+
+    async def on_guild_channel_delete(self, channel: GuildChannel):
+        """
+        Notify all listeners that a channel has been deleted
+
+        :param channel: Channel that was deleted
+        :return:
+        """
+        for listener in self.channelDeleteListener:
+            await listener(channel)
+            logger.debug(f"Notified channel delete listener: {listenerName(listener)}")
