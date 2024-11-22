@@ -50,6 +50,7 @@ class CommandManager:
     async def onBotReady(self):
         await self.translator.load()
         await self.tree.set_translator(self.translator)
+        logger.debug("Translator loaded and set")
 
         await self.syncCommands()
         # await self.removeCommands()

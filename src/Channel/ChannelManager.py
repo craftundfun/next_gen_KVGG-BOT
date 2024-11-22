@@ -2,7 +2,7 @@ from datetime import datetime
 
 from discord import Guild
 from discord.abc import GuildChannel
-from sqlalchemy import update
+from sqlalchemy import update, text
 
 from database.Domain.Channel.Entity.Channel import Channel
 from database.Domain.Channel.Entity.ChannelGuildMapping import ChannelGuildMapping
@@ -83,12 +83,39 @@ class ChannelManager:
         :param guild: Guild to check
         :return:
         """
-        # TODO maybe optimize this to not call the database for every channel
-        # TODO delete channels that are not in the guild anymore
-        for channel in guild.channels:
-            if not self.session.query(Channel).filter_by(channel_id=channel.id).first():
-                logger.debug(f"Channel {channel.name, channel.id} not found in database")
-                await self.channelCreate(channel)
+        channelIdsAsTEXT = ", ".join([f"({str(channel.id)})" for channel in guild.channels])
+        sql = text("CALL FindMissingChannels(:channelIds, @missing_channels);")
+
+        with self.session:
+            try:
+                self.session.execute(sql, {"channelIds": channelIdsAsTEXT})
+                result = self.session.execute(text("SELECT @missing_channels;")).fetchall()
+
+                # [(None,)] possible result if the procedure found nothing
+                if not result or not result[0][0]:
+                    logger.debug(f"No missing channels found for {guild.name, guild.id}")
+
+                    return
+
+                # Extract the string inside the parentheses and split by commas
+                # Removing the parentheses
+                channelIDsStr = result[0][0][1:-1]
+                # Convert each item to an integer
+                missingChannelIDs = list(map(int, channelIDsStr.split(',')))
+            except Exception as error:
+                logger.error(f"Failed to find missing channels: {error}", exc_info=error)
+
+                exit(1)
+
+        for id in missingChannelIDs:
+            try:
+                channel = await self.client.fetch_channel(id)
+            except Exception as error:
+                logger.error(f"Failed to fetch channel from {guild.name, guild.id}", exc_info=error)
+
+                continue
+
+            await self.channelCreate(channel)
 
         logger.debug(f"Found and added all new channels for guild {guild.name, guild.id}")
 
