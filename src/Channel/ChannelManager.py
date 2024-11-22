@@ -84,13 +84,13 @@ class ChannelManager:
         :return:
         """
         # TODO maybe optimize this to not call the database for every channel
+        # TODO delete channels that are not in the guild anymore
         for channel in guild.channels:
             if not self.session.query(Channel).filter_by(channel_id=channel.id).first():
                 logger.debug(f"Channel {channel.name, channel.id} not found in database")
                 await self.channelCreate(channel)
 
         logger.debug(f"Found and added all new channels for guild {guild.name, guild.id}")
-
 
     def registerListener(self):
         """

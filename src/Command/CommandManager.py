@@ -3,6 +3,7 @@ from discord.app_commands import CommandTree
 from src.Command.CommandWorker import CommandWorker
 from src.Command.PingCommand import PingCommand
 from src.Logging.Logger import Logger
+from src.Translator.Translator import Translator
 from src.Types.ClientListenerType import ClientListenerType
 
 logger = Logger("CommandManager")
@@ -18,6 +19,7 @@ class CommandManager:
         self.client = client
         self.tree = CommandTree(client)
         self.commandWorker = CommandWorker(client)
+        self.translator = Translator()
 
         self.commands = []
 
@@ -46,5 +48,10 @@ class CommandManager:
         await self.syncCommands()
 
     async def onBotReady(self):
-        # await self.syncCommands()
-        await self.removeCommands()
+        await self.translator.load()
+        await self.tree.set_translator(self.translator)
+
+        await self.syncCommands()
+        # await self.removeCommands()
+
+        pass

@@ -10,7 +10,8 @@ logger = Logger("PingCommand")
 class PingCommand(BaseCommand):
 
     def register(self):
-        @self.tree.command(name="ping", description="Pong!", guild=discord.Object(438689788585967616))
+        @self.tree.command(name="ping_command",
+                           description="ping_description", guild=discord.Object(438689788585967616))
         async def ping(interaction: Interaction):
             await self.notifyBefore()
 

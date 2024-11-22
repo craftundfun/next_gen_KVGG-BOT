@@ -1,0 +1,4 @@
+{
+	"ping_command": "ping",
+	"ping_description": "Answers you Pong!"
+}
