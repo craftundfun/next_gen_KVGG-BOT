@@ -52,7 +52,7 @@ class CommandManager:
         await self.tree.set_translator(self.translator)
         logger.debug("Translator loaded and set")
 
-        await self.syncCommands()
-        # await self.removeCommands()
+        # await self.syncCommands()
+        await self.removeCommands()
 
         pass

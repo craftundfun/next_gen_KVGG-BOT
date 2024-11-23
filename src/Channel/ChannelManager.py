@@ -76,14 +76,15 @@ class ChannelManager:
 
                 logger.debug(f"Channel {channel.name, channel.id} created and added to database")
 
-    async def onBotStart(self, guild: Guild):
+    async def _findMissingChannels(self, guild: Guild):
         """
-        Check if all channels are in the database
+        Find missing channels in the database if some got created while the bot was offline
 
         :param guild: Guild to check
         :return:
         """
         channelIdsAsTEXT = ", ".join([f"({str(channel.id)})" for channel in guild.channels])
+        # call database routine
         sql = text("CALL FindMissingChannels(:channelIds, @missing_channels);")
 
         with self.session:
@@ -97,27 +98,61 @@ class ChannelManager:
 
                     return
 
-                # Extract the string inside the parentheses and split by commas
-                # Removing the parentheses
+                # extract the string inside the parentheses and split by commas
+                # removing the parentheses
                 channelIDsStr = result[0][0][1:-1]
-                # Convert each item to an integer
+                # convert each item to an integer
                 missingChannelIDs = list(map(int, channelIDsStr.split(',')))
             except Exception as error:
                 logger.error(f"Failed to find missing channels: {error}", exc_info=error)
 
-                exit(1)
+                return
 
         for id in missingChannelIDs:
             try:
                 channel = await self.client.fetch_channel(id)
+
+                if not channel:
+                    logger.error(f"Channel {id} not found in guild {guild.name, guild.id}")
+
+                    continue
             except Exception as error:
                 logger.error(f"Failed to fetch channel from {guild.name, guild.id}", exc_info=error)
 
                 continue
-
-            await self.channelCreate(channel)
+            else:
+                await self.channelCreate(channel)
 
         logger.debug(f"Found and added all new channels for guild {guild.name, guild.id}")
+
+    async def _findDeletedChannels(self, guild: Guild):
+        """
+        Set channels as deleted in the database if they are not in the guild anymore
+
+        :param guild: Guild to check
+        :return:
+        """
+        with self.session:
+            try:
+                updateClause = (update(Channel)
+                                .where(Channel.channel_id.not_in([channel.id for channel in guild.channels]))
+                                .values(deleted_at=datetime.now()))
+                self.session.execute(updateClause)
+                self.session.commit()
+
+                logger.debug(f"Deleted channels updated for guild {guild.name, guild.id}")
+            except Exception as error:
+                logger.error(f"Failed to find deleted channels for guild {guild.name, guild.id}", exc_info=error)
+
+    async def onBotStart(self, guild: Guild):
+        """
+        Check if all channels are in the database
+
+        :param guild: Guild to check
+        :return:
+        """
+        await self._findMissingChannels(guild)
+        await self._findDeletedChannels(guild)
 
     def registerListener(self):
         """
