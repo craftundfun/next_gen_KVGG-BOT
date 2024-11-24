@@ -1,8 +1,9 @@
 from datetime import datetime
 
 import discord
+from discord import Guild
 from discord.abc import GuildChannel
-from sqlalchemy import update
+from sqlalchemy import update, text
 
 from database.Domain.Category.Entity.Category import Category
 from database.Domain.Category.Entity.CategoryGuildMapping import CategoryGuildMapping
@@ -84,8 +85,76 @@ class CategoryManager:
             else:
                 logger.debug(f"Category {category.name, category.id} added to database")
 
-    async def onBotStart(self):
-        pass
+    async def _findMissingCategories(self, guild: Guild):
+        """
+        Check for missing categories in the guild
+
+        :param guild: Guild to check
+        :return:
+        """
+        categoryIdsAsTEXT = ", ".join([f"({str(category.id)})" for category in guild.categories])
+        sql = text("CALL FindMissingCategories(:categoryIds, @missing_categories);")
+
+        with self.session:
+            try:
+                self.session.execute(sql, {"categoryIds": categoryIdsAsTEXT})
+                result = self.session.execute(text("SELECT @missing_categories;")).fetchall()
+
+                if not result or not result[0][0]:
+                    logger.debug(f"No missing categories found in guild {guild.name, guild.id}")
+
+                    return
+
+                categoryIDsStr = result[0][0][1:-1]
+                missingCategories = list(map(int, categoryIDsStr.split(',')))
+            except Exception as error:
+                logger.error(f"Failed to find missing categories in guild {guild.name, guild.id}", exc_info=error)
+
+                return
+
+        for id in missingCategories:
+            try:
+                category = await self.client.fetch_channel(id)
+
+                if not category:
+                    logger.error(f"Category {id} not found in guild {guild.name, guild.id}")
+
+                    continue
+            except Exception as error:
+                logger.error(f"Failed to fetch category {id} in guild {guild.name, guild.id}", exc_info=error)
+
+                continue
+            else:
+                await self.categoryCreate(category)
+
+    async def _findDeletedCategories(self, guild: Guild):
+        """
+        Check for deleted categories in the guild
+
+        :param guild: Guild to check
+        :return:
+        """
+        with self.session:
+            try:
+                updateClause = (update(Category)
+                                .where(Category.category_id.not_in([category.id for category in guild.categories]))
+                                .values(deleted_at=datetime.now()))
+                self.session.execute(updateClause)
+                self.session.commit()
+
+                logger.debug(f"Deleted categories updated for guild {guild.name, guild.id}")
+            except Exception as error:
+                logger.error(f"Failed to delete categories in guild {guild.name, guild.id}", exc_info=error)
+
+    async def onBotStart(self, guild: Guild):
+        """
+        Start up check for categories
+
+        :param guild: Guild to check
+        :return:
+        """
+        await self._findMissingCategories(guild)
+        await self._findDeletedCategories(guild)
 
     def registerListener(self):
         """
