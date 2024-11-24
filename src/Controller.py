@@ -2,6 +2,7 @@ from os import environ
 
 from discord import Intents
 
+from src.Category.CategoryManager import CategoryManager
 from src.Channel.ChannelManager import ChannelManager
 from src.Client.Client import Client
 from src.Command.CommandManager import CommandManager
@@ -25,6 +26,7 @@ class Controller:
         self.commandManager = CommandManager(self.client)
         self.guildManager = GuildManager(self.client)
         self.channelManager = ChannelManager(self.client, self.guildManager)
+        self.categoryManager = CategoryManager(self.client, self.guildManager)
 
         self.registerListeners()
 

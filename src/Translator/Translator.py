@@ -32,7 +32,12 @@ class Translator(discord.app_commands.Translator):
                         string: locale_str,
                         locale: Locale,
                         context: TranslationContextTypes) -> Optional[str]:
-        def getTranslation(dictToUse: dict) -> str:
+        def getTranslation(dictToUse: dict | None) -> str:
+            if not dictToUse:
+                logger.debug(f"No translation for \"{string}\" in language \"{locale}\"")
+
+                return str(string)
+
             try:
                 translation = dictToUse.get(str(string))
 
@@ -54,4 +59,4 @@ class Translator(discord.app_commands.Translator):
             case Locale.german:
                 return getTranslation(self.de)
             case _:
-                return getTranslation(self.en)
+                return getTranslation(None)

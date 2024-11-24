@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import discord
 from discord import Guild
 from discord.abc import GuildChannel
 from sqlalchemy import update, text
@@ -31,6 +32,11 @@ class ChannelManager:
         :param channel: GuildChannel to delete
         :return:
         """
+        if channel.type == discord.ChannelType.category:
+            logger.debug(f"Channel {channel.name, channel.id} is a category")
+
+            return
+
         with self.session:
             updateClause = (update(Channel)
                             .where(Channel.channel_id == channel.id)
@@ -51,6 +57,11 @@ class ChannelManager:
         :param channel: GuildChannel to add
         :return:
         """
+        if channel.type == discord.ChannelType.category:
+            logger.debug(f"Channel {channel.name, channel.id} is a category")
+
+            return
+
         with self.session:
             # IDE can't resolve Channel type
             # noinspection PyUnresolvedReferences
