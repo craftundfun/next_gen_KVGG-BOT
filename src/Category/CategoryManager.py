@@ -3,7 +3,7 @@ from datetime import datetime
 import discord
 from discord import Guild
 from discord.abc import GuildChannel
-from sqlalchemy import update, text
+from sqlalchemy import update, text, select
 
 from database.Domain.Category.Entity.Category import Category
 from database.Domain.Category.Entity.CategoryGuildMapping import CategoryGuildMapping
@@ -157,10 +157,36 @@ class CategoryManager:
         await self._findMissingCategories(guild)
         await self._findDeletedCategories(guild)
 
-    async def updateCategory(self, before, after):
-        # TODO
+    async def categoryUpdate(self, before: GuildChannel, after: GuildChannel):
+        """
+        Update the category in the database
 
-        pass
+        :param before: Category before the update
+        :param after: Category after the update
+        :return:
+        """
+        if not before.type == discord.ChannelType.category:
+            logger.debug(f"Channel {before.name, before.id} is not a category")
+
+            return
+
+        with self.session:
+            try:
+                selectQuery = (select(Category).where(Category.category_id == before.id))
+                databaseCategory: Category = self.session.execute(selectQuery).scalars().one()
+            except Exception as error:
+                logger.error(f"Failed to fetch category {before.name, before.id}", exc_info=error)
+
+                return
+
+            databaseCategory.name = after.name
+
+            try:
+                self.session.commit()
+            except Exception as error:
+                logger.error(f"Failed to update category {before.name, before.id}", exc_info=error)
+
+                self.session.rollback()
 
     def registerListener(self):
         """
@@ -173,6 +199,9 @@ class CategoryManager:
 
         self.client.addListener(self.categoryDelete, ClientListenerType.CHANNEL_DELETE)
         logger.debug("Category delete listener registered")
+
+        self.client.addListener(self.categoryUpdate, ClientListenerType.CHANNEL_UPDATE)
+        logger.debug("Category update listener registered")
 
         self.guildManager.addGuildManagerListener(self.onBotStart, GuildListenerType.START_UP)
         logger.debug("Guild manager listener registered")

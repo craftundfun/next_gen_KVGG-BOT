@@ -20,6 +20,7 @@ class Client(discordClient):
     channelDeleteListener = []
     guildJoinListener = []
     guildRemoveListener = []
+    channelUpdateListener = []
 
     def __new__(cls, *args, **kwargs) -> "Client":
         if not cls._self:
@@ -58,6 +59,8 @@ class Client(discordClient):
                 self.guildJoinListener.append(listener)
             case ClientListenerType.GUILD_REMOVE:
                 self.guildRemoveListener.append(listener)
+            case ClientListenerType.CHANNEL_UPDATE:
+                self.channelUpdateListener.append(listener)
             case _:
                 logger.error(f"Invalid listener type: {listenerType}")
 
@@ -97,6 +100,18 @@ class Client(discordClient):
         for listener in self.channelCreateListener:
             await listener(channel)
             logger.debug(f"Notified channel create listener: {listenerName(listener)}")
+
+    async def on_guild_channel_update(self, before: GuildChannel, after: GuildChannel):
+        """
+        Notify all listeners that a channel has been updated
+
+        :param before: Channel state before the change
+        :param after: Channel state after the change
+        :return:
+        """
+        for listener in self.channelUpdateListener:
+            await listener(before, after)
+            logger.debug(f"Notified channel update listener: {listenerName(listener)}")
 
     async def on_guild_channel_delete(self, channel: GuildChannel):
         """
