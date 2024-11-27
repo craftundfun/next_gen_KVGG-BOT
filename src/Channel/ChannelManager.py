@@ -3,7 +3,7 @@ from datetime import datetime
 import discord
 from discord import Guild
 from discord.abc import GuildChannel
-from sqlalchemy import update, text
+from sqlalchemy import update, text, select
 
 from database.Domain.Channel.Entity.Channel import Channel
 from database.Domain.Channel.Entity.ChannelGuildMapping import ChannelGuildMapping
@@ -12,6 +12,7 @@ from src.Database.DatabaseConnection import getSession
 from src.Guild.GuildManager import GuildManager
 from src.Logging.Logger import Logger
 from src.Types.ClientListenerType import ClientListenerType
+from src.Types.GuildListenerType import GuildListenerType
 
 logger = Logger("ChannelManager")
 
@@ -145,10 +146,15 @@ class ChannelManager:
         """
         with self.session:
             try:
-                updateClause = (update(Channel)
-                                .where(Channel.channel_id.not_in([channel.id for channel in guild.channels]))
-                                .values(deleted_at=datetime.now()))
-                self.session.execute(updateClause)
+                selectClause = (select(Channel)
+                                .join(ChannelGuildMapping)
+                                .where(ChannelGuildMapping.guild_id == guild.id))
+                guildChannels = self.session.execute(selectClause).scalars().all()
+
+                for channel in guildChannels:
+                    if channel.channel_id not in [guildChannel.id for guildChannel in guild.channels]:
+                        channel.deleted_at = datetime.now()
+
                 self.session.commit()
 
                 logger.debug(f"Deleted channels updated for guild {guild.name, guild.id}")
@@ -165,6 +171,25 @@ class ChannelManager:
         await self._findMissingChannels(guild)
         await self._findDeletedChannels(guild)
 
+    """
+    # TODO same functions here, remove if they dont change
+    """
+
+    async def onGuildJoin(self, guild: Guild):
+        """
+        Check if all channels are in the database
+
+        :param guild: Guild to check
+        :return:
+        """
+        await self._findMissingChannels(guild)
+        await self._findDeletedChannels(guild)
+
+    async def updateChannel(self, before: GuildChannel, after: GuildChannel):
+        # TODO
+
+        pass
+
     def registerListener(self):
         """
         Register all listeners to corresponding events
@@ -177,7 +202,10 @@ class ChannelManager:
         self.client.addListener(self.channelCreate, ClientListenerType.CHANNEL_CREATE)
         logger.debug("Channel create listener registered")
 
-        self.guildManager.addGuildManagerListener(self.onBotStart)
+        self.guildManager.addGuildManagerListener(self.onBotStart, GuildListenerType.START_UP)
         logger.debug("Guild manager listener registered")
+
+        self.guildManager.addGuildManagerListener(self.onGuildJoin, GuildListenerType.GUILD_JOIN)
+        logger.debug("Guild join listener registered")
 
         logger.info("Channel listeners registered")

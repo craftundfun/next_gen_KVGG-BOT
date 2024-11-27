@@ -12,6 +12,7 @@ from src.Database.DatabaseConnection import getSession
 from src.Guild.GuildManager import GuildManager
 from src.Logging.Logger import Logger
 from src.Types.ClientListenerType import ClientListenerType
+from src.Types.GuildListenerType import GuildListenerType
 
 logger = Logger("CategoryManager")
 
@@ -156,6 +157,11 @@ class CategoryManager:
         await self._findMissingCategories(guild)
         await self._findDeletedCategories(guild)
 
+    async def updateCategory(self, before, after):
+        # TODO
+
+        pass
+
     def registerListener(self):
         """
         Register the listeners for the client
@@ -163,7 +169,15 @@ class CategoryManager:
         :return:
         """
         self.client.addListener(self.categoryCreate, ClientListenerType.CHANNEL_CREATE)
+        logger.debug("Category create listener registered")
+
         self.client.addListener(self.categoryDelete, ClientListenerType.CHANNEL_DELETE)
-        self.guildManager.addGuildManagerListener(self.onBotStart)
+        logger.debug("Category delete listener registered")
+
+        self.guildManager.addGuildManagerListener(self.onBotStart, GuildListenerType.START_UP)
+        logger.debug("Guild manager listener registered")
+
+        self.guildManager.addGuildManagerListener(self.onBotStart, GuildListenerType.GUILD_JOIN)
+        logger.debug("Guild join listener registered")
 
         logger.debug("Registered listeners to client")
