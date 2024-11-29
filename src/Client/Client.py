@@ -1,7 +1,7 @@
 from inspect import iscoroutinefunction
 from typing import Any
 
-from discord import Client as discordClient, Guild
+from discord import Client as discordClient, Guild, Member
 from discord import Intents
 from discord.abc import GuildChannel
 
@@ -14,6 +14,7 @@ logger = Logger("Client")
 
 class Client(discordClient):
     _self = None
+
     readyListener = []
     guildUpdate = []
     channelCreateListener = []
@@ -21,6 +22,8 @@ class Client(discordClient):
     guildJoinListener = []
     guildRemoveListener = []
     channelUpdateListener = []
+    memberJoinListener = []
+    ready = False
 
     def __new__(cls, *args, **kwargs) -> "Client":
         if not cls._self:
@@ -61,6 +64,8 @@ class Client(discordClient):
                 self.guildRemoveListener.append(listener)
             case ClientListenerType.CHANNEL_UPDATE:
                 self.channelUpdateListener.append(listener)
+            case ClientListenerType.MEMBER_JOIN:
+                self.memberJoinListener.append(listener)
             case _:
                 logger.error(f"Invalid listener type: {listenerType}")
 
@@ -68,12 +73,20 @@ class Client(discordClient):
 
         logger.debug(f"Listener successfully added: {listenerName(listener)}")
 
+    # TODO called multiple times, probably just live with it
     async def on_ready(self):
         """
         Notify all listeners that the bot is ready
 
         :return:
         """
+        if self.ready:
+            logger.warning("Bot is already ready")
+
+            return
+
+        self.ready = True
+
         for listener in self.readyListener:
             await listener()
             logger.debug(f"Notified ready listener: {listenerName(listener)}")
@@ -139,3 +152,8 @@ class Client(discordClient):
         for listener in self.guildRemoveListener:
             await listener(guild)
             logger.debug(f"Notified guild remove listener: {listenerName(listener)}")
+
+    async def on_member_join(self, member: Member):
+        for listener in self.memberJoinListener:
+            await listener(member)
+            logger.debug(f"Notified member join listener: {listenerName(listener)}")

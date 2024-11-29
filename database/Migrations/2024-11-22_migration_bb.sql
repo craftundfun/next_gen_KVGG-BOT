@@ -1,4 +1,4 @@
-USE next_gen_beta;
+USE kvgg_next_beta;
 
 DROP PROCEDURE IF EXISTS FindMissingChannels;
 
@@ -40,3 +40,6 @@ END $$
 DELIMITER ;
 
 DROP TEMPORARY TABLE IF EXISTS temp_channel_id_list;
+
+CALL FindMissingChannels('(502840786736644108), (2), (3), (4), (5)', @missing_channels);
+SELECT @missing_channels;

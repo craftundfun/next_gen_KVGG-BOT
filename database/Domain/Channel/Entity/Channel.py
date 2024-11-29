@@ -8,3 +8,6 @@ class Channel(Base):
     name = Column(VARCHAR(255), nullable=False)
     type = Column(TEXT, nullable=False)
     deleted_at = Column(DATETIME, default=None)
+
+    def __repr__(self):
+        return f"Channel(channel_id={self.channel_id}, name={self.name}, type={self.type}, deleted_at={self.deleted_at})"

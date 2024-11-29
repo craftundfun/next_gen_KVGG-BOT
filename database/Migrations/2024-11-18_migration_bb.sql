@@ -1,10 +1,9 @@
-USE next_gen_beta;
+USE kvgg_next_beta;
 
 DROP TABLE IF EXISTS discord_user;
 
 CREATE TABLE IF NOT EXISTS discord_user (
 	discord_id   BIGINT UNSIGNED UNIQUE NOT NULL,
-	display_name VARCHAR(255)           NOT NULL,
 	global_name  VARCHAR(255)           NOT NULL,
 	created_at   DATETIME DEFAULT NOW() NOT NULL,
 

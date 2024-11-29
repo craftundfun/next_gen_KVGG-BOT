@@ -11,3 +11,6 @@ class ChannelGuildMapping(Base):
 
     channel = relationship(Channel)
     guild = relationship(Guild)
+
+    def __repr__(self):
+        return f"ChannelGuildMapping(channel_id={self.channel_id}, guild_id={self.guild_id})"

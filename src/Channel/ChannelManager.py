@@ -95,7 +95,8 @@ class ChannelManager:
         :param guild: Guild to check
         :return:
         """
-        channelIdsAsTEXT = ", ".join([f"({str(channel.id)})" for channel in guild.channels])
+        channelIdsAsTEXT = ", ".join([f"({str(channel.id)})"
+                                      for channel in guild.channels if channel.type != discord.ChannelType.category])
         # call database routine
         sql = text("CALL FindMissingChannels(:channelIds, @missing_channels);")
 

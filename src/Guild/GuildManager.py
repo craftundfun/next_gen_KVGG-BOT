@@ -47,7 +47,6 @@ class GuildManager:
                 logger.error(f"Invalid listener type: {type}")
 
         logger.debug(f"Listener successfully added: {listenerName(listener)}")
-        self.startUpGuildCheck.append(listener)
 
     async def onBotStart(self):
         """

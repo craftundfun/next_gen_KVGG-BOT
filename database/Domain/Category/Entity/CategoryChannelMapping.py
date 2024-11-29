@@ -12,3 +12,6 @@ class CategoryChannelMapping(Base):
 
     category = relationship(Category)
     channel = relationship(Channel)
+
+    def __repr__(self):
+        return f"CategoryChannelMapping(category_id={self.category_id}, channel_id={self.channel_id})"

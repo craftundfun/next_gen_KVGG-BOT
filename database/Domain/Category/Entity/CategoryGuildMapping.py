@@ -11,3 +11,6 @@ class CategoryGuildMapping(Base):
 
     category = relationship(Category)
     guild = relationship(Guild)
+
+    def __repr__(self):
+        return f"CategoryGuildMapping(category_id={self.category_id}, guild_id={self.guild_id})"

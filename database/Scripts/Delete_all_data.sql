@@ -1,4 +1,4 @@
-USE next_gen_beta;
+USE kvgg_next_beta;
 
 DELETE FROM category_guild_mapping;
 DELETE FROM category;

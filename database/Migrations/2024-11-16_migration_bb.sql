@@ -1,1 +1,1 @@
-CREATE SCHEMA IF NOT EXISTS next_gen_beta;
+CREATE SCHEMA IF NOT EXISTS kvgg_next_beta;

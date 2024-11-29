@@ -1,4 +1,4 @@
-USE next_gen_beta;
+USE kvgg_next_beta;
 
 DROP TABLE IF EXISTS guild;
 
@@ -16,6 +16,7 @@ DROP TABLE IF EXISTS guild_discord_user_mapping;
 CREATE TABLE IF NOT EXISTS guild_discord_user_mapping (
 	guild_id        BIGINT UNSIGNED NOT NULL,
 	discord_user_id BIGINT UNSIGNED NOT NULL,
+	display_name    VARCHAR(255)    NOT NULL,
 
 	PRIMARY KEY (guild_id, discord_user_id),
 	FOREIGN KEY (guild_id) REFERENCES guild(guild_id),

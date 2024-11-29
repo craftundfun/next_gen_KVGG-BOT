@@ -1,4 +1,4 @@
-USE next_gen_beta;
+USE kvgg_next_beta;
 
 DROP TABLE IF EXISTS category_guild_mapping;
 # DROP TABLE IF EXISTS category_channel_mapping;

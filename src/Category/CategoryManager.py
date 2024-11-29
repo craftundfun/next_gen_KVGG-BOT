@@ -137,14 +137,21 @@ class CategoryManager:
         """
         with self.session:
             try:
-                updateClause = (update(Category)
-                                .where(Category.category_id.not_in([category.id for category in guild.categories]))
-                                .values(deleted_at=datetime.now()))
-                self.session.execute(updateClause)
+                selectClause = (select(Category)
+                                .join(CategoryGuildMapping)
+                                .where(CategoryGuildMapping.guild_id == guild.id))
+                guildCategories = self.session.execute(selectClause).scalars().all()
+
+                for category in guildCategories:
+                    if category.category_id not in [discordCategory.id for discordCategory in guild.categories]:
+                        category.deleted_at = datetime.now()
+
                 self.session.commit()
 
                 logger.debug(f"Deleted categories updated for guild {guild.name, guild.id}")
             except Exception as error:
+                self.session.rollback()
+
                 logger.error(f"Failed to delete categories in guild {guild.name, guild.id}", exc_info=error)
 
     async def onBotStart(self, guild: Guild):

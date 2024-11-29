@@ -8,6 +8,7 @@ from src.Client.Client import Client
 from src.Command.CommandManager import CommandManager
 from src.Guild.GuildManager import GuildManager
 from src.Logging.Logger import Logger
+from src.Member.MemberManager import MemberManager
 
 logger = Logger("Controller")
 
@@ -27,6 +28,7 @@ class Controller:
         self.guildManager = GuildManager(self.client)
         self.channelManager = ChannelManager(self.client, self.guildManager)
         self.categoryManager = CategoryManager(self.client, self.guildManager)
+        self.memberManager = MemberManager(self.client)
 
         self.registerListeners()
 
