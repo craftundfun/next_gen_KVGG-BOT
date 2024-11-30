@@ -1,7 +1,7 @@
 from inspect import iscoroutinefunction
 from typing import Any
 
-from discord import Client as discordClient, Guild, Member
+from discord import Client as discordClient, Guild, Member, RawMemberRemoveEvent
 from discord import Intents
 from discord.abc import GuildChannel
 
@@ -23,9 +23,13 @@ class Client(discordClient):
     guildRemoveListener = []
     channelUpdateListener = []
     memberJoinListener = []
+    memberRemoveListener = []
+    memberRemoveListenerRaw = []
+    memberUpdateListener = []
+
     ready = False
 
-    def __new__(cls, *args, **kwargs) -> "Client":
+    def __new__(cls, *args, **kwargs) -> discordClient:
         if not cls._self:
             cls._self = super().__new__(cls)
 
@@ -66,6 +70,12 @@ class Client(discordClient):
                 self.channelUpdateListener.append(listener)
             case ClientListenerType.MEMBER_JOIN:
                 self.memberJoinListener.append(listener)
+            case ClientListenerType.MEMBER_REMOVE:
+                self.memberRemoveListener.append(listener)
+            case ClientListenerType.RAW_MEMBER_REMOVE:
+                self.memberRemoveListenerRaw.append(listener)
+            case ClientListenerType.MEMBER_UPDATE:
+                self.memberUpdateListener.append(listener)
             case _:
                 logger.error(f"Invalid listener type: {listenerType}")
 
@@ -149,11 +159,57 @@ class Client(discordClient):
             logger.debug(f"Notified guild join listener: {listenerName(listener)}")
 
     async def on_guild_remove(self, guild: Guild):
+        """
+        When the bot is removed from a guild
+
+        :param guild: Guild that was removed
+        :return:
+        """
         for listener in self.guildRemoveListener:
             await listener(guild)
             logger.debug(f"Notified guild remove listener: {listenerName(listener)}")
 
     async def on_member_join(self, member: Member):
+        """
+        When a member joins a guild
+
+        :param member: Guild specific member that joined
+        :return:
+        """
         for listener in self.memberJoinListener:
             await listener(member)
             logger.debug(f"Notified member join listener: {listenerName(listener)}")
+
+    async def on_member_remove(self, member: Member):
+        """
+        When a member leaves a guild
+
+        :param member: Guild specific member that left
+        :return:
+        """
+        for listener in self.memberRemoveListener:
+            await listener(member)
+            logger.debug(f"Notified member join listener: {listenerName(listener)}")
+
+    async def on_raw_member_remove(self, payload: RawMemberRemoveEvent):
+        """
+        When a member leaves a guild and is not cached
+
+        :param payload: Raw member remove event
+        :return:
+        """
+        for listener in self.memberRemoveListenerRaw:
+            await listener(payload)
+            logger.debug(f"Notified raw member remove listener: {listenerName(listener)}")
+
+    async def on_member_update(self, before: Member, after: Member):
+        """
+        When a member is updated
+
+        :param before: Member state before the change
+        :param after: Member state after the change
+        :return:
+        """
+        for listener in self.memberUpdateListener:
+            await listener(before, after)
+            logger.debug(f"Notified member update listener: {listenerName(listener)}")

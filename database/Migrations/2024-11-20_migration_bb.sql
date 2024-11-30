@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS guild_discord_user_mapping (
 	guild_id        BIGINT UNSIGNED NOT NULL,
 	discord_user_id BIGINT UNSIGNED NOT NULL,
 	display_name    VARCHAR(255)    NOT NULL,
+	left_at         DATETIME        NULL,
 
 	PRIMARY KEY (guild_id, discord_user_id),
 	FOREIGN KEY (guild_id) REFERENCES guild(guild_id),

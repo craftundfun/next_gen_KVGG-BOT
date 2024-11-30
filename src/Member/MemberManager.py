@@ -1,4 +1,6 @@
-from discord import Member
+from datetime import datetime
+
+from discord import Member, User
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -22,8 +24,22 @@ class MemberManager:
         self.registerListener()
 
     def registerListener(self):
+        """
+        Register all necessary listeners
+
+        :return:
+        """
         self.client.addListener(self.memberJoinGuild, ClientListenerType.MEMBER_JOIN)
         logger.debug("Registered member join listener")
+
+        self.client.addListener(self.memberLeftGuild, ClientListenerType.MEMBER_REMOVE)
+        logger.debug("Registered member remove listener")
+
+        self.client.addListener(self.memberLeftGuildRaw, ClientListenerType.RAW_MEMBER_REMOVE)
+        logger.debug("Registered raw member remove listener")
+
+        self.client.addListener(self.memberUpdate, ClientListenerType.MEMBER_UPDATE)
+        logger.debug("Registered member update listener")
 
     async def memberJoinGuild(self, member: Member):
         """
@@ -82,3 +98,59 @@ class MemberManager:
                 return
             else:
                 logger.debug(f"Member {member.name, member.id} added to guild {member.guild.name, member.guild.id}")
+
+    async def memberLeftGuild(self, member: Member):
+        """
+        Remove a member from the guild
+
+        :param member: Guild specific member that left the guild
+        :return:
+        """
+        with self.session:
+            try:
+                selectQuery = (select(GuildDiscordUserMapping)
+                               .where(GuildDiscordUserMapping.guild_id == member.guild.id,
+                                      GuildDiscordUserMapping.discord_user_id == member.id))
+                guildDiscordUserMapping = self.session.execute(selectQuery).scalars().one()
+                guildDiscordUserMapping.left_at = datetime.now()
+
+                self.session.commit()
+            except Exception as error:
+                logger.error(f"Failed to get guild member mapping {member.name, member.id} "
+                             f"for guild {member.guild.name, member.guild.id}", exc_info=error)
+
+                self.session.rollback()
+                return
+            else:
+                logger.debug(f"Member {member.name, member.id} removed from guild {member.guild.name, member.guild.id}")
+
+    async def memberLeftGuildRaw(self, guildId: int, user: User):
+        """
+        Remove a member from the guild using the user object because the member object is not available
+
+        :param guildId: Guild ID
+        :param user: User object
+        :return:
+        """
+        with self.session:
+            try:
+                selectQuery = (select(GuildDiscordUserMapping)
+                               .where(GuildDiscordUserMapping.guild_id == guildId,
+                                      GuildDiscordUserMapping.discord_user_id == user.id))
+                guildDiscordUserMapping = self.session.execute(selectQuery).scalars().one()
+                guildDiscordUserMapping.left_at = datetime.now()
+
+                self.session.commit()
+            except Exception as error:
+                logger.error(f"Failed to get guild member mapping {user.name, user.id} "
+                             f"for guild {guildId}", exc_info=error)
+
+                self.session.rollback()
+                return
+            else:
+                logger.debug(f"Member {user.name, user.id} removed from guild {guildId}")
+
+    async def memberUpdate(self, before: Member, after: Member):
+        # TODO
+
+        pass

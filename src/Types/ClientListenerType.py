@@ -13,3 +13,6 @@ class ClientListenerType(Enum):
     CHANNEL_UPDATE = "channel_update"
 
     MEMBER_JOIN = "member_join"
+    MEMBER_REMOVE = "member_remove"
+    RAW_MEMBER_REMOVE = "raw_member_remove"
+    MEMBER_UPDATE = "member_update"
