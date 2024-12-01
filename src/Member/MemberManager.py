@@ -4,12 +4,12 @@ from discord import Member, User, RawMemberRemoveEvent
 from sqlalchemy import select, null
 from sqlalchemy.exc import NoResultFound
 
-from Bot.database.Domain.DiscordUser.Entity.DiscordUser import DiscordUser
-from Bot.database.Domain.Guild.Entity.GuildDiscordUserMapping import GuildDiscordUserMapping
-from Bot.src.Client.Client import Client
-from Bot.src.Database.DatabaseConnection import getSession
-from Bot.src.Logging.Logger import Logger
-from Bot.src.Types.ClientListenerType import ClientListenerType
+from database.Domain.DiscordUser.Entity.DiscordUser import DiscordUser
+from database.Domain.Guild.Entity.GuildDiscordUserMapping import GuildDiscordUserMapping
+from src.Client.Client import Client
+from src.Database.DatabaseConnection import getSession
+from src.Logging.Logger import Logger
+from src.Types.ClientListenerType import ClientListenerType
 
 logger = Logger("MemberManager")
 
