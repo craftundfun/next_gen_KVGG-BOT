@@ -1,0 +1,21 @@
+services:
+    web:
+        container_name: web
+        build:
+            context: .
+            dockerfile: Dockerfile_Web
+        develop:
+            watch:
+                -   action: sync
+                    path: .
+                    target: /app
+        volumes:
+            - .:/app
+        ports:
+            - "8000:8000"
+
+    bot:
+        container_name: bot
+        build:
+            context: .
+            dockerfile: Dockerfile_Bot
