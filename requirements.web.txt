@@ -2,3 +2,4 @@ Flask
 Flask-SQLAlchemy
 pymysql
 python-dotenv
+flask-cors

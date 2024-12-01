@@ -1,0 +1,38 @@
+services:
+    backend:
+        container_name: backend
+        build:
+            context: .
+            dockerfile: Dockerfile_Web
+        develop:
+            watch:
+                -   action: sync
+                    path: .
+                    target: /app
+        volumes:
+            - .:/app
+        ports:
+            - "8000:8000"
+
+    frontend:
+        container_name: frontend
+        build:
+            context: ./web
+            dockerfile: Dockerfile
+        ports:
+            - "3000:3000"
+        develop:
+            watch:
+                -   action: sync
+                    path: ./web
+                    target: /app
+        volumes:
+            - ./web:/app
+        depends_on:
+            - backend
+
+    bot:
+        container_name: bot
+        build:
+            context: .
+            dockerfile: Dockerfile_Bot

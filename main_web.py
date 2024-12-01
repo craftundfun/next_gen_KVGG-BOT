@@ -1,7 +1,6 @@
 import os
 
-# important
-import pymysql
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
@@ -9,9 +8,6 @@ from sqlalchemy import select
 from database.Domain.BaseClass import Base
 from database.Domain.DiscordUser.Entity.DiscordUser import DiscordUser
 
-pymysql.install_as_MySQLdb()
-
-from dotenv import load_dotenv
 load_dotenv()
 
 # Initialisiere die Flask App und die Datenbank

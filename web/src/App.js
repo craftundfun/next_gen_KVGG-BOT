@@ -4,9 +4,9 @@ function App() {
 	const [message, setMessage] = useState("");
 
 	useEffect(() => {
-		fetch('http://localhost:5000/api/hello')
+		fetch('http://localhost:8000/api/hello')
 			.then(response => response.json())
-			.then(data => setMessage(data.message));
+			.then(data => setMessage(data.message + " And hello from React!"));
 	}, []);
 
 	return (

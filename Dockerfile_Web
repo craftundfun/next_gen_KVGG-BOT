@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY requirements.web.txt requirements.txt
 COPY database /app/database
-COPY main_web.py /app/main_web.py
+COPY test.py /app/test.py
 COPY templates /app/templates
 
 RUN pip install --no-cache-dir -r requirements.txt
@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8000
 
 # Run the application
-CMD ["python", "./main_web.py"]
+CMD ["python", "./test.py"]
