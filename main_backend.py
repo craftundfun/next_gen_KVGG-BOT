@@ -24,7 +24,7 @@ db.init_app(app)
 
 @app.route('/api/hello')
 def hello_world():
-    return jsonify(message="Hello from Flask!")
+    return jsonify(message="Hello from Flask! :)")
 
 
 if __name__ == '__main__':

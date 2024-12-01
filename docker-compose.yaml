@@ -3,7 +3,7 @@ services:
         container_name: backend
         build:
             context: .
-            dockerfile: Dockerfile_Web
+            dockerfile: Dockerfile_Backend
         develop:
             watch:
                 -   action: sync
