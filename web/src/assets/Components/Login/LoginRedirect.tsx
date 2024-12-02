@@ -28,7 +28,7 @@ function LoginRedirect() {
 				const authorizationHeader = response.headers.get("Authorization");
 
 				if (authorizationHeader === null) {
-					navigate("/error");
+					// navigate("/error");
 
 					return;
 				}
