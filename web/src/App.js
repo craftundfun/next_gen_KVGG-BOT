@@ -1,35 +1,27 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
+import {BrowserRouter as Router, Route, Routes,} from "react-router-dom";
+import Login from './assets/Components/Login/Login.tsx';
+import Dashboard from './assets/Components/Dashboard/Dashboard.tsx';
+import Forbidden from './assets/Components/Status/Forbidden.tsx';
+import LoginRedirect from './assets/Components/Login/LoginRedirect.tsx';
+import Error from './assets/Components/Status/Error.tsx';
 
 function App() {
-	const [message, setMessage] = useState("");
-
-	useEffect(() => {
-		fetch('http://localhost:8000/api/hello')
-			.then(response => response.json())
-			.then(data => setMessage(data.message + " And hello from Rene! :)"));
-	}, []);
-
-	// return (
-	// 	<div className="App">
-	// 		<h1>{message}</h1>
-	// 	</div>
-	// );
-
 	return (
-		<div className="App">
-			<h1>Show and tell</h1>
-			<button
-				onClick={(e) =>
-					window.open(
-						"https://discord.com/oauth2/authorize?client_id=1076510738576855051&response_type=code&redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Fauth%2Fdiscord&scope=identify",
-						"_parent"
-					)
-				}
-			>
-				Auth
-			</button>
-		</div>
+		<Router>
+			<Routes>
+				<Route path="/" element={<Login/>}/>
+				<Route path="/login" element={<LoginRedirect/>}/>
+				<Route path="/dashboard" element={<Dashboard/>}/>
+
+				<Route path="*" element={<div>Page Not Found</div>}/>
+				<Route path="/forbidden" element={<Forbidden/>}/>
+				<Route path="/error" element={<Error/>}/>
+			</Routes>
+		</Router>
 	);
 }
 
 export default App;
+
+

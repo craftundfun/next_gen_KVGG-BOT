@@ -1,0 +1,35 @@
+{
+	"compilerOptions": {
+		"target": "es5",
+		// Specify ECMAScript target version
+		"lib": [
+			"dom",
+			"es6",
+		],
+		// Specify libraries to be included in the compilation
+		"allowJs": true,
+		// Allow JavaScript files to be compiled
+		"jsx": "react",
+		// Enable JSX support for React
+		"module": "esnext",
+		// Specify the module system
+		"moduleResolution": "node",
+		// Resolve modules using Node.js resolution logic
+		"strict": true,
+		// Enable strict mode for better type checking
+		"esModuleInterop": true,
+		// Enable compatibility with CommonJS modules
+		"skipLibCheck": true,
+		// Skip type checking of declaration files
+		"forceConsistentCasingInFileNames": true
+		// Ensure file names are case-consistent
+	},
+	"include": [
+		"src/**/*"
+		// Include all files in the src folder
+	],
+	"exclude": [
+		"node_modules"
+		// Exclude the node_modules folder
+	]
+}

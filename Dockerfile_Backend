@@ -5,7 +5,6 @@ WORKDIR /app
 COPY requirements.web.txt requirements.txt
 COPY database /app/database
 COPY main_backend.py /app/main_backend.py
-COPY templates /app/templates
 
 RUN pip install --no-cache-dir -r requirements.txt
 

@@ -13,6 +13,7 @@ services:
             - .:/app
         ports:
             - "8000:8000"
+        restart: on-failure
 
     frontend:
         container_name: frontend
@@ -30,6 +31,7 @@ services:
             - ./web:/app
         depends_on:
             - backend
+        restart: on-failure
 
     bot:
         container_name: bot
