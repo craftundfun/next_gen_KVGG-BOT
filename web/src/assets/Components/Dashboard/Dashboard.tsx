@@ -6,7 +6,7 @@ import apiURL from "../../../modules/ApiUrl";
 function Dashboard() {
 	const navigate = useNavigate();
 
-	const token = sessionStorage.getItem('accessToken');
+	const token = sessionStorage.getItem('jwt');
 	const tokenType = sessionStorage.getItem('tokenType');
 
 	let [user, setUser] = useState<string | null>(null);

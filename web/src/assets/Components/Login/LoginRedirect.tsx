@@ -42,8 +42,10 @@ function LoginRedirect() {
 					return;
 				}
 
-				sessionStorage.setItem('accessToken', token);
+				sessionStorage.setItem("jwt", token);
 				sessionStorage.setItem('tokenType', tokenType);
+
+				console.log("Logged in", token, sessionStorage.getItem("jwt"));
 
 				navigate("/dashboard");
 			} else {
