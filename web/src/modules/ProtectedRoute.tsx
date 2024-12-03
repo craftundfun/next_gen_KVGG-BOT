@@ -7,18 +7,15 @@ type Props = {
 };
 
 const ProtectedRoute = ({children}: Props) => {
-	const {jwt, isAuthenticated} = useAuth();
-
-	console.log("JWT in context: ", jwt);
-	console.log("Is Authenticated: ", isAuthenticated);
-
-
+	/*
+	ProtectedRoute is a wrapper component that checks if the user is authenticated. If the user is not authenticated,
+	they are redirected to the login page. If the user is authenticated, the children are rendered.
+	 */
+	const {isAuthenticated} = useAuth();
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		console.log("Checking authentication...");
 		if (!isAuthenticated) {
-			console.log("Not authenticated, redirecting...");
 			navigate("/");
 		}
 	}, [isAuthenticated, navigate]);

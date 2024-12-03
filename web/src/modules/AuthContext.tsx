@@ -1,4 +1,5 @@
 import React, {createContext, ReactNode, useContext, useState} from 'react';
+import {jwtDecode} from "jwt-decode";
 
 type AuthContextType = {
 	jwt: string | null;
@@ -21,6 +22,10 @@ type Props = {
 };
 
 export const AuthProvider = ({children}: Props) => {
+	/*
+	AuthProvider is a wrapper component that provides the AuthContext to all children components. It also provides
+	functionality to login, logout and check if the user is authenticated.
+	 */
 	const [jwt, setJwt] = useState<string | null>(() => sessionStorage.getItem('jwt'));
 
 	// Handle login functionality
@@ -39,8 +44,25 @@ export const AuthProvider = ({children}: Props) => {
 		sessionStorage.removeItem('jwt');
 	};
 
+	// Handle token expiration
+	const isTokenExpired = (token: string | null): boolean => {
+		if (token === null) {
+			return true;
+		}
+
+		try {
+			const decoded: any = jwtDecode(token);
+			// current time in seconds
+			const currentTime = Date.now() / 1000;
+
+			return decoded.exp < currentTime;
+		} catch (error) {
+			return true;
+		}
+	};
+
 	// Always ensure isAuthenticated is a boolean value
-	const isAuthenticated = !!jwt;
+	const isAuthenticated = !!jwt && !isTokenExpired(jwt);
 
 	return (
 		<AuthContext.Provider value={{jwt, login, logout, isAuthenticated}}>
@@ -49,7 +71,13 @@ export const AuthProvider = ({children}: Props) => {
 	);
 };
 
+
 export const useAuth = () => {
+	/*
+	useAuth is a custom hook that returns the AuthContext.
+	It is used to access the login, logout and isAuthenticated.
+	It also throws an error if the hook is used outside the AuthProvider.
+	 */
 	const context = useContext(AuthContext);
 
 	if (!context) {
