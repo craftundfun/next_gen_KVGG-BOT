@@ -38,3 +38,8 @@ services:
         build:
             context: .
             dockerfile: Dockerfile_Bot
+        develop:
+            watch:
+                -   action: sync
+                    path: ./src_bot
+                    target: /app

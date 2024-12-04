@@ -1,10 +1,18 @@
 import {useLocation, useNavigate} from "react-router-dom";
 import React, {useEffect, useState} from "react";
 import apiURL from "../../../modules/ApiUrl";
+import {useAuth} from "../../../modules/AuthContext";
 
 function LoginRedirect() {
+	/*
+	Discord OAuth2 reroutes the user to this page after successful login. The page then extracts the code from the URL
+	and sends it to the backend to receive a JWT token. The token is then stored in the session storage and the user is
+	redirected to the dashboard.
+	 */
 	const location = useLocation();
 	const navigate = useNavigate();
+	const {login} = useAuth();
+
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
@@ -24,29 +32,33 @@ function LoginRedirect() {
 			},
 			credentials: 'include',
 		}).then((response) => {
+			console.log("Response: ", response);
+			console.log("Response headers: ", response.headers);
+			console.log("Response okay?", response.ok);
+
 			if (response.ok) {
 				const authorizationHeader = response.headers.get("Authorization");
 
 				if (authorizationHeader === null) {
-					// navigate("/error");
+					console.log("Error: No authorization header");
 
 					return;
 				}
+
+				console.log("Authorization header: ", authorizationHeader);
 
 				const token = authorizationHeader.split(" ")[1];
 				const tokenType = authorizationHeader.split(" ")[0];
 
-				if (token === null) {
-					navigate("/error");
-
-					return;
-				}
-
-				sessionStorage.setItem('accessToken', token);
 				sessionStorage.setItem('tokenType', tokenType);
+				login(token);
+
+				console.log("Redirecting to dashboard...");
 
 				navigate("/dashboard");
 			} else {
+				console.log("Error: ", response);
+
 				navigate("/error");
 			}
 		}).catch((error) => {
@@ -58,7 +70,7 @@ function LoginRedirect() {
 		}).finally(() => {
 			setLoading(false);
 		});
-	}, [location, navigate]);
+	}, [login, location, navigate]);
 
 	if (loading) {
 		return <p>Loading...</p>;
