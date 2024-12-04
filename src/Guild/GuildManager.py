@@ -4,7 +4,7 @@ from discord.guild import Guild as DiscordGuild
 from sqlalchemy import update, null, select
 from sqlalchemy.exc import NoResultFound
 
-from database.Domain.Guild.Entity.Guild import Guild
+from database.Domain.models.Guild import Guild
 from src.Client.Client import Client
 from src.Database.DatabaseConnection import getSession
 from src.Helpers.FunctionName import listenerName

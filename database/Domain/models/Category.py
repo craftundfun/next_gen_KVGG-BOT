@@ -1,5 +1,4 @@
 from database.Domain.BaseClass import *
-from database.Domain.Guild.Entity.Guild import Guild
 
 
 class Category(Base):
@@ -10,7 +9,7 @@ class Category(Base):
     deleted_at = Column(DATETIME, nullable=True, default=None)
     guild_id = Column(BigInteger, ForeignKey("guild.guild_id"), nullable=False)
 
-    relationship(Guild)
+    relationship("Guild")
 
     def __repr__(self):
         return f"Category(category_id={self.category_id}, name={self.name}, deleted_at={self.deleted_at})"

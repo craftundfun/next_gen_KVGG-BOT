@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
 from database.Domain.BaseClass import Base
-from database.Domain.DiscordUser.Entity.DiscordUser import DiscordUser
+from database.Domain.models.DiscordUser import DiscordUser
 
 pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request, redirect
@@ -95,8 +95,20 @@ def discordOAuth():
     return response
 
 
+def hasUserSpecificRoles(*roles: []):
+    def inner(func):
+        def wrapper(*args, **kwargs):
+            print(roles)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return inner
+
+
 @app.route("/api/discordUser/all")
 @jwt_required()
+# @hasUserSpecificRoles("ADMIN", "MODERATOR")
 def getUser():
     """
     This function is used to get all the users from the database.

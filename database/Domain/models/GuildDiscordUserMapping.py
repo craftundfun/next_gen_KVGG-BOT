@@ -1,6 +1,4 @@
 from database.Domain.BaseClass import *
-from database.Domain.DiscordUser.Entity.DiscordUser import DiscordUser
-from database.Domain.Guild.Entity.Guild import Guild
 
 
 class GuildDiscordUserMapping(Base):
@@ -11,8 +9,8 @@ class GuildDiscordUserMapping(Base):
     display_name = Column(VARCHAR(255), nullable=False)
     left_at = Column(DATETIME, nullable=True)
 
-    guild = relationship(Guild)
-    discord_user = relationship(DiscordUser)
+    guild = relationship("Guild")
+    discord_user = relationship("DiscordUser")
 
     def __repr__(self):
         return f"GuildDiscordUserMapping(guild_id={self.guild_id}, discord_user_id={self.discord_user_id})"

@@ -1,6 +1,8 @@
-from datetime import datetime
-
 from database.Domain.BaseClass import *
+
+if TYPE_CHECKING:
+    from database.Domain.models.WebsiteRole import WebsiteRole
+    from database.Domain.models.WebsiteUser import WebsiteUser
 
 
 class WebsiteRoleUserMapping(Base):
@@ -11,5 +13,5 @@ class WebsiteRoleUserMapping(Base):
     created_at = Column(DATETIME, default=datetime.now(), nullable=False)
     deleted_at = Column(DATETIME, nullable=True)
 
-    website_role = relationship("WebsiteRole", uselist=False)
-    website_user = relationship("WebsiteUser", uselist=False)
+    website_role: Mapped[Optional["WebsiteRole"]] = relationship("WebsiteRole", uselist=False)
+    website_user: Mapped[Optional["WebsiteUser"]] = relationship("WebsiteUser", uselist=False)

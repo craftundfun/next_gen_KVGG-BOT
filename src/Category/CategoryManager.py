@@ -5,7 +5,7 @@ from discord import Guild
 from discord.abc import GuildChannel
 from sqlalchemy import update, text, select
 
-from database.Domain.Category.Entity.Category import Category
+from database.Domain.models.Category import Category
 from src.Client.Client import Client
 from src.Database.DatabaseConnection import getSession
 from src.Guild.GuildManager import GuildManager
