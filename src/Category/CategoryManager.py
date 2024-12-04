@@ -6,7 +6,6 @@ from discord.abc import GuildChannel
 from sqlalchemy import update, text, select
 
 from database.Domain.Category.Entity.Category import Category
-from database.Domain.Category.Entity.CategoryGuildMapping import CategoryGuildMapping
 from src.Client.Client import Client
 from src.Database.DatabaseConnection import getSession
 from src.Guild.GuildManager import GuildManager
@@ -70,14 +69,10 @@ class CategoryManager:
                 categoryDatabase = Category(
                     category_id=category.id,
                     name=category.name,
-                )
-                categoryChannelMapping = CategoryGuildMapping(
-                    category_id=category.id,
                     guild_id=category.guild.id,
                 )
 
                 self.session.add(categoryDatabase)
-                self.session.add(categoryChannelMapping)
                 self.session.commit()
             except Exception as error:
                 logger.error(f"Failed to add category {category.name, category.id}", exc_info=error)
@@ -138,8 +133,7 @@ class CategoryManager:
         with self.session:
             try:
                 selectClause = (select(Category)
-                                .join(CategoryGuildMapping)
-                                .where(CategoryGuildMapping.guild_id == guild.id))
+                                .where(Category.guild_id == guild.id))
                 guildCategories = self.session.execute(selectClause).scalars().all()
 
                 for category in guildCategories:

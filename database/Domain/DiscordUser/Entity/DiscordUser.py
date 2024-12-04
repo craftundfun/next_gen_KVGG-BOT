@@ -8,6 +8,8 @@ class DiscordUser(Base):
     global_name = Column(VARCHAR(255), nullable=False)
     created_at = Column(DATETIME, nullable=False, default=func.NOW())
 
+    websiteUser = relationship("WebsiteUser", back_populates="discordUser", uselist=False)
+
     def __repr__(self):
         return (f"DiscordUser(discord_id={self.discord_id}, global_name={self.global_name}, "
                 f"created_at={self.created_at})")

@@ -83,6 +83,7 @@ def discordOAuth():
     try:
         db.session.execute(selectQuery).scalars().one()
     except NoResultFound:
+        # TODO dont reroute to the frontend, let the frontend handle the error
         return redirect("http://localhost:3000/forbidden")
     except Exception as error:
         return jsonify(message=f"Something went wrong! {error}")

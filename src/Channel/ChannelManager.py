@@ -6,7 +6,6 @@ from discord.abc import GuildChannel
 from sqlalchemy import update, text, select
 
 from database.Domain.Channel.Entity.Channel import Channel
-from database.Domain.Channel.Entity.ChannelGuildMapping import ChannelGuildMapping
 from src.Client.Client import Client
 from src.Database.DatabaseConnection import getSession
 from src.Guild.GuildManager import GuildManager
@@ -70,23 +69,18 @@ class ChannelManager:
                 channel_id=channel.id,
                 name=channel.name,
                 type=channel.type.name,
-            )
-            channelGuildMapping = ChannelGuildMapping(
-                channel_id=channel.id,
                 guild_id=channel.guild.id
             )
 
             try:
                 self.session.add(databaseChannel)
-                self.session.add(channelGuildMapping)
+                self.session.commit()
+
+                logger.debug(f"Channel {channel.name, channel.id} created and added to database")
             except Exception as error:
                 logger.error(f"Failed to create channel: {error}", exc_info=error)
 
                 self.session.rollback()
-            else:
-                self.session.commit()
-
-                logger.debug(f"Channel {channel.name, channel.id} created and added to database")
 
     async def _findMissingChannels(self, guild: Guild):
         """
@@ -148,8 +142,7 @@ class ChannelManager:
         with self.session:
             try:
                 selectClause = (select(Channel)
-                                .join(ChannelGuildMapping)
-                                .where(ChannelGuildMapping.guild_id == guild.id))
+                                .where(Channel.guild_id == guild.id))
                 guildChannels = self.session.execute(selectClause).scalars().all()
 
                 for channel in guildChannels:

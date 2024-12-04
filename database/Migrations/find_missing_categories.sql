@@ -1,44 +1,5 @@
 USE kvgg_next_beta;
 
-DROP TABLE IF EXISTS category_guild_mapping;
-# DROP TABLE IF EXISTS category_channel_mapping;
-DROP TABLE IF EXISTS category;
-
-CREATE TABLE IF NOT EXISTS category (
-	category_id BIGINT UNSIGNED UNIQUE NOT NULL,
-	name        VARCHAR(255)           NOT NULL,
-	deleted_at  DATETIME               NULL DEFAULT NULL,
-
-	PRIMARY KEY (category_id)
-)
-
-	ENGINE = InnoDB
-	CHARSET = UTF8MB4;
-
-# CREATE TABLE IF NOT EXISTS category_channel_mapping (
-# 	category_id BIGINT UNSIGNED NOT NULL,
-# 	channel_id  BIGINT UNSIGNED NOT NULL,
-#
-# 	PRIMARY KEY (category_id, channel_id),
-# 	FOREIGN KEY (category_id) REFERENCES category(category_id),
-# 	FOREIGN KEY (channel_id) REFERENCES channel(channel_id)
-# )
-#
-# 	ENGINE = InnoDB
-# 	CHARSET = UTF8MB4;
-
-CREATE TABLE IF NOT EXISTS category_guild_mapping (
-	category_id BIGINT UNSIGNED NOT NULL,
-	guild_id    BIGINT UNSIGNED NOT NULL,
-
-	PRIMARY KEY (category_id, guild_id),
-	FOREIGN KEY (category_id) REFERENCES category(category_id),
-	FOREIGN KEY (guild_id) REFERENCES guild(guild_id)
-)
-
-	ENGINE = InnoDB
-	CHARSET = UTF8MB4;
-
 DROP PROCEDURE IF EXISTS FindMissingCategories;
 
 DELIMITER $$
