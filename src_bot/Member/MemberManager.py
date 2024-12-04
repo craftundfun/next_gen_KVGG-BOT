@@ -6,10 +6,10 @@ from sqlalchemy.exc import NoResultFound
 
 from database.Domain.models.DiscordUser import DiscordUser
 from database.Domain.models.GuildDiscordUserMapping import GuildDiscordUserMapping
-from src.Client.Client import Client
-from src.Database.DatabaseConnection import getSession
-from src.Logging.Logger import Logger
-from src.Types.ClientListenerType import ClientListenerType
+from src_bot.Client.Client import Client
+from src_bot.Database.DatabaseConnection import getSession
+from src_bot.Logging.Logger import Logger
+from src_bot.Types.ClientListenerType import ClientListenerType
 
 logger = Logger("MemberManager")
 

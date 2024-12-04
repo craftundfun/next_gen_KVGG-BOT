@@ -5,12 +5,12 @@ from sqlalchemy import update, null, select
 from sqlalchemy.exc import NoResultFound
 
 from database.Domain.models.Guild import Guild
-from src.Client.Client import Client
-from src.Database.DatabaseConnection import getSession
-from src.Helpers.FunctionName import listenerName
-from src.Logging.Logger import Logger
-from src.Types.ClientListenerType import ClientListenerType
-from src.Types.GuildListenerType import GuildListenerType
+from src_bot.Client.Client import Client
+from src_bot.Database.DatabaseConnection import getSession
+from src_bot.Helpers.FunctionName import listenerName
+from src_bot.Logging.Logger import Logger
+from src_bot.Types.ClientListenerType import ClientListenerType
+from src_bot.Types.GuildListenerType import GuildListenerType
 
 logger = Logger("GuildManager")
 

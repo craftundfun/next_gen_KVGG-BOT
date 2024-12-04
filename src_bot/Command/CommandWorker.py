@@ -1,8 +1,8 @@
 from discord import Client
 
-from src.Command.BaseCommand import BaseCommand
-from src.Logging.Logger import Logger
-from src.Types.CommandListenerType import CommandListenerType
+from src_bot.Command.BaseCommand import BaseCommand
+from src_bot.Logging.Logger import Logger
+from src_bot.Types.CommandListenerType import CommandListenerType
 
 logger = Logger("CommandWorker")
 

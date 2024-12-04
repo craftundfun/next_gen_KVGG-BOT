@@ -3,9 +3,9 @@ from inspect import iscoroutinefunction
 
 from discord.app_commands import CommandTree
 
-from src.Helpers.FunctionName import listenerName
-from src.Logging.Logger import Logger
-from src.Types.CommandListenerType import CommandListenerType
+from src_bot.Helpers.FunctionName import listenerName
+from src_bot.Logging.Logger import Logger
+from src_bot.Types.CommandListenerType import CommandListenerType
 
 logger = Logger("BaseCommand")
 

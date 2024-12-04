@@ -5,7 +5,7 @@ import discord.app_commands
 from discord import Locale
 from discord.app_commands import locale_str, TranslationContextTypes
 
-from src.Logging.Logger import Logger
+from src_bot.Logging.Logger import Logger
 
 logger = Logger("Translator")
 

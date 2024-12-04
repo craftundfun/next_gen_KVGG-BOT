@@ -5,9 +5,9 @@ from discord import Client as discordClient, Guild, Member, RawMemberRemoveEvent
 from discord import Intents
 from discord.abc import GuildChannel
 
-from src.Helpers.FunctionName import listenerName
-from src.Logging.Logger import Logger
-from src.Types.ClientListenerType import ClientListenerType
+from src_bot.Helpers.FunctionName import listenerName
+from src_bot.Logging.Logger import Logger
+from src_bot.Types.ClientListenerType import ClientListenerType
 
 logger = Logger("Client")
 

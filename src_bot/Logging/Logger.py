@@ -4,7 +4,7 @@ import os
 import sys
 from logging import Logger as BaseLogger
 
-from src.Logging.CustomFormatters import CustomFormatterConsole, CustomFormatterFile
+from src_bot.Logging.CustomFormatters import CustomFormatterConsole, CustomFormatterFile
 
 
 class Logger(BaseLogger):

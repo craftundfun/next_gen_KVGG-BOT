@@ -11,7 +11,11 @@ COPY requirements.bot.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container
-COPY . /app/
+COPY src_bot /app/src_bot/
+COPY main_bot.py /app/
+COPY database /app/database/
+COPY .env /app/
+COPY locales /app/locales/
 
 # Run the application
 CMD ["python", "main_bot.py"]

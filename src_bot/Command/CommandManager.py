@@ -1,10 +1,10 @@
 from discord.app_commands import CommandTree
 
-from src.Command.CommandWorker import CommandWorker
-from src.Command.PingCommand import PingCommand
-from src.Logging.Logger import Logger
-from src.Translator.Translator import Translator
-from src.Types.ClientListenerType import ClientListenerType
+from src_bot.Command.CommandWorker import CommandWorker
+from src_bot.Command.PingCommand import PingCommand
+from src_bot.Logging.Logger import Logger
+from src_bot.Translator.Translator import Translator
+from src_bot.Types.ClientListenerType import ClientListenerType
 
 logger = Logger("CommandManager")
 

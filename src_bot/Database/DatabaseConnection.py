@@ -3,7 +3,7 @@ import os
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.Logging.Logger import Logger
+from src_bot.Logging.Logger import Logger
 
 logger = Logger("DatabaseConnection")
 

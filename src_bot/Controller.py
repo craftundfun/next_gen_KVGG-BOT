@@ -2,13 +2,13 @@ from os import environ
 
 from discord import Intents
 
-from src.Category.CategoryManager import CategoryManager
-from src.Channel.ChannelManager import ChannelManager
-from src.Client.Client import Client
-from src.Command.CommandManager import CommandManager
-from src.Guild.GuildManager import GuildManager
-from src.Logging.Logger import Logger
-from src.Member.MemberManager import MemberManager
+from src_bot.Category.CategoryManager import CategoryManager
+from src_bot.Channel.ChannelManager import ChannelManager
+from src_bot.Client.Client import Client
+from src_bot.Command.CommandManager import CommandManager
+from src_bot.Guild.GuildManager import GuildManager
+from src_bot.Logging.Logger import Logger
+from src_bot.Member.MemberManager import MemberManager
 
 logger = Logger("Controller")
 

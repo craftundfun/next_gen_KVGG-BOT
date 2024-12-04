@@ -1,8 +1,8 @@
 import discord
 from discord import Interaction
 
-from src.Command.BaseCommand import BaseCommand
-from src.Logging.Logger import Logger
+from src_bot.Command.BaseCommand import BaseCommand
+from src_bot.Logging.Logger import Logger
 
 logger = Logger("PingCommand")
 
