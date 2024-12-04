@@ -32,12 +32,20 @@ function LoginRedirect() {
 			},
 			credentials: 'include',
 		}).then((response) => {
+			console.log("Response: ", response);
+			console.log("Response headers: ", response.headers);
+			console.log("Response okay?", response.ok);
+
 			if (response.ok) {
 				const authorizationHeader = response.headers.get("Authorization");
 
 				if (authorizationHeader === null) {
+					console.log("Error: No authorization header");
+
 					return;
 				}
+
+				console.log("Authorization header: ", authorizationHeader);
 
 				const token = authorizationHeader.split(" ")[1];
 				const tokenType = authorizationHeader.split(" ")[0];
@@ -45,8 +53,12 @@ function LoginRedirect() {
 				sessionStorage.setItem('tokenType', tokenType);
 				login(token);
 
+				console.log("Redirecting to dashboard...");
+
 				navigate("/dashboard");
 			} else {
+				console.log("Error: ", response);
+
 				navigate("/error");
 			}
 		}).catch((error) => {
