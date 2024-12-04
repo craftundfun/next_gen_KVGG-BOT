@@ -1,6 +1,7 @@
 # important
 import os
 from datetime import timedelta
+from functools import wraps
 
 import pymysql
 import requests
@@ -9,11 +10,12 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
 from database.Domain.BaseClass import Base
+from database.Domain.models import WebsiteRoleUserMapping
 from database.Domain.models.DiscordUser import DiscordUser
 
 pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request, redirect
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -95,10 +97,30 @@ def discordOAuth():
     return response
 
 
-def hasUserSpecificRoles(*roles: []):
+# TODO tidy up the code
+def hasUserSpecificRoles(*roles: str):
     def inner(func):
+        @wraps(func)  # Bewahrt die Metadaten der ursprünglichen Funktion
         def wrapper(*args, **kwargs):
-            print(roles)
+            userId = get_jwt_identity()
+
+            if not userId:
+                return jsonify(message="Unauthorized: Missing user id"), 401
+
+            selectQuery = (select(WebsiteRoleUserMapping).where(WebsiteRoleUserMapping.discord_id == userId))
+
+            try:
+                websiteRoleUserMapping = db.session.execute(selectQuery).scalars().all()
+                websiteRoleUserMapping: [WebsiteRoleUserMapping] = list(websiteRoleUserMapping)
+            except Exception as error:
+                return jsonify(message=f"Something went wrong! {error}")
+
+            currentUserRoles = [mapping.website_role.role_name for mapping in websiteRoleUserMapping]
+
+            # Prüfen, ob der Benutzer die erforderlichen Rollen hat
+            if not any(role in currentUserRoles for role in roles):
+                return jsonify(message="Forbidden: Insufficient permissions"), 403
+
             return func(*args, **kwargs)
 
         return wrapper
@@ -108,7 +130,8 @@ def hasUserSpecificRoles(*roles: []):
 
 @app.route("/api/discordUser/all")
 @jwt_required()
-# @hasUserSpecificRoles("ADMIN", "MODERATOR")
+# TODO make a type list for the roles and dont hardcode the names
+@hasUserSpecificRoles("Administrator", "MODERATOR")
 def getUser():
     """
     This function is used to get all the users from the database.
