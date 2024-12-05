@@ -7,11 +7,12 @@ from sqlalchemy import select
 from database.Domain.models import WebsiteRoleUserMapping, WebsiteRole
 from src_backend import db
 from src_backend.Logging.Logger import Logger
+from src_backend.Types.Role import Role
 
 logger = Logger(__name__)
 
 
-def hasUserSpecificRoles(*roles: str):
+def hasUserSpecificRoles(*roles: Role):
     """
     Check if the user has the required roles to access the endpoint
 
@@ -46,7 +47,7 @@ def hasUserSpecificRoles(*roles: str):
             currentUserRoles = [mapping.website_role.role_name for mapping in websiteRoleUserMapping]
 
             # check if the user has one of the required roles
-            if not any(role in currentUserRoles for role in roles):
+            if not any(role.value in currentUserRoles for role in roles):
                 logger.warning(f"Forbidden: Insufficient permissions. User {userId} has roles {currentUserRoles}")
 
                 return jsonify(message="Forbidden: Insufficient permissions"), 403
@@ -60,7 +61,7 @@ def hasUserSpecificRoles(*roles: str):
     return inner
 
 
-def hasUserMinimumRequiredRole(role: str):
+def hasUserMinimumRequiredRole(role: Role):
     def inner(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -81,7 +82,7 @@ def hasUserMinimumRequiredRole(role: str):
             )
             selectQueryWebsiteRole = (
                 select(WebsiteRole)
-                .where(WebsiteRole.role_name == role,
+                .where(WebsiteRole.role_name == role.value,
                        WebsiteRole.deleted_at == None, )
             )
 
