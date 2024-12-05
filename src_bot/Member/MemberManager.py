@@ -41,6 +41,7 @@ class MemberManager:
         self.client.addListener(self.memberUpdate, ClientListenerType.MEMBER_UPDATE)
         logger.debug("Registered member update listener")
 
+    # TODO fetch all members of a guild at the start of the bot
     async def memberJoinGuild(self, member: Member):
         """
         Adds a member to the database when they join a guild
@@ -58,6 +59,7 @@ class MemberManager:
                     discord_id=member.id,
                     global_name=member.name,
                     created_at=member.created_at,
+                    profile_picture=member.display_avatar.url,
                 )
 
                 self.session.add(databaseMember)

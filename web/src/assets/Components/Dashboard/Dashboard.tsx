@@ -2,6 +2,7 @@ import * as React from 'react';
 import {useEffect, useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import apiURL from "../../../modules/ApiUrl";
+import BaseLayout from "../ui/base";
 
 function Dashboard() {
 	const navigate = useNavigate();
@@ -9,10 +10,12 @@ function Dashboard() {
 	const token = sessionStorage.getItem('jwt');
 	const tokenType = sessionStorage.getItem('tokenType');
 
-	let [user, setUser] = useState<string | null>(null);
+	let [users, setUsers] = useState<string | null>(null);
+	let [guilds, setGuilds] = useState<string | null>(null);
 	let [loading, setLoading] = useState<boolean>(true);
 
 	useEffect(() => {
+		// Get all users
 		fetch(apiURL + "/api/discordUser/all", {
 			method: 'GET',
 			headers: {
@@ -30,7 +33,35 @@ function Dashboard() {
 			return response.json();
 		}).then((data) => {
 			if (data) {
-				setUser(JSON.stringify(data));
+				setUsers(JSON.stringify(data));
+				//setLoading(false);
+			}
+		}).catch((error) => {
+			console.log(error);
+
+			navigate("/error");
+
+			return null;
+		});
+
+		fetch(apiURL + "/api/guild/all", {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': tokenType + ' ' + token,
+			},
+			credentials: 'include',
+		}).then((response) => {
+			if (!response.ok) {
+				navigate("/error");
+
+				return null;
+			}
+
+			return response.json();
+		}).then((data) => {
+			if (data) {
+				setGuilds(JSON.stringify(data));
 				setLoading(false);
 			}
 		}).catch((error) => {
@@ -44,15 +75,17 @@ function Dashboard() {
 
 	return (
 		<div>
-			<h1>Dashboard</h1>
-			{loading ? (
-				<p>Loading...</p>
-			) : (
-				<>
-					<p>{tokenType} {token}</p>
-					<p>{user}</p>
-				</>
-			)}
+			<BaseLayout>
+				{loading ? (
+					<p>Loading...</p>
+				) : (
+					<>
+						<p>{tokenType} {token}</p>
+						<p>{users}</p>
+						<p>{guilds}</p>
+					</>
+				)}
+			</BaseLayout>
 		</div>
 	);
 }

@@ -20,11 +20,14 @@ def get_all_users():
     selectQuery = select(DiscordUser)
     users = db.session.execute(selectQuery).scalars().all()
 
-    userDict: dict = {"user": [{"discord_id": user.discord_id} for user in users]}
+    userDict: dict = {"user":
+        [
+            {
+                "discord_id": user.discord_id,
+                "profile_picture": user.profile_picture
+            }
+            for user in users
+        ]
+    }
 
     return jsonify(userDict)
-
-
-@userBp.route('/discordUser/test')
-def test():
-    return jsonify({"message": "test"})

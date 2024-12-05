@@ -1,13 +1,16 @@
 import requests
-from flask import Blueprint, jsonify, redirect, request
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
 from database.Domain.models import DiscordUser
 from src_backend import Config, db
+from src_backend.Logging.Logger import Logger
 
 authBp = Blueprint('auth', __name__)
+# TODO own .env for backend
+logger = Logger(__name__)
 
 
 @authBp.route('/discord')
@@ -20,7 +23,9 @@ def discordOAuth():
     code = request.args.get("code")
 
     if code is None:
-        return jsonify(message="Something went wrong!")
+        logger.error("No code was provided by Discord")
+
+        return jsonify(message="No code was provided by Discord"), 403
 
     # url to get the access token
     url = "https://discord.com/api/oauth2/token"
@@ -40,7 +45,9 @@ def discordOAuth():
     try:
         response.raise_for_status()
     except Exception as error:
-        return jsonify(message=f"Something went wrong! {error}")
+        logger.error("Failed to get access token", exc_info=error)
+
+        return jsonify(message=f"Something went wrong!"), 403
 
     # authorization header
     headers = {
@@ -51,7 +58,9 @@ def discordOAuth():
     try:
         response.raise_for_status()
     except Exception as error:
-        return jsonify(message=f"Something went wrong! {error}")
+        logger.error("Failed to get user information", exc_info=error)
+
+        return jsonify(message=f"Something went wrong!"), 500
 
     user: dict = response.json()
     selectQuery = (select(DiscordUser).where(DiscordUser.discord_id == user['id']))
@@ -59,16 +68,19 @@ def discordOAuth():
     try:
         db.session.execute(selectQuery).scalars().one()
     except NoResultFound:
-        print("User not found")
-        # TODO dont reroute to the frontend, let the frontend handle the error
-        return redirect("http://localhost:3000/forbidden")
+        logger.warning(f"{user['username'], user['id']} not found in the database!")
+
+        return jsonify(message="User not found in the database!"), 403
     except Exception as error:
-        return jsonify(message=f"Something went wrong! {error}")
+        logger.error(f"Failed to get user {user['username'], user['id']} from the database", exc_info=error)
+
+        return jsonify(message=f"Something went wrong!"), 500
 
     accessToken = create_access_token(identity=str(user['id']))
     response = jsonify(message="Successfully authenticated!")
+
     response.headers["Authorization"] = f"Bearer {accessToken}"
 
-    print(response.headers)
+    logger.debug(f"User {user['username'], user['id']} authenticated")
 
-    return response
+    return response, 200

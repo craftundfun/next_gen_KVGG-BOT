@@ -115,6 +115,7 @@ class ChannelManager:
 
                 return
 
+        # TODO bulk insert channels
         for id in missingChannelIDs:
             try:
                 channel = await self.client.fetch_channel(id)

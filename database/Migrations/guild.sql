@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS guild (
 	guild_id  BIGINT UNSIGNED UNIQUE NOT NULL,
 	name      VARCHAR(255)           NOT NULL,
 	joined_at DATETIME DEFAULT NULL,
+	icon      TEXT     DEFAULT NULL,
 
 	PRIMARY KEY (guild_id)
 )
