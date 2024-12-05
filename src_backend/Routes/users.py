@@ -4,14 +4,14 @@ from sqlalchemy import select
 
 from database.Domain.models.DiscordUser import DiscordUser
 from src_backend import db
-from src_backend.RBACCheck import hasUserSpecificRoles
+from src_backend.RBACCheck import hasUserMinimumRequiredRole
 
 userBp = Blueprint('user', __name__)
 
 
 @userBp.route('/discordUser/all')
 @jwt_required()
-@hasUserSpecificRoles("Administrator", "MODERATOR")
+@hasUserMinimumRequiredRole("Administrator")
 def get_all_users():
     """
     Fetch all users from the database.
