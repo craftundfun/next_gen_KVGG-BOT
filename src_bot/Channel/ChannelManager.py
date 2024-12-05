@@ -179,10 +179,38 @@ class ChannelManager:
         await self._findMissingChannels(guild)
         await self._findDeletedChannels(guild)
 
+    # TODO also check for changes on startup
     async def updateChannel(self, before: GuildChannel, after: GuildChannel):
-        # TODO
+        """
+        Update the channel in the database
 
-        pass
+        :param before: GuildChannel before the update
+        :param after: GuildChannel after the update
+        :return:
+        """
+        selectQuery = (select(Channel).where(Channel.channel_id == before.id))
+
+        with self.session:
+            try:
+                channelDatabase = self.session.execute(selectQuery).scalars().one()
+            except Exception as error:
+                logger.error(f"Failed to get channel {before.name, before.id} from database", exc_info=error)
+
+                return
+
+            channelDatabase.name = after.name
+            # IDE can't resolve Channel type
+            # noinspection PyUnresolvedReferences
+            channelDatabase.type = after.type.name
+
+            try:
+                self.session.commit()
+            except Exception as error:
+                logger.error(f"Failed to update channel {before.name, before.id}", exc_info=error)
+
+                self.session.rollback()
+            else:
+                logger.debug(f"Channel {before.name, before.id} updated in database")
 
     def registerListener(self):
         """
@@ -195,6 +223,9 @@ class ChannelManager:
 
         self.client.addListener(self.channelCreate, ClientListenerType.CHANNEL_CREATE)
         logger.debug("Channel create listener registered")
+
+        self.client.addListener(self.updateChannel, ClientListenerType.CHANNEL_UPDATE)
+        logger.debug("Channel update listener registered")
 
         self.guildManager.addGuildManagerListener(self.onBotStart, GuildListenerType.START_UP)
         logger.debug("Guild manager listener registered")
