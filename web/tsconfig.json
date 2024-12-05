@@ -15,7 +15,8 @@
 		"forceConsistentCasingInFileNames": true,
 		"baseUrl": ".",
 		"paths": {
-			"@/": ["./src/"]
+			"@/": ["./src/"],
+			"@/components/*": ["src/assets/Components/*"]
 		}
 	},
 	"include": [
