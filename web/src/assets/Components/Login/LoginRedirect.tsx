@@ -2,18 +2,21 @@ import {useLocation, useNavigate} from "react-router-dom";
 import React, {useEffect, useRef, useState} from "react";
 import apiURL from "../../../modules/ApiUrl";
 import {useAuth} from "../../../modules/AuthContext";
-import BaseLayout from "../ui/base";
 import {Spinner} from "../ui/spinner";
+import {useDiscordUser} from "../../../context/DiscordUserContext";
+import parseDiscordUser from "../../../types/DiscordUser";
+import BaseLayout from "@/assets/Components/ui/SiteBlueprint";
 
 function LoginRedirect() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const {login} = useAuth();
+	const {setDiscordUser, discordUser} = useDiscordUser();
 	const [loading, setLoading] = useState(true);
 	const hasFetched = useRef(false);
 
 	useEffect(() => {
-		// only call the backend once here, otherwise we might reauthenticate the user and this will fail
+		// only call the backend once here, otherwise we might reauthenticate the user, and this will fail
 		if (hasFetched.current) return;
 		hasFetched.current = true;
 
@@ -34,9 +37,14 @@ function LoginRedirect() {
 		}).then((response) => {
 			if (response.ok) {
 				const authorizationHeader = response.headers.get("Authorization");
+				const discordIdHeader = response.headers.get("DiscordId");
 
 				if (authorizationHeader === null) {
 					console.log("Error: No authorization header");
+
+					return;
+				} else if (discordIdHeader === null) {
+					console.log("Error: No discord id header");
 
 					return;
 				}
@@ -47,18 +55,57 @@ function LoginRedirect() {
 				sessionStorage.setItem('tokenType', tokenType);
 				login(token);
 
+				fetch(apiURL + `/api/discordUser/${discordIdHeader}`, {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': tokenType + ' ' + token,
+					},
+					credentials: 'include',
+				}).then(async response => {
+					if (!response.ok) {
+						console.log("Error: Could not fetch discord user");
+
+						navigate("/error");
+
+						return;
+					}
+
+					let discordUserFromRequest = parseDiscordUser(await response.json());
+
+					if (discordUserFromRequest === null) {
+						console.log("Error: Could not parse discord user");
+
+						navigate("/error");
+
+						return;
+					}
+
+					setDiscordUser(discordUserFromRequest);
+				}).catch((error) => {
+					console.log(error);
+
+					navigate("/error");
+
+					return;
+				});
+
 				navigate("/dashboard");
 			} else {
 				navigate("/error");
+
+				return;
 			}
 		}).catch((error) => {
 			console.log(error);
 
 			navigate("/error");
+
+			return;
 		}).finally(() => {
 			setLoading(false);
 		});
-	}, [login, location, navigate]);
+	}, [login, location, navigate, setDiscordUser, discordUser]);
 
 	if (loading) {
 		return (

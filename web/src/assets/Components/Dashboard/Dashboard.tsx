@@ -2,7 +2,7 @@ import * as React from 'react';
 import {useEffect, useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import apiURL from "../../../modules/ApiUrl";
-import BaseLayout from "../ui/base";
+import BaseLayout from "@/assets/Components/ui/SiteBlueprint";
 
 function Dashboard() {
 	const navigate = useNavigate();

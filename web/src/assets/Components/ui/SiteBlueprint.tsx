@@ -1,11 +1,14 @@
 import * as React from "react";
 import {Avatar, AvatarFallback, AvatarImage} from "../ui/avatar";
+import {useDiscordUser} from "../../../context/DiscordUserContext";
 
 interface BaseLayoutProps {
 	children: React.ReactNode;
 }
 
 const BaseLayout: React.FC<BaseLayoutProps> = ({children}) => {
+	const {discordUser} = useDiscordUser();
+
 	return (
 		<div className="flex flex-col h-screen bg-gradient-to-b from-gray-900 to-gray-800">
 			<div className="flex items-center justify-between p-2 bg-gray-800"
@@ -20,13 +23,14 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({children}) => {
 					KVGG
 				</div>
 				<div className="flex items-center">
-					<button className="text-white">
-						<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-							 xmlns="http://www.w3.org/2000/svg">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-								  d="M4 6h16M4 12h16m-7 6h7"></path>
-						</svg>
-					</button>
+					<Avatar>
+						<AvatarImage src={discordUser?.profile_picture || ''}/>
+						<AvatarFallback>NA</AvatarFallback>
+					</Avatar>
+					<div className="ml-2 text-white">
+						<div>{discordUser?.global_name || "NA"}</div>
+						<div className="text-sm">{discordUser?.global_name || "NA"}</div>
+					</div>
 				</div>
 			</div>
 			<div className="flex-grow">

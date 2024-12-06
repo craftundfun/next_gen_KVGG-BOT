@@ -1,5 +1,5 @@
 import requests
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, make_response
 from flask_jwt_extended import create_access_token
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -77,9 +77,10 @@ def discordOAuth():
         return jsonify(message=f"Something went wrong!"), 500
 
     accessToken = create_access_token(identity=str(user['id']))
-    response = jsonify(message="Successfully authenticated!")
+    response = make_response(jsonify(message="Successfully authenticated!"))
 
     response.headers["Authorization"] = f"Bearer {accessToken}"
+    response.headers["DiscordId"] = user['id']
 
     logger.debug(f"User {user['username'], user['id']} authenticated")
 

@@ -19,3 +19,11 @@ class DiscordUser(Base):
     def __repr__(self):
         return (f"DiscordUser(discord_id={self.discord_id}, global_name={self.global_name}, "
                 f"created_at={self.created_at})")
+
+    def as_dict(self):
+        return {
+            "discord_id": self.discord_id,
+            "global_name": self.global_name,
+            "created_at": self.created_at,
+            "profile_picture": self.profile_picture,
+        }
