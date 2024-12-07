@@ -81,6 +81,7 @@ class CategoryManager:
             else:
                 logger.debug(f"Category {category.name, category.id} added to database")
 
+    # TODO bulk insert categories
     async def _findMissingCategories(self, guild: Guild):
         """
         Check for missing categories in the guild

@@ -48,6 +48,7 @@ class GuildManager:
 
         logger.debug(f"Listener successfully added: {listenerName(listener)}")
 
+    # TODO look for changes in existing guilds while bot was offline
     async def onBotStart(self):
         """
         Traverse all guilds the bot is in and evaluate if they are in the database
@@ -61,10 +62,12 @@ class GuildManager:
                 try:
                     databaseGuild = self.session.scalars(selectQuery).one()
                 except NoResultFound:
+                    # TODO maybe in a extra function, we are doing this twice
                     databaseGuild = Guild(
                         guild_id=guild.id,
                         name=guild.name,
                         joined_at=datetime.now(),
+                        icon=guild.icon.url if guild.icon else None,
                     )
 
                     self.session.add(databaseGuild)
@@ -132,6 +135,7 @@ class GuildManager:
                     guild_id=guild.id,
                     name=guild.name,
                     joined_at=datetime.now(),
+                    icon=guild.icon.url if guild.icon else None,
                 )
 
                 self.session.add(databaseGuild)
