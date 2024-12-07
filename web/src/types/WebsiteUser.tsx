@@ -1,9 +1,29 @@
-import {DiscordUser} from "./DiscordUser";
+//import {DiscordUser} from "./DiscordUser";
 
 export interface WebsiteUser {
 	discord_id: number;
-	global_name: string;
 	created_at: string;
-	profile_picture: string;
-	discordUser?: DiscordUser;
+	deleted_at: string;
+	email: string;
+	//discordUser?: DiscordUser;
 }
+
+function parseWebsiteUser(data: any): WebsiteUser | null {
+	/*
+	 * This function parses the DiscordUser object.
+	 */
+	try {
+		return {
+			discord_id: data.discord_id,
+			created_at: data.created_at,
+			deleted_at: data.deleted_at,
+			email: data.email,
+		};
+	} catch (error) {
+		console.error(error);
+
+		return null;
+	}
+}
+
+export default parseWebsiteUser;

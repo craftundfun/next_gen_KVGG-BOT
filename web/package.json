@@ -5,6 +5,7 @@
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-navigation-menu": "^1.2.1",
+    "@radix-ui/react-scroll-area": "^1.2.1",
     "@radix-ui/react-slot": "^1.1.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",

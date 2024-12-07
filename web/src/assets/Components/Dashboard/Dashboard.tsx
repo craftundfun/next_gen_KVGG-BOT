@@ -1,8 +1,8 @@
-import * as React from 'react';
+import React from 'react';
 import {useEffect, useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import apiURL from "../../../modules/ApiUrl";
-import BaseLayout from "@/assets/Components/ui/SiteBlueprint";
+import BaseLayout from "../ui/SiteBlueprint";
 
 function Dashboard() {
 	const navigate = useNavigate();
@@ -79,11 +79,17 @@ function Dashboard() {
 				{loading ? (
 					<p>Loading...</p>
 				) : (
-					<>
-						<p>{tokenType} {token}</p>
-						<p>{users}</p>
-						<p>{guilds}</p>
-					</>
+					<div className=" flex-grow grid grid-cols-2 grid-rows-2 h-full">
+						<div className="overflow-auto">
+							<p>{tokenType} {token}</p>
+						</div>
+						<div className="overflow-auto">
+							<p>{users}</p>
+						</div>
+						<div className="overflow-auto">
+							<p>{guilds}</p>
+						</div>
+					</div>
 				)}
 			</BaseLayout>
 		</div>

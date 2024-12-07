@@ -4,14 +4,17 @@ import apiURL from "../../../modules/ApiUrl";
 import {useAuth} from "../../../modules/AuthContext";
 import {Spinner} from "../ui/spinner";
 import {useDiscordUser} from "../../../context/DiscordUserContext";
+import {useWebsiteUser} from "../../../context/WebsiteUserContext";
 import parseDiscordUser from "../../../types/DiscordUser";
-import BaseLayout from "@/assets/Components/ui/SiteBlueprint";
+import parseWebsiteUser from "../../../types/WebsiteUser";
+import BaseLayout from "../ui/SiteBlueprint";
 
 function LoginRedirect() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const {login} = useAuth();
 	const {setDiscordUser, discordUser} = useDiscordUser();
+	const {setWebsiteUser, websiteUser} = useWebsiteUser();
 	const [loading, setLoading] = useState(true);
 	const hasFetched = useRef(false);
 
@@ -90,6 +93,35 @@ function LoginRedirect() {
 					return;
 				});
 
+				fetch(apiURL + `/api/websiteUser/${discordIdHeader}`, {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': tokenType + ' ' + token,
+					},
+					credentials: 'include',
+				}).then(async response => {
+					if (!response.ok) {
+						console.log("Error: Could not fetch website user");
+
+						navigate("/error");
+
+						return;
+					}
+
+					let websiteUserFromRequest = parseWebsiteUser(await response.json());
+
+					if (websiteUserFromRequest === null) {
+						console.log("Error: Could not parse website user");
+
+						navigate("/error");
+
+						return;
+					}
+
+					setWebsiteUser(websiteUserFromRequest);
+				})
+
 				navigate("/dashboard");
 			} else {
 				navigate("/error");
@@ -105,7 +137,7 @@ function LoginRedirect() {
 		}).finally(() => {
 			setLoading(false);
 		});
-	}, [login, location, navigate, setDiscordUser, discordUser]);
+	}, [login, location, navigate, setDiscordUser, discordUser, setWebsiteUser, websiteUser]);
 
 	if (loading) {
 		return (

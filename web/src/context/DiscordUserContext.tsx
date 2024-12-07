@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { DiscordUser } from "../types/DiscordUser";
+import React, {createContext, useContext, useState, ReactNode} from 'react';
+import {DiscordUser} from "../types/DiscordUser";
 
 interface DiscordUserContextType {
 	discordUser: DiscordUser | null;
@@ -12,11 +12,21 @@ interface Props {
 	children: ReactNode;
 }
 
-export const DiscordUserProvider: React.FC<Props> = ({ children }) => {
-	const [discordUser, setDiscordUser] = useState<DiscordUser | null>(null);
+export const DiscordUserProvider: React.FC<Props> = ({children}) => {
+	const [discordUser, setDiscordUserState] = useState<DiscordUser | null>(() => {
+		const storedUser = sessionStorage.getItem('discordUser');
+
+		return storedUser ? JSON.parse(storedUser) : null;
+	});
+
+	const setDiscordUser = (user: DiscordUser) => {
+
+		sessionStorage.setItem('discordUser', JSON.stringify(user));
+		setDiscordUserState(user);
+	};
 
 	return (
-		<DiscordUserContext.Provider value={{ discordUser, setDiscordUser }}>
+		<DiscordUserContext.Provider value={{discordUser, setDiscordUser}}>
 			{children}
 		</DiscordUserContext.Provider>
 	);

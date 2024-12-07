@@ -49,6 +49,27 @@
 	}
 }
 
+/* For Webkit browsers (Chrome, Safari) */
+::-webkit-scrollbar {
+	width: 12px; /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+	background: var(--background); /* Background of the scrollbar track */
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: var(--foreground); /* Color of the scrollbar thumb */
+	border-radius: 10px; /* Roundness of the scrollbar thumb */
+	border: 3px solid var(--background); /* Padding around the scrollbar thumb */
+}
+
+/* For Firefox */
+* {
+	scrollbar-width: thin; /* Width of the scrollbar */
+	scrollbar-color: var(--foreground) var(--background); /* Color of the scrollbar thumb and track */
+}
+
 @layer base {
 	* {
 		@apply border-border;
