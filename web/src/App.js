@@ -1,10 +1,10 @@
 import React from 'react';
 import {BrowserRouter as Router, Route, Routes,} from "react-router-dom";
-import Login from './assets/Components/Login/Login.tsx';
-import Dashboard from './assets/Components/Dashboard/Dashboard.tsx';
-import Forbidden from './assets/Components/Status/Forbidden.tsx';
-import LoginRedirect from './assets/Components/Login/LoginRedirect.tsx';
-import Error from './assets/Components/Status/Error.tsx';
+import Login from '@/components/ui/Login/Login.tsx';
+import Dashboard from '@/components/ui/Dashboard/Dashboard.tsx';
+import Forbidden from '@/components/ui/Status/Forbidden.tsx';
+import LoginRedirect from '@/components/ui/Login/LoginRedirect.tsx';
+import Error from '@/components/ui/Status/Error.tsx';
 import {AuthProvider} from './modules/AuthContext.tsx';
 import ProtectedRoute from './modules/ProtectedRoute.tsx';
 
