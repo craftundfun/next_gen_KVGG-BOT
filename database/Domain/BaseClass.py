@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 
 # noinspection PyUnresolvedReferences
-from sqlalchemy import Column, BigInteger, VARCHAR, ForeignKey, DATETIME, TEXT, Integer, TIMESTAMP
+from sqlalchemy import Column, BigInteger, VARCHAR, ForeignKey, DATETIME, TEXT, Integer, TIMESTAMP, JSON
 # noinspection PyUnresolvedReferences
 from sqlalchemy.orm import DeclarativeBase, relationship
 # noinspection PyUnresolvedReferences

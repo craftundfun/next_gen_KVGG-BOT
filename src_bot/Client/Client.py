@@ -2,7 +2,7 @@ from inspect import iscoroutinefunction
 from typing import Any
 
 from discord import Client as discordClient, Guild, Member, RawMemberRemoveEvent
-from discord import Intents
+from discord import Intents, VoiceState
 from discord.abc import GuildChannel
 
 from src_bot.Helpers.FunctionName import listenerName
@@ -26,6 +26,7 @@ class Client(discordClient):
     memberRemoveListener = []
     memberRemoveListenerRaw = []
     memberUpdateListener = []
+    voiceUpdateListener = []
 
     ready = False
 
@@ -76,6 +77,8 @@ class Client(discordClient):
                 self.memberRemoveListenerRaw.append(listener)
             case ClientListenerType.MEMBER_UPDATE:
                 self.memberUpdateListener.append(listener)
+            case ClientListenerType.VOICE_UPDATE:
+                self.voiceUpdateListener.append(listener)
             case _:
                 logger.error(f"Invalid listener type: {listenerType}")
 
@@ -213,3 +216,15 @@ class Client(discordClient):
         for listener in self.memberUpdateListener:
             await listener(before, after)
             logger.debug(f"Notified member update listener: {listenerName(listener)}")
+
+    async def on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState):
+        """
+        When a member has a voice state update
+
+        :param member: The member that had a voice state update.
+        :param before: The voice state before the update.
+        :param after: The voice state after the update.
+        """
+        for listener in self.voiceUpdateListener:
+            await listener(member, before, after)
+            logger.debug(f"Notified voice state update listener: {listenerName(listener)}")
