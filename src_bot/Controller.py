@@ -7,6 +7,7 @@ from src_bot.Channel.ChannelManager import ChannelManager
 from src_bot.Client.Client import Client
 from src_bot.Command.CommandManager import CommandManager
 from src_bot.Event.EventHandler import EventHandler
+from src_bot.Event.TimeCalculator import TimeCalculator
 from src_bot.Guild.GuildManager import GuildManager
 from src_bot.Logging.Logger import Logger
 from src_bot.Member.MemberManager import MemberManager
@@ -31,6 +32,7 @@ class Controller:
         self.categoryManager = CategoryManager(self.client, self.guildManager)
         self.memberManager = MemberManager(self.client)
         self.eventHandler = EventHandler(self.client)
+        self.timeCalculator = TimeCalculator(self.eventHandler)
 
         self.registerListeners()
 

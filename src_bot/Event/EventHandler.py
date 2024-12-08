@@ -9,10 +9,13 @@ from src_bot.Types.ClientListenerType import ClientListenerType
 
 from sqlalchemy import null
 
+from src_bot.Types.EventHandlerType import EventHandlerType
+
 logger = Logger("EventHandler")
 
 
 class EventHandler:
+    memberLeaveListeners = []
 
     def __init__(self, client: Client):
         self.client = client
@@ -20,6 +23,21 @@ class EventHandler:
         self.lock = Lock()
 
         self.registerListeners()
+
+    def addListener(self, type: EventHandlerType, listener: callable):
+        """
+        Add a listener to the event handler.
+
+        :param type: The type of the event handler.
+        :param listener: The listener to add.
+        """
+        match type:
+            case EventHandlerType.MEMBER_LEAVE:
+                self.memberLeaveListeners.append(listener)
+            case _:
+                logger.error(f"Unknown event handler type {type}")
+
+                return
 
     def registerListeners(self):
         """
@@ -57,6 +75,7 @@ class EventHandler:
 
                 return
 
+            memberLeft = False
             histories = []
 
             # insert first to complete the join-leave-circle
@@ -120,6 +139,7 @@ class EventHandler:
 
                 # insert last to complete the join-leave-circle
                 histories.append(historyLeave)
+                memberLeft = True
 
             if len(histories) == 0:
                 logger.debug(f"No history to save for {member.display_name, member.id}")
@@ -143,3 +163,9 @@ class EventHandler:
                     self.session.rollback()
                 else:
                     logger.debug(f"Saved {len(histories)} histories for {member.display_name, member.id}")
+
+        # TODO evaluate if this should be called within the lock
+        if memberLeft:
+            for listener in self.memberLeaveListeners:
+                await listener(member)
+                logger.debug("Notified member leave listeners")

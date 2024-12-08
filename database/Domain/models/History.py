@@ -19,3 +19,7 @@ class History(Base):
     discord_user: Mapped[Optional["DiscordUser"]] = relationship("DiscordUser")
     guild: Mapped[Optional["Guild"]] = relationship("Guild")
     event: Mapped[Optional["Event"]] = relationship("Event")
+
+    def __repr__(self):
+        return (f"History(id={self.id}, discord_id={self.discord_id}, guild_id={self.guild_id}, "
+                f"event_id={self.event_id}, time={self.time}, additional_info={self.additional_info})")
