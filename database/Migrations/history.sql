@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS event;
 
 CREATE TABLE IF NOT EXISTS event (
 	id   BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
-	type VARCHAR(255)                   NOT NULL,
+	type VARCHAR(255) UNIQUE            NOT NULL,
 
 	PRIMARY KEY (id)
 )
@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS history (
 CREATE INDEX idc_discord_id ON history(discord_id);
 CREATE INDEX idc_guild_id ON history(guild_id);
 CREATE INDEX idc_event_id ON history(event_id);
+CREATE INDEX idc_discord_guild_id ON history(discord_id, guild_id);
 
 INSERT INTO event (type)
 VALUES ('MUTE'),
