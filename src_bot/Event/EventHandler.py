@@ -15,6 +15,8 @@ logger = Logger("EventHandler")
 
 
 class EventHandler:
+    _self = None
+
     memberLeaveListeners = []
 
     def __init__(self, client: Client):
@@ -23,6 +25,13 @@ class EventHandler:
         self.lock = Lock()
 
         self.registerListeners()
+
+    # Singleton pattern to ensure the lock is shared between all instances
+    def __new__(cls, *args, **kwargs) -> "EventHandler":
+        if not cls._self:
+            cls._self = super().__new__(cls)
+
+        return cls._self
 
     def addListener(self, type: EventHandlerType, listener: callable):
         """
