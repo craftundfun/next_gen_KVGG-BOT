@@ -1,14 +1,14 @@
 version: 2
 updates:
-    - package-ecosystem: "pip"
-      directory: "/"
-      schedule:
-          interval: "daily"
-      requirements-file:
-          - "requirements.bot.txt"
-          - "requirements.web.txt"
+    -   package-ecosystem: "pip"
+        directory: "/"
+        schedule:
+            interval: "daily"
+        requirements-file:
+            - "bot-requirements.txt"
+            - "web-requirements.txt"
 
-    - package-ecosystem: "npm"
-      directory: "/web"
-      schedule:
-          interval: "daily"
+    -   package-ecosystem: "npm"
+        directory: "/web"
+        schedule:
+            interval: "daily"
