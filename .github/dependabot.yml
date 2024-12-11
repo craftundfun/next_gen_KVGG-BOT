@@ -9,9 +9,14 @@ updates:
         directory: "/"
         schedule:
             interval: "daily"
-        requirements-file:
-            - "requirements.bot.txt"
-            - "requirements.web.txt"
+        requirements-file: "requirements.bot.txt"
+
+    -   package-ecosystem: "pip"
+        directory: "/"
+        schedule:
+            interval: "daily"
+        requirements-file: "requirements.web.txt"
+
     -   package-ecosystem: "npm"
         directory: "/web"
         schedule:
