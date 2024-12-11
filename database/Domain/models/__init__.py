@@ -8,6 +8,9 @@ from .GuildDiscordUserMapping import GuildDiscordUserMapping
 from .WebsiteRole import WebsiteRole
 from .WebsiteRoleUserMapping import WebsiteRoleUserMapping
 from .WebsiteUser import WebsiteUser
+from .History import History
+from .Event import Event
+from .Statistic import Statistic
 # noinspection PyUnresolvedReferences
 from ..BaseClass import Base
 

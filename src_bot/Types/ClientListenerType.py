@@ -16,3 +16,5 @@ class ClientListenerType(Enum):
     MEMBER_REMOVE = "member_remove"
     RAW_MEMBER_REMOVE = "raw_member_remove"
     MEMBER_UPDATE = "member_update"
+
+    VOICE_UPDATE = "voice_update"

@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS guild (
 
 DROP TABLE IF EXISTS guild_discord_user_mapping;
 
+# maybe we don't need this table, but we will see
 CREATE TABLE IF NOT EXISTS guild_discord_user_mapping (
+	# id              BIGINT UNSIGNED AUTO_INCREMENT UNIQUE NOT NULL,
 	guild_id        BIGINT UNSIGNED NOT NULL,
 	discord_user_id BIGINT UNSIGNED NOT NULL,
 	display_name    VARCHAR(255)    NOT NULL,
@@ -27,3 +29,5 @@ CREATE TABLE IF NOT EXISTS guild_discord_user_mapping (
 )
 	ENGINE = InnoDB
 	CHARSET = UTF8MB4;
+
+CREATE INDEX idc_discord_guild_id ON guild_discord_user_mapping(discord_user_id, guild_id);

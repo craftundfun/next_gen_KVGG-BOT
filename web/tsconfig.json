@@ -15,11 +15,18 @@
 		"forceConsistentCasingInFileNames": true,
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["src/*"],
+			"@": ["./src"],
+			"@modules/*": ["./src/modules/*"],
+			"@components/*": ["./src/assets/Components/*"],
+			"@customTypes/*": ["./src/customTypes/*"],
+			"@context/*": ["./src/context/*"],
+			"@lib/*": ["./src/lib/*"],
+			"@utils/*": ["./src/assets/lib/*"],
+			"@ui/*": ["./src/assets/Components/ui/*"],
 		}
 	},
 	"include": [
-		"src/**/*"
+		"src"
 	],
 	"exclude": [
 		"node_modules"

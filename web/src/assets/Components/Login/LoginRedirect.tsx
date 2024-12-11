@@ -1,13 +1,14 @@
 import {useLocation, useNavigate} from "react-router-dom";
 import React, {useEffect, useRef, useState} from "react";
-import apiURL from "../../../modules/ApiUrl";
-import {useAuth} from "../../../modules/AuthContext";
-import {Spinner} from "../ui/spinner";
-import {useDiscordUser} from "../../../context/DiscordUserContext";
-import {useWebsiteUser} from "../../../context/WebsiteUserContext";
-import parseDiscordUser from "../../../types/DiscordUser";
-import parseWebsiteUser from "../../../types/WebsiteUser";
+import {backendUrl} from "@modules/Constants";
+import {useAuth} from "@modules/AuthContext";
+import {Spinner} from "@ui/spinner";
+import {useDiscordUser} from "@context/DiscordUserContext";
+import {useWebsiteUser} from "@context/WebsiteUserContext";
 import BaseLayout from "../ui/SiteBlueprint";
+import {parseWebsiteUser, WebsiteUser} from "@customTypes/WebsiteUser";
+import parseDiscordUser, {DiscordUser} from "@customTypes/DiscordUser";
+
 
 function LoginRedirect() {
 	const location = useLocation();
@@ -31,7 +32,7 @@ function LoginRedirect() {
 			return;
 		}
 
-		fetch(apiURL + "/auth/discord?code=" + code, {
+		fetch(backendUrl + "/auth/discord?code=" + code, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
@@ -58,7 +59,7 @@ function LoginRedirect() {
 				sessionStorage.setItem('tokenType', tokenType);
 				login(token);
 
-				fetch(apiURL + `/api/discordUser/${discordIdHeader}`, {
+				fetch(backendUrl + `/api/discordUser/${discordIdHeader}`, {
 					method: 'GET',
 					headers: {
 						'Content-Type': 'application/json',
@@ -74,7 +75,7 @@ function LoginRedirect() {
 						return;
 					}
 
-					let discordUserFromRequest = parseDiscordUser(await response.json());
+					let discordUserFromRequest: DiscordUser | null = parseDiscordUser(await response.json());
 
 					if (discordUserFromRequest === null) {
 						console.log("Error: Could not parse discord user");
@@ -93,7 +94,7 @@ function LoginRedirect() {
 					return;
 				});
 
-				fetch(apiURL + `/api/websiteUser/${discordIdHeader}`, {
+				fetch(backendUrl + `/api/websiteUser/${discordIdHeader}`, {
 					method: 'GET',
 					headers: {
 						'Content-Type': 'application/json',
@@ -109,7 +110,7 @@ function LoginRedirect() {
 						return;
 					}
 
-					let websiteUserFromRequest = parseWebsiteUser(await response.json());
+					let websiteUserFromRequest: WebsiteUser | null = parseWebsiteUser(await response.json());
 
 					if (websiteUserFromRequest === null) {
 						console.log("Error: Could not parse website user");

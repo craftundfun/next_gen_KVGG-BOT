@@ -1,15 +1,12 @@
 import * as React from "react";
-import {Button} from "../ui/button";
-import {Card, CardContent, CardHeader, CardTitle} from "../ui/card";
-import {Avatar, AvatarFallback, AvatarImage} from "../ui/avatar";
+import {Button} from "@ui/button";
+import {Card, CardContent, CardHeader, CardTitle} from "@ui/card";
+import {Avatar, AvatarFallback, AvatarImage} from "@ui/avatar";
+import {discordOAuthUrl, copyrightUrl} from "@modules/Constants";
 
 function Login() {
 	const handleLogin = () => {
-		window.open(
-			"https://discord.com/oauth2/authorize?client_id=1076510738576855051&response_type=code&" +
-			"redirect_uri=http%3A%2F%2F127.0.0.1%3A3000%2Flogin&scope=identify",
-			"_parent"
-		);
+		window.open(discordOAuthUrl, "_parent");
 	};
 
 	return (
@@ -42,7 +39,8 @@ function Login() {
 			</div>
 			<div>
 				<p className="text-white text-center">
-					© 2024 <a href="https://github.com/craftundfun" className="underline text-accent">craftundfun</a>. All
+					© 2024 <a href={copyrightUrl} className="underline text-accent">craftundfun</a>.
+					All
 					rights reserved.
 				</p>
 			</div>

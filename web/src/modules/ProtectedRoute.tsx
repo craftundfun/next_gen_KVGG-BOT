@@ -1,6 +1,6 @@
 import React, {ReactNode, useEffect} from "react";
-import {useAuth} from "./AuthContext";
 import {useNavigate} from "react-router-dom";
+import {useAuth} from "@modules/AuthContext";
 
 type Props = {
 	children: ReactNode;

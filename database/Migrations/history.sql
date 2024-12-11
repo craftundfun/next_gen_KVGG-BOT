@@ -1,11 +1,11 @@
 USE kvgg_next_beta;
 
-DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS history;
+DROP TABLE IF EXISTS event;
 
-CREATE TABLE IF NOT EXISTS events (
+CREATE TABLE IF NOT EXISTS event (
 	id   BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
-	type VARCHAR(255)                   NOT NULL,
+	type VARCHAR(255) UNIQUE            NOT NULL,
 
 	PRIMARY KEY (id)
 )
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS history (
 	guild_id        BIGINT UNSIGNED                NOT NULL,
 	event_id        BIGINT UNSIGNED                NOT NULL,
 	time            TIMESTAMP                      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	additional_info TEXT                           NULL     DEFAULT NULL,
+	additional_info JSON                           NULL     DEFAULT NULL,
 
 	PRIMARY KEY (id),
 	FOREIGN KEY (discord_id) REFERENCES discord_user(discord_id),
@@ -31,14 +31,17 @@ CREATE TABLE IF NOT EXISTS history (
 CREATE INDEX idc_discord_id ON history(discord_id);
 CREATE INDEX idc_guild_id ON history(guild_id);
 CREATE INDEX idc_event_id ON history(event_id);
+CREATE INDEX idc_discord_guild_id ON history(discord_id, guild_id);
 
-INSERT INTO events (type)
+INSERT INTO event (type)
 VALUES ('MUTE'),
 	('UNMUTE'),
+	('DEAF'),
+	('UNDEAF'),
 	('STEAM_START'),
 	('STREAM_END'),
-	('WEBCAM_START'),
-	('WEBCAM_END'),
+	#('WEBCAM_START'),
+	#('WEBCAM_END'),
 	('VOICE_JOIN'),
 	('VOICE_LEAVE'),
 	('VOICE_CHANGE');
