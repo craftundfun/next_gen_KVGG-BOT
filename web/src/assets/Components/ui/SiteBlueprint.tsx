@@ -1,8 +1,8 @@
 import * as React from "react";
-import {Avatar, AvatarFallback, AvatarImage} from "../ui/avatar";
-import {useDiscordUser} from "../../../context/DiscordUserContext";
-import {useWebsiteUser} from "../../../context/WebsiteUserContext";
-import {Spinner} from "../ui/spinner";
+import {Avatar, AvatarFallback, AvatarImage} from "@ui/avatar";
+import {useDiscordUser} from "@context/DiscordUserContext";
+import {useWebsiteUser} from "@context/WebsiteUserContext";
+import {Spinner} from "@ui/spinner";
 
 interface BaseLayoutProps {
 	children: React.ReactNode;

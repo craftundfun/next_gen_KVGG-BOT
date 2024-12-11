@@ -1,6 +1,6 @@
 //import {DiscordUser} from "./DiscordUser";
 
-export interface WebsiteUser {
+interface WebsiteUser {
 	discord_id: number;
 	created_at: string;
 	deleted_at: string;
@@ -26,4 +26,4 @@ function parseWebsiteUser(data: any): WebsiteUser | null {
 	}
 }
 
-export default parseWebsiteUser;
+export {parseWebsiteUser, WebsiteUser};

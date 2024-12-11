@@ -1,8 +1,8 @@
 import React from 'react';
 import {useEffect, useState} from 'react';
 import {useNavigate} from "react-router-dom";
-import apiURL from "../../../modules/ApiUrl";
-import BaseLayout from "../ui/SiteBlueprint";
+import {backendUrl} from "@modules/Constants";
+import BaseLayout from "@ui/SiteBlueprint";
 
 function Dashboard() {
 	const navigate = useNavigate();
@@ -16,7 +16,7 @@ function Dashboard() {
 
 	useEffect(() => {
 		// Get all users
-		fetch(apiURL + "/api/discordUser/all", {
+		fetch(backendUrl + "/api/discordUser/all", {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ function Dashboard() {
 			return null;
 		});
 
-		fetch(apiURL + "/api/guild/all", {
+		fetch(backendUrl + "/api/guild/all", {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',

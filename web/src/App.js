@@ -1,12 +1,12 @@
 import React from 'react';
 import {BrowserRouter as Router, Route, Routes,} from "react-router-dom";
-import Login from './assets/Components/Login/Login.tsx';
-import Dashboard from './assets/Components/Dashboard/Dashboard.tsx';
-import Forbidden from './assets/Components/Status/Forbidden.tsx';
-import LoginRedirect from './assets/Components/Login/LoginRedirect.tsx';
-import Error from './assets/Components/Status/Error.tsx';
-import {AuthProvider} from './modules/AuthContext.tsx';
-import ProtectedRoute from './modules/ProtectedRoute.tsx';
+import Error from '@components/Status/Error';
+import {AuthProvider} from '@modules/AuthContext';
+import ProtectedRoute from '@modules/ProtectedRoute';
+import Forbidden from '@components/Status/Forbidden';
+import Dashboard from '@components/Dashboard/Dashboard';
+import LoginRedirect from '@components/Login/LoginRedirect';
+import Login from '@components/Login/Login';
 
 function App() {
 	return (

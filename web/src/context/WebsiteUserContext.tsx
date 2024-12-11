@@ -1,5 +1,5 @@
 import React, {createContext, useContext, useState, ReactNode} from 'react';
-import {WebsiteUser} from "../types/WebsiteUser";
+import {WebsiteUser} from "@customTypes/WebsiteUser";
 
 interface WebsiteUserContextType {
 	websiteUser: WebsiteUser | null;

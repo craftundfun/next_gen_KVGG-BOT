@@ -1,5 +1,5 @@
 import React, {createContext, useContext, useState, ReactNode} from 'react';
-import {DiscordUser} from "../types/DiscordUser";
+import {DiscordUser} from "@customTypes/DiscordUser";
 
 interface DiscordUserContextType {
 	discordUser: DiscordUser | null;
