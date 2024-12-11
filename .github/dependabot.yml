@@ -4,9 +4,6 @@ updates:
         directory: "/"
         schedule:
             interval: "daily"
-        requirements-file:
-            - "bot-requirements.txt"
-            - "web-requirements.txt"
 
     -   package-ecosystem: "npm"
         directory: "/web"
