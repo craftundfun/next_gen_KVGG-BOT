@@ -2,7 +2,7 @@ import * as React from "react";
 import {Button} from "@ui/button";
 import {Card, CardContent, CardHeader, CardTitle} from "@ui/card";
 import {Avatar, AvatarFallback, AvatarImage} from "@ui/avatar";
-import {discordOAuthUrl} from "@modules/Constants";
+import {discordOAuthUrl, copyrightUrl} from "@modules/Constants";
 
 function Login() {
 	const handleLogin = () => {
@@ -39,7 +39,7 @@ function Login() {
 			</div>
 			<div>
 				<p className="text-white text-center">
-					© 2024 <a href="https://github.com/craftundfun" className="underline text-accent">craftundfun</a>.
+					© 2024 <a href={copyrightUrl} className="underline text-accent">craftundfun</a>.
 					All
 					rights reserved.
 				</p>

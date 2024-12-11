@@ -23,9 +23,17 @@ class TimeCalculator:
         self.registerListener()
 
     def registerListener(self):
+        """
+        Register the listener for the time calculator.
+        """
         self.eventHandler.addListener(EventHandlerType.MEMBER_LEAVE, self.onMemberLeave)
 
     async def onMemberLeave(self, member: Member):
+        """
+        Fetch the online history and invoke the online and stream time calculation.
+
+        :param member: The member that left the channel.
+        """
         # select all events that did happen since the last time the member joined
         selectQuery = (
             select(History)
@@ -53,9 +61,11 @@ class TimeCalculator:
             except Exception as error:
                 logger.error("Error while executing select query", exc_info=error)
 
+                return
+
             selectQuery = (select(Statistic)
                            .where(Statistic.discord_id == member.id,
-                                  Statistic.guild_id == member.guild.id))
+                                  Statistic.guild_id == member.guild.id, ))
 
             # get the statistic for the member and simultaneously check if they already have one
             try:
@@ -74,7 +84,8 @@ class TimeCalculator:
                 logger.debug(f"Created new statistic for {member.display_name, member.id} on "
                              f"{member.guild.name, member.guild.id}")
             except Exception as error:
-                logger.error("Error while updating online time", exc_info=error)
+                logger.error(f"Error while fetching statistic for {member.display_name, member.id} on "
+                             f"{member.guild.name, member.guild.id}", exc_info=error)
                 self.session.rollback()
 
                 return
@@ -93,31 +104,33 @@ class TimeCalculator:
                 logger.error("Error while committing changes", exc_info=error)
                 self.session.rollback()
             else:
-                logger.debug(f"Updated online time for {member.display_name, member.id} on "
+                logger.debug(f"Updated statistics for {member.display_name, member.id} on "
                              f"{member.guild.name, member.guild.id}")
 
-    def _calculateOnlineTime(self, member: Member, history: Sequence[History]) -> (int, int):
+    def _calculateOnlineTime(self, member: Member, history: Sequence[History]) -> tuple[int, int]:
         """
         Calculate the online time of a member by subtracting the time they were muted from the time they were online.
 
         :param member: The member to calculate the online time for.
         :param history: The history of the member.
+        :return: The online time and the mute time of the member in seconds.
         """
         onlineTime: timedelta = history[-1].time - history[0].time
         logger.debug(f"Raw online time for {member.display_name, member.id} on "
                      f"{member.guild.name, member.guild.id}: {onlineTime}")
 
         muteTime = timedelta()
-
         muteEvents = []
         unmuteEvents = []
 
+        # find all wanted events
         for history in history:
             if history.event_id == 1:
                 muteEvents.append(history)
             elif history.event_id == 2:
                 unmuteEvents.append(history)
 
+        # if
         if len(muteEvents) == len(unmuteEvents):
             for i in range(len(muteEvents)):
                 muteTime += unmuteEvents[i].time - muteEvents[i].time
@@ -157,7 +170,9 @@ class TimeCalculator:
 
                                 break
             except Exception as error:
-                logger.error("Error while trying to recover online time", exc_info=error)
+                logger.error(f"Error while trying to recover mute and unmute times for "
+                             f"{member.display_name, member.id} on {member.guild.name, member.guild.id}",
+                             exc_info=error, )
 
         logger.debug(f"Online time for {member.display_name, member.id} on "
                      f"{member.guild.name, member.guild.id}: {onlineTime}")
@@ -165,6 +180,13 @@ class TimeCalculator:
         return int(onlineTime.total_seconds()), int(muteTime.total_seconds())
 
     def _calculateStreamTime(self, member: Member, history: Sequence[History]) -> int:
+        """
+        Calculate the time a member has streamed in a voice channel.
+
+        :param member: The member to calculate the stream time for.
+        :param history: The history of the member.
+        :return: The time the member has streamed in seconds.
+        """
         streamStartEvents = []
         streamStopEvents = []
 

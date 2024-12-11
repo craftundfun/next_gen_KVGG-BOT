@@ -2,7 +2,7 @@ import * as React from "react";
 import {Avatar, AvatarFallback, AvatarImage} from "@ui/avatar";
 import {useDiscordUser} from "@context/DiscordUserContext";
 import {useWebsiteUser} from "@context/WebsiteUserContext";
-import {Spinner} from "@ui/spinner";
+import AvatarNameCombination from "@modules/AvatarSiteBlueprint";
 
 interface BaseLayoutProps {
 	children: React.ReactNode;
@@ -22,27 +22,10 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({children}) => {
 						<AvatarFallback>KVGG Logo</AvatarFallback>
 					</Avatar>
 				</div>
-				<div className="absolute left-1/2 transform -translate-x-1/2 text-white text-3xl underline">
+				<div className="absolute left-1/2 transform -translate-x-1/2 text-white text-3xl">
 					KVGG
 				</div>
-				<div className="flex items-center">
-					<div className="text-white">
-						{discordUser ? (<>
-							<div>{discordUser?.global_name || "NA"}</div>
-							<div className="text-sm">{websiteUser?.email || "NA"}</div>
-						</>) : (<>
-							<Spinner size="small"/>
-							<Spinner size="small"/>
-						</>)
-						}
-					</div>
-					<Avatar className="ml-2 mt-1 w-8 h-8">
-						<AvatarImage src={discordUser?.profile_picture || ''}/>
-						<AvatarFallback>
-							<Spinner size="medium"/>
-						</AvatarFallback>
-					</Avatar>
-				</div>
+				<AvatarNameCombination discordUser={discordUser} websiteUser={websiteUser}/>
 			</div>
 			<div className="flex-grow overflow-auto">
 				{children}
