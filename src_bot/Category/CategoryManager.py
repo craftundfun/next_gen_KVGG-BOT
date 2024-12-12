@@ -63,15 +63,20 @@ class CategoryManager:
 
             return
 
-        await self._categoryCreate([category])
+        await self._createCategories([category])
 
-    async def _categoryCreate(self, categories: list[GuildChannel]):
+    async def _createCategories(self, categories: list[GuildChannel]):
         """
         Adds the categories to the database
 
         :param categories: Categories to add
         :return:
         """
+        if len(categories) == 0:
+            logger.debug("No categories to create")
+
+            return
+
         categoryDatabaseObjects = []
 
         for category in categories:
@@ -139,7 +144,7 @@ class CategoryManager:
             else:
                 categories.append(category)
 
-        await self._categoryCreate(categories)
+        await self._createCategories(categories)
 
     async def _findDeletedCategories(self, guild: Guild):
         """

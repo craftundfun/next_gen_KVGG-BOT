@@ -50,19 +50,21 @@ class ChannelManager:
             else:
                 logger.debug(f"Channel {channel.name, channel.id} deleted from database")
 
-    async def channelCreate(self, channel: GuildChannel):
+    async def _createChannels(self, channels: list[GuildChannel]):
         """
         Adds the channel to the database
 
-        :param channel: GuildChannel to add
+        :param channels: GuildChannels to add
         :return:
         """
-        if channel.type == discord.ChannelType.category:
-            logger.debug(f"Channel {channel.name, channel.id} is a category")
+        if len(channels) == 0:
+            logger.debug("No channels to create")
 
             return
 
-        with self.session:
+        channelDatabaseObjects = []
+
+        for channel in channels:
             # IDE can't resolve Channel type
             # noinspection PyUnresolvedReferences
             databaseChannel = Channel(
@@ -72,15 +74,32 @@ class ChannelManager:
                 guild_id=channel.guild.id
             )
 
+            channelDatabaseObjects.append(databaseChannel)
+
+        with self.session:
             try:
-                self.session.add(databaseChannel)
+                self.session.bulk_save_objects(channelDatabaseObjects)
                 self.session.commit()
 
-                logger.debug(f"Channel {channel.name, channel.id} created and added to database")
+                logger.debug(f"Channels created and added to database for guild "
+                             f"{channels[0].guild.name, channels[0].guild.id}")
             except Exception as error:
-                logger.error(f"Failed to create channel: {error}", exc_info=error)
+                logger.error(f"Failed to create channels", exc_info=error)
 
                 self.session.rollback()
+
+    async def createChannel(self, channel: GuildChannel):
+        """
+        Checks if the given channel is a channel and invokes the channel creation
+
+        :param channel: Channel to create
+        """
+        if channel.type == discord.ChannelType.category:
+            logger.debug(f"Channel {channel.name, channel.id} is a category")
+
+            return
+
+        await self._createChannels([channel])
 
     async def _findMissingChannels(self, guild: Guild):
         """
@@ -115,7 +134,8 @@ class ChannelManager:
 
                 return
 
-        # TODO bulk insert channels
+        channels = []
+
         for id in missingChannelIDs:
             try:
                 channel = await self.client.fetch_channel(id)
@@ -129,8 +149,9 @@ class ChannelManager:
 
                 continue
             else:
-                await self.channelCreate(channel)
+                channels.append(channel)
 
+        await self._createChannels(channels)
         logger.debug(f"Found and added all new channels for guild {guild.name, guild.id}")
 
     async def _findDeletedChannels(self, guild: Guild):
@@ -222,7 +243,7 @@ class ChannelManager:
         self.client.addListener(self.channelDelete, ClientListenerType.CHANNEL_DELETE)
         logger.debug("Channel delete listener registered")
 
-        self.client.addListener(self.channelCreate, ClientListenerType.CHANNEL_CREATE)
+        self.client.addListener(self.createChannel, ClientListenerType.CHANNEL_CREATE)
         logger.debug("Channel create listener registered")
 
         self.client.addListener(self.updateChannel, ClientListenerType.CHANNEL_UPDATE)
