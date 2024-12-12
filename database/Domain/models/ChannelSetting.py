@@ -1,8 +1,5 @@
 from database.Domain.BaseClass import *
 
-if TYPE_CHECKING:
-    from database.Domain.models.Channel import Channel
-
 
 class ChannelSetting(Base):
     __tablename__ = "channel_setting"

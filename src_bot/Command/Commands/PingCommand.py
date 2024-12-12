@@ -1,17 +1,18 @@
 import discord
 from discord import Interaction
 
-from src_bot.Command.BaseCommand import BaseCommand
+from src_bot.Command.CommandBase import CommandBase
 from src_bot.Logging.Logger import Logger
 
 logger = Logger("PingCommand")
 
 
-class PingCommand(BaseCommand):
+class PingCommand(CommandBase):
 
-    def register(self):
+    def registerCommand(self):
         @self.tree.command(name="ping_command",
-                           description="ping_description", guild=discord.Object(438689788585967616))
+                           description="ping_description",
+                           guilds=self.guilds, )
         async def ping(interaction: Interaction):
             await self.notifyBefore()
 

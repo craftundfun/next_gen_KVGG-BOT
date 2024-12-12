@@ -1,28 +1,31 @@
 from abc import ABC, abstractmethod
 from inspect import iscoroutinefunction
 
+import discord.object
 from discord.app_commands import CommandTree
 
 from src_bot.Helpers.FunctionName import listenerName
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.CommandListenerType import CommandListenerType
 
-logger = Logger("BaseCommand")
+logger = Logger("CommandBase")
 
 
-class BaseCommand(ABC):
+class CommandBase(ABC):
     """
     Base class for all commands that are registered in the command tree with listeners
     """
     beforeListener = []
     afterListener = []
 
-    def __init__(self, tree: CommandTree):
+    def __init__(self, tree: CommandTree, guilds: list[discord.object.Object]):
         self.tree = tree
-        self.register()
+        self.guilds = guilds
+
+        self.registerCommand()
 
     @abstractmethod
-    def register(self):
+    def registerCommand(self):
         pass
 
     def addListener(self, listener: callable, listenerType: CommandListenerType):
