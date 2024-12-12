@@ -52,36 +52,49 @@ class CategoryManager:
             else:
                 logger.debug(f"Category {category.name, category.id} deleted from database")
 
-    async def categoryCreate(self, category: GuildChannel):
+    async def createCategory(self, category: GuildChannel):
         """
-        Adds the category to the database
+        Checks if the given channel is a category and invokes the category creation
 
-        :param category:
-        :return:
+        :param category: Category to create
         """
         if not category.type == discord.ChannelType.category:
             logger.debug(f"Channel {category.name, category.id} is not a category")
 
             return
 
+        await self._categoryCreate([category])
+
+    async def _categoryCreate(self, categories: list[GuildChannel]):
+        """
+        Adds the categories to the database
+
+        :param categories: Categories to add
+        :return:
+        """
+        categoryDatabaseObjects = []
+
+        for category in categories:
+            categoryDatabase = Category(
+                category_id=category.id,
+                name=category.name,
+                guild_id=category.guild.id,
+            )
+
+            categoryDatabaseObjects.append(categoryDatabase)
+
         with self.session:
             try:
-                categoryDatabase = Category(
-                    category_id=category.id,
-                    name=category.name,
-                    guild_id=category.guild.id,
-                )
-
-                self.session.add(categoryDatabase)
+                self.session.bulk_save_objects(categoryDatabaseObjects)
                 self.session.commit()
             except Exception as error:
-                logger.error(f"Failed to add category {category.name, category.id}", exc_info=error)
+                logger.error(f"Failed to create categories for "
+                             f"{categories[0].guild.name, categories[0].guild.id}", exc_info=error, )
 
                 self.session.rollback()
             else:
-                logger.debug(f"Category {category.name, category.id} added to database")
+                logger.debug(f"Categories created for {categories[0].guild.name, categories[0].guild.id}")
 
-    # TODO bulk insert categories
     async def _findMissingCategories(self, guild: Guild):
         """
         Check for missing categories in the guild
@@ -109,6 +122,8 @@ class CategoryManager:
 
                 return
 
+        categories = []
+
         for id in missingCategories:
             try:
                 category = await self.client.fetch_channel(id)
@@ -122,7 +137,9 @@ class CategoryManager:
 
                 continue
             else:
-                await self.categoryCreate(category)
+                categories.append(category)
+
+        await self._categoryCreate(categories)
 
     async def _findDeletedCategories(self, guild: Guild):
         """
@@ -196,7 +213,7 @@ class CategoryManager:
 
         :return:
         """
-        self.client.addListener(self.categoryCreate, ClientListenerType.CHANNEL_CREATE)
+        self.client.addListener(self.createCategory, ClientListenerType.CHANNEL_CREATE)
         logger.debug("Category create listener registered")
 
         self.client.addListener(self.categoryDelete, ClientListenerType.CHANNEL_DELETE)
