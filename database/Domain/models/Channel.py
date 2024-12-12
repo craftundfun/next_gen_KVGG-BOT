@@ -7,7 +7,7 @@ class Channel(Base):
     channel_id = Column(BigInteger, unique=True, nullable=False, primary_key=True)
     name = Column(VARCHAR(255), nullable=False)
     type = Column(TEXT, nullable=False)
-    deleted_at = Column(DATETIME, default=None)
+    # deleted_at = Column(DATETIME, default=None)
     guild_id = Column(BigInteger, ForeignKey("guild.guild_id"), nullable=False)
 
     relationship("Guild")

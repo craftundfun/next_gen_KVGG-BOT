@@ -21,9 +21,10 @@ CREATE TABLE IF NOT EXISTS history (
 	additional_info JSON                           NULL     DEFAULT NULL,
 
 	PRIMARY KEY (id),
-	FOREIGN KEY (discord_id) REFERENCES discord_user(discord_id),
-	FOREIGN KEY (guild_id) REFERENCES guild(guild_id),
-	FOREIGN KEY (event_id) REFERENCES events(id)
+	# at the moment we dont need the history longer than for the time calculation, so we can safely delete it
+	FOREIGN KEY (discord_id) REFERENCES discord_user(discord_id) ON DELETE CASCADE,
+	FOREIGN KEY (guild_id) REFERENCES guild(guild_id) ON DELETE CASCADE,
+	FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE
 )
 	ENGINE = InnoDB
 	CHARSET = UTF8MB4;

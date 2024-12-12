@@ -11,6 +11,7 @@ from .WebsiteUser import WebsiteUser
 from .History import History
 from .Event import Event
 from .Statistic import Statistic
+from .ChannelSetting import ChannelSetting
 # noinspection PyUnresolvedReferences
 from ..BaseClass import Base
 
