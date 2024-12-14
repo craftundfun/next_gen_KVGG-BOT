@@ -4,6 +4,7 @@ from asyncio.locks import Lock
 from database.Domain.models.History import History
 from src_bot.Client.Client import Client
 from src_bot.Database.DatabaseConnection import getSession
+from src_bot.Helpers.FunctionName import listenerName
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ClientListenerType import ClientListenerType
 
@@ -47,6 +48,8 @@ class EventHandler:
                 logger.error(f"Unknown event handler type {type}")
 
                 return
+
+        logger.debug(f"Listener successfully added: {listenerName(listener)}")
 
     def registerListeners(self):
         """

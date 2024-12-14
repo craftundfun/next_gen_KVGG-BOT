@@ -8,19 +8,39 @@ from sqlalchemy.orm.exc import NoResultFound
 from database.Domain.models import History, Statistic
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Event.EventHandler import EventHandler
+from src_bot.Helpers.FunctionName import listenerName
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.EventHandlerType import EventHandlerType
+from src_bot.Types.TimeCalculatorType import TimeCalculatorType
 
 logger = Logger("TimeCalculator")
 
 
 class TimeCalculator:
+    memberLeaveListeners = []
 
     def __init__(self, eventHandler: EventHandler):
         self.eventHandler = eventHandler
         self.session = getSession()
 
         self.registerListener()
+
+    def addListener(self, type: TimeCalculatorType, listener: callable):
+        """
+        Add a listener to the time calculator.
+
+        :param type: The type of the listener.
+        :param listener: The listener to add.
+        """
+        match type:
+            case TimeCalculatorType.MEMBER_LEAVE:
+                self.memberLeaveListeners.append(listener)
+            case _:
+                logger.error(f"Unknown time calculator type {type}")
+
+                return
+
+        logger.debug(f"Listener successfully added: {listenerName(listener)}")
 
     def registerListener(self):
         """
@@ -92,9 +112,15 @@ class TimeCalculator:
 
             onlineTime, muteTime = self._calculateOnlineTime(member, history)
             statistic.online_time += onlineTime
-            statistic.mute_time += muteTime
 
-            statistic.stream_time += self._calculateStreamTime(member, history)
+            # this should only happen to short online times, because the database refresh will handle that
+            if onlineTime - muteTime > 0:
+                statistic.mute_time += muteTime
+            else:
+                logger.error(f"Mute time is greater than online time, this should not happen for "
+                             f"{member.display_name, member.id} on {member.guild.name, member.guild.id}")
+
+            statistic.stream_time += (streamTime := self._calculateStreamTime(member, history))
 
             try:
                 # add regardless of whether the member has a statistic or not
@@ -103,9 +129,15 @@ class TimeCalculator:
             except Exception as error:
                 logger.error("Error while committing changes", exc_info=error)
                 self.session.rollback()
+
+                return
             else:
                 logger.debug(f"Updated statistics for {member.display_name, member.id} on "
                              f"{member.guild.name, member.guild.id}")
+
+        for listener in self.memberLeaveListeners:
+            await listener(member, onlineTime, streamTime, muteTime)
+            logger.debug(f"Invoked listener: {listenerName(listener)}")
 
     def _calculateOnlineTime(self, member: Member, history: Sequence[History]) -> tuple[int, int]:
         """

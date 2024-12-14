@@ -12,6 +12,10 @@ from .History import History
 from .Event import Event
 from .Statistic import Statistic
 from .ChannelSetting import ChannelSetting
+from .Experience import Experience
+from .Boost import Boost
+from .ExperienceBoostMapping import ExperienceBoostMapping
+from .ExperienceAmount import ExperienceAmount
 # noinspection PyUnresolvedReferences
 from ..BaseClass import Base
 

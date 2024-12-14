@@ -32,8 +32,7 @@ def hasUserSpecificRoles(*roles: Role):
 
             selectQuery = (
                 select(WebsiteRoleUserMapping)
-                .where(WebsiteRoleUserMapping.discord_id == userId,
-                       WebsiteRoleUserMapping.deleted_at == None, )
+                .where(WebsiteRoleUserMapping.discord_id == userId, )
             )
 
             try:
@@ -75,15 +74,13 @@ def hasUserMinimumRequiredRole(role: Role):
             selectQueryRolesOfUser = (
                 select(WebsiteRoleUserMapping)
                 .join(WebsiteRole)
-                .where(WebsiteRoleUserMapping.discord_id == userId,
-                       WebsiteRoleUserMapping.deleted_at == None, )
+                .where(WebsiteRoleUserMapping.discord_id == userId, )
                 .order_by(WebsiteRole.priority.desc())
                 .limit(1)
             )
             selectQueryWebsiteRole = (
                 select(WebsiteRole)
-                .where(WebsiteRole.role_name == role.value,
-                       WebsiteRole.deleted_at == None, )
+                .where(WebsiteRole.role_name == role.value, )
             )
 
             try:

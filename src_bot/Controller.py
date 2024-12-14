@@ -8,6 +8,7 @@ from src_bot.Client.Client import Client
 from src_bot.Command.CommandManager import CommandManager
 from src_bot.Event.EventHandler import EventHandler
 from src_bot.Event.TimeCalculator import TimeCalculator
+from src_bot.Experience.ExperienceManager import ExperienceManager
 from src_bot.Guild.GuildManager import GuildManager
 from src_bot.Logging.Logger import Logger
 from src_bot.Member.MemberManager import MemberManager
@@ -33,6 +34,7 @@ class Controller:
         self.memberManager = MemberManager(self.client)
         self.eventHandler = EventHandler(self.client)
         self.timeCalculator = TimeCalculator(self.eventHandler)
+        self.ExperienceManager = ExperienceManager(self.timeCalculator)
 
         self.registerListeners()
 

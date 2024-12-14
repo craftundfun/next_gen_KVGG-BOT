@@ -21,6 +21,5 @@ class WebsiteUser(Base):
         return {
             "discord_id": self.discord_id,
             "created_at": self.created_at,
-            "deleted_at": self.deleted_at,
             "email": self.email,
         }
