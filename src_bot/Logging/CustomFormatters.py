@@ -1,6 +1,8 @@
 import logging
 import sys
 
+from src_bot.Logging.EmailService import send_exception_mail
+
 
 class CustomFormatterConsole(logging.Formatter):
     """
@@ -31,10 +33,9 @@ class CustomFormatterConsole(logging.Formatter):
             sys.stdout.write(record.message + "\n")
             sys.stdout.write(record.exc_text + "\n")
 
-            # TODO send email
-            # send_exception_mail(record.message + f" ({appendix})\n" + record.exc_text)
+            send_exception_mail(record.message + f" ({appendix})\n" + record.exc_text)
         elif record.levelno > logging.WARNING:
-            # send_exception_mail(record.message + f" ({appendix})\nNo Exception-Text available.")
+            send_exception_mail(record.message + f" ({appendix})\nNo Exception-Text available.")
             pass
 
         return formatter.format(record)
