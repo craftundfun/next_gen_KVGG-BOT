@@ -30,7 +30,7 @@ class GuildManager:
 
         self.registerListeners()
 
-    def addGuildManagerListener(self, listener: callable, type: GuildListenerType):
+    def addListener(self, listener: callable, type: GuildListenerType):
         """
         Add a listener to the guild manager
 
