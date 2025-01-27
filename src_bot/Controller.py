@@ -36,7 +36,7 @@ class Controller:
         self.eventHandler = EventHandler(self.client, self.guildManager)
         self.timeCalculator = TimeCalculator(self.eventHandler)
         self.timer = Timer(self.client)
-        self.ExperienceManager = ExperienceManager(self.client, self.timer, self.guildManager)
+        # self.ExperienceManager = ExperienceManager(self.client, self.timer, self.guildManager)
 
         self.registerListeners()
 
