@@ -1,67 +1,85 @@
-from discord import Member
+from datetime import timedelta, datetime
 
-from database.Domain.models import ExperienceBoostMapping, Experience, ExperienceAmount
-from src_bot.Database.DatabaseConnection import getSession
-from src_bot.Event.TimeCalculator import TimeCalculator
-
+from discord import Guild, Member
 from sqlalchemy import select
-from sqlalchemy.exc import NoResultFound
 
+from database.Domain.models import ExperienceBoostMapping
+from src_bot.Client.Client import Client
+from src_bot.Database.DatabaseConnection import getSession
+from src_bot.Guild.GuildManager import GuildManager
 from src_bot.Logging.Logger import Logger
+from src_bot.Timer.Timer import Timer
+from src_bot.Types.GuildListenerType import GuildListenerType
 
 logger = Logger("ExperienceManager")
 
 
 class ExperienceManager:
 
-    def __init__(self, timeCalculator: TimeCalculator):
-        self.timeCalculator = timeCalculator
+    def __init__(self, client: Client, timer: Timer, guildManager: GuildManager):
+        self.client = client
+        self.timer = timer
+        self.guildManager = guildManager
 
         self.session = getSession()
 
         self.registerListener()
 
     def registerListener(self):
-        pass
+        self.guildManager.addGuildManagerListener(self.startTimers, GuildListenerType.START_UP)
+        logger.debug("Registered guild manager listener")
 
-    async def calculateExperience(self, member: Member, onlineTime: int, streamTime: int, muteTime: int):
-        getExperienceBoostMappingQuery = (select(ExperienceBoostMapping)
-                                          .where(ExperienceBoostMapping.discord_id == member.id,
-                                                 ExperienceBoostMapping.guild_id == member.guild.id, ))
-        getExperienceQuery = (select(Experience).where(Experience.discord_id == member.id,
-                                                       Experience.guild_id == member.guild.id, ))
-        getExperienceAmountQuery = (select(ExperienceAmount))
+    async def startTimers(self, guild: Guild):
+        """
+        Start the timers for the experience boosts for members that are online
 
+        :param guild: Guild to start the timers for
+        """
         with self.session:
-            try:
-                experienceBoostMappings = self.session.execute(getExperienceBoostMappingQuery).scalars().all()
-                experience = self.session.execute(getExperienceQuery).scalars().one()
-                experienceAmounts = self.session.execute(getExperienceAmountQuery).scalars().all()
-            except NoResultFound:
-                logger.debug(f"No experience found for {member.display_name, member.id} on "
-                             f"{member.guild.name, member.guild.id}")
+            for member in guild.members:
+                if not member.voice:
+                    continue
 
-                experience = Experience(
-                    discord_id=member.id,
-                    guild_id=member.guild.id,
-                )
+                logger.debug(f"{member.display_name, member.id} is in voice-channel")
 
-                self.session.add(experience)
-            except Exception as error:
-                logger.error(f"Failed to get experience for {member.display_name, member.id} on "
-                             f"{member.guild.name, member.guild.id}",
-                             exc_info=error, )
+                selectQuery = (select(ExperienceBoostMapping)
+                               .where(ExperienceBoostMapping.guild_id == guild.id,
+                                      ExperienceBoostMapping.discord_id == member.id, ))
 
-                return
+                try:
+                    boostMappings = self.session.execute(selectQuery).scalars().fetchall()
+                except Exception as error:
+                    logger.error(
+                        f"Failed to get boost mappings for {member.display_name, member.id} on "
+                        f"{guild.name, guild.id}",
+                        exc_info=error,
+                    )
 
-            if len(experienceAmounts) == 0:
-                logger.error(f"No experience amounts found")
+                    continue
 
-                return
+                if not boostMappings or len(boostMappings) == 0:
+                    logger.debug(
+                        f"No boost mappings found for {member.display_name, member.id} on "
+                        f"{guild.name, guild.id}"
+                    )
 
-            realOnlineTime = onlineTime - muteTime
-            realStreamTime = streamTime - muteTime
-            newXp = 0
+                    continue
 
-            for boostMapping in experienceBoostMappings:
-                # TODO dont calculate boosts if the member leaves, calculate them with history after they run out
+                for boostMapping in boostMappings:
+                    self.timer.addJob(
+                        self.boostEnded,
+                        datetime.now() + timedelta(seconds=boostMapping.remaining_time),
+                        f"experience-{guild.id}-{member.id}",
+                        member=member,
+                        guild=guild,
+                    )
+
+                    logger.debug(
+                        f"Added job for {boostMapping} for {member.display_name, member.id} on "
+                        f"{guild.name, guild.id}"
+                    )
+
+                logger.debug(f"Added jobs for {member.display_name, member.id} on {guild.name, guild.id}")
+
+    async def boostEnded(self, member: Member, guild: Guild):
+        print(f"{datetime.now()} Hello {member} on {guild}")
