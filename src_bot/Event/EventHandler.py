@@ -1,7 +1,7 @@
 from asyncio.locks import Lock
 
 from discord import Member, VoiceState, Guild
-from sqlalchemy import null, select, exists, distinct
+from sqlalchemy import null, select, exists
 from sqlalchemy.orm import aliased
 
 from database.Domain.models.History import History
