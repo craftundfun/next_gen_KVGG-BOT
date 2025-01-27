@@ -4,6 +4,7 @@ from discord.guild import Guild as DiscordGuild
 from sqlalchemy import update, null, select
 from sqlalchemy.exc import NoResultFound
 
+from database.Domain import DiscordUser
 from database.Domain.models.Guild import Guild
 from src_bot.Client.Client import Client
 from src_bot.Database.DatabaseConnection import getSession
@@ -30,7 +31,7 @@ class GuildManager:
 
         self.registerListeners()
 
-    def addGuildManagerListener(self, listener: callable, type: GuildListenerType):
+    def addListener(self, listener: callable, type: GuildListenerType):
         """
         Add a listener to the guild manager
 
@@ -80,6 +81,39 @@ class GuildManager:
                 logger.debug(f"Guild {guild.name, guild.id} found in database")
 
                 await self.updateGuildOnStart(guild, databaseGuild)
+
+                ### TODO remove that, its just for testing
+                with self.session:
+                    selectQuery = select(DiscordUser)
+                    discordUsers = self.session.scalars(selectQuery).all()
+
+                    users = []
+
+                    for member in guild.members:
+                        if member.bot:
+                            continue
+
+                        if member.id in [user.discord_id for user in discordUsers]:
+                            continue
+
+                        users.append(
+                            DiscordUser(
+                                discord_id=member.id ,
+                                global_name=member.global_name if member.global_name else "Kein Name",
+                                created_at=datetime.now(),
+                                profile_picture=member.avatar.url if member.avatar else "fff",
+                            )
+                        )
+
+                        logger.debug(f"inserted {member}")
+
+                    try:
+                        print(users)
+                        self.session.bulk_save_objects(users)
+                        self.session.commit()
+                    except Exception as error:
+                        logger.error("Failed to insert users", exc_info=error)
+                ### TODO end
 
                 for listener in self.startUpGuildCheck:
                     await listener(guild)

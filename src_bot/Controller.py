@@ -33,7 +33,7 @@ class Controller:
         self.channelManager = ChannelManager(self.client, self.guildManager)
         self.categoryManager = CategoryManager(self.client, self.guildManager)
         self.memberManager = MemberManager(self.client)
-        self.eventHandler = EventHandler(self.client)
+        self.eventHandler = EventHandler(self.client, self.guildManager)
         self.timeCalculator = TimeCalculator(self.eventHandler)
         self.timer = Timer(self.client)
         self.ExperienceManager = ExperienceManager(self.client, self.timer, self.guildManager)

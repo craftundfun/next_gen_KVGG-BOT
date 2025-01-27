@@ -249,10 +249,10 @@ class ChannelManager:
         self.client.addListener(self.updateChannel, ClientListenerType.CHANNEL_UPDATE)
         logger.debug("Channel update listener registered")
 
-        self.guildManager.addGuildManagerListener(self.onBotStart, GuildListenerType.START_UP)
+        self.guildManager.addListener(self.onBotStart, GuildListenerType.START_UP)
         logger.debug("Guild manager listener registered")
 
-        self.guildManager.addGuildManagerListener(self.onGuildJoin, GuildListenerType.GUILD_JOIN)
+        self.guildManager.addListener(self.onGuildJoin, GuildListenerType.GUILD_JOIN)
         logger.debug("Guild join listener registered")
 
         logger.info("Channel listeners registered")
