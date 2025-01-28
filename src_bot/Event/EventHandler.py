@@ -114,6 +114,9 @@ class EventHandler:
                     .scalars()
                     .all()
                 )
+                currentOnlineMembersPerHistory = {history.discord_id:
+                                                      (history.channel_id if history.channel_id else null())
+                                                  for history in currentOnlineMembersPerHistory}
 
                 # TODO maybe fetch them only if needed
                 didStream = (
@@ -122,18 +125,29 @@ class EventHandler:
                     .scalars()
                     .all()
                 )
+                didStream = {history.discord_id:
+                                 (history.channel_id if history.channel_id else null())
+                             for history in didStream}
+
                 wasMuted = (
                     self.session
                     .execute(wasMutedQuery)
                     .scalars()
                     .all()
                 )
+                wasMuted = {history.discord_id:
+                                (history.channel_id if history.channel_id else null())
+                            for history in wasMuted}
+
                 wasDeafened = (
                     self.session
                     .execute(wasDeafenedQuery)
                     .scalars()
                     .all()
                 )
+                wasDeafened = {history.discord_id:
+                                   (history.channel_id if history.channel_id else null())
+                               for history in wasDeafened}
             except Exception as error:
                 logger.error(
                     f"Failed to get current online members per history for guild {guild.name, guild.id}",
@@ -149,18 +163,20 @@ class EventHandler:
                 if member.bot:
                     continue
 
+                # member is currently online
                 if member.voice:
                     # member was tracked as online previously
-                    if member.id in [history.discord_id for history in currentOnlineMembersPerHistory]:
+                    if member.id in currentOnlineMembersPerHistory.keys():
                         # if member is in a different channel than before
-                        if [history for history in currentOnlineMembersPerHistory if history.discord_id == member.id][0].additional_info['channel_id'] != member.voice.channel.id:
+                        if ((channelId := currentOnlineMembersPerHistory[member.id])
+                                and channelId != member.voice.channel.id):
                             historiesToInsert.append(
                                 History(
                                     discord_id=member.id,
                                     guild_id=guild.id,
                                     event_id=9,
                                     additional_info={
-                                        "channel_from": [history for history in currentOnlineMembersPerHistory if history.discord_id == member.id][0].additional_info['channel_id'],
+                                        "channel_from": channelId,
                                         "channel_to": member.voice.channel.id,
                                     },
                                 )
@@ -174,39 +190,39 @@ class EventHandler:
                             discord_id=member.id,
                             guild_id=guild.id,
                             event_id=7,
-                            additional_info={"channel_id": member.voice.channel.id},
+                            channel_id=member.voice.channel.id,
                         )
                     )
                 # member is currently offline but was tracked as online previously
-                elif member.id in [history.discord_id for history in currentOnlineMembersPerHistory]:
+                elif member.id in currentOnlineMembersPerHistory.keys():
                     # TODO make better logic for this
-                    if member.id in [history.discord_id for history in didStream]:
+                    if member.id in didStream.keys():
                         historiesToInsert.append(
                             History(
                                 discord_id=member.id,
                                 guild_id=guild.id,
                                 event_id=6,
-                                additional_info=[history for history in didStream if history.discord_id == member.id][0].additional_info,
+                                channel_id=didStream[member.id],
                             )
                         )
 
-                    if member.id in [history.discord_id for history in wasMuted]:
+                    if member.id in wasMuted.keys():
                         historiesToInsert.append(
                             History(
                                 discord_id=member.id,
                                 guild_id=guild.id,
                                 event_id=2,
-                                additional_info=[history for history in wasMuted if history.discord_id == member.id][0].additional_info,
+                                channel_id=wasMuted[member.id],
                             )
                         )
 
-                    if member.id in [history.discord_id for history in wasDeafened]:
+                    if member.id in wasDeafened.keys():
                         historiesToInsert.append(
                             History(
                                 discord_id=member.id,
                                 guild_id=guild.id,
                                 event_id=4,
-                                additional_info=[history for history in wasDeafened if history.discord_id == member.id][0].additional_info,
+                                channel_id=wasDeafened[member.id],
                             )
                         )
 
@@ -215,7 +231,7 @@ class EventHandler:
                             discord_id=member.id,
                             guild_id=guild.id,
                             event_id=8,
-                            additional_info=[history for history in currentOnlineMembersPerHistory if history.discord_id == member.id][0].additional_info,
+                            channel_id=currentOnlineMembersPerHistory[member.id],
                         )
                     )
                     membersThatLeft.append(member)
@@ -240,7 +256,6 @@ class EventHandler:
                     await listener(member)
                     logger.debug("Notified member leave listeners")
 
-    # TODO startup check and periodic check if state is consistent with database
     async def voiceStateUpdate(self, member: Member, before: VoiceState, after: VoiceState):
         """
         Handles voice state updates for a member and saves the history to the database.
@@ -250,17 +265,19 @@ class EventHandler:
         :param after: The voice state after the update.
         """
         async with self.lock:
-            def getHistoryObject(eventId: int, additionalInfo: dict | None):
+            def getHistoryObject(eventId: int, channelId: int | None = None, additionalInfo: dict | None = None):
                 """
                 Create a history object for the given event and additional info.
 
                 :param eventId: The event id of the history.
+                :param channelId: The channel in which the event took place.
                 :param additionalInfo: Additional info for the history.
                 """
                 return History(
                     discord_id=member.id,
                     guild_id=member.guild.id,
                     event_id=eventId,
+                    channel_id=channelId if channelId else null(),
                     additional_info=additionalInfo if additionalInfo else null(),
                 )
 
@@ -275,69 +292,70 @@ class EventHandler:
             # insert first to complete the join-leave-circle
             # Member joined a voice channel
             if not before.channel and after.channel:
-                histories.append(getHistoryObject(7, {"channel_id": after.channel.id}))
+                histories.append(getHistoryObject(7, after.channel.id))
 
             # Member moved to another voice channel
             if before.channel and after.channel and before.channel.id != after.channel.id:
                 histories.append(
                     getHistoryObject(
                         9,
-                        {
+                        channelId=None,
+                        additionalInfo={
                             "channel_from": before.channel.id,
-                            "channel_to": after.channel.id
+                            "channel_to": after.channel.id,
                         }
                     )
                 )
 
             # Member muted themselves or was muted
             if (after.self_mute or after.mute) and not (before.self_mute or before.mute):
-                histories.append(getHistoryObject(1, {"channel_id": after.channel.id}))
+                histories.append(getHistoryObject(1, after.channel.id))
 
             # Member joined a voice channel muted
             if not before.channel and after.channel and (after.self_mute or after.mute):
-                histories.append(getHistoryObject(1, {"channel_id": after.channel.id}))
+                histories.append(getHistoryObject(1, after.channel.id))
 
             # Member unmuted themselves or was unmuted
             if not (after.self_mute or after.mute) and (before.self_mute or before.mute):
-                histories.append(getHistoryObject(2, {"channel_id": after.channel.id}))
+                histories.append(getHistoryObject(2, after.channel.id))
 
             # Member deafened themselves or was deafened
             if (after.self_deaf or after.deaf) and not (before.self_deaf or before.deaf):
-                histories.append(getHistoryObject(3, {"channel_id": after.channel.id}))
+                histories.append(getHistoryObject(3, after.channel.id))
 
             # Member joined a voice channel deafened
             if not before.channel and after.channel and (after.self_deaf or after.deaf):
-                histories.append(getHistoryObject(3, {"channel_id": after.channel.id}))
+                histories.append(getHistoryObject(3, after.channel.id))
 
             # Member undeafened themselves or was undeafened
             if not (after.self_deaf or after.deaf) and (before.self_deaf or before.deaf):
-                histories.append(getHistoryObject(4, {"channel_id": after.channel.id}))
+                histories.append(getHistoryObject(4, after.channel.id))
 
             # Member started streaming
             if (after.self_video or after.self_stream) and not (before.self_stream or before.self_video):
-                histories.append(getHistoryObject(5, {"channel_id": after.channel.id}))
+                histories.append(getHistoryObject(5, after.channel.id))
 
             # Member stopped streaming
             if not (after.self_video or after.self_stream) and (before.self_stream or before.self_video):
-                histories.append(getHistoryObject(6, {"channel_id": after.channel.id}))
+                histories.append(getHistoryObject(6, after.channel.id))
 
             # last history to save for the join-leave-circle
             # Member left a voice channel
             if before.channel and not after.channel:
                 # unmute member upon leaving
                 if before.self_mute or before.mute:
-                    histories.append(getHistoryObject(2, {"channel_id": before.channel.id}))
+                    histories.append(getHistoryObject(2, before.channel.id))
 
                 # undeafen member upon leaving
                 if before.self_deaf or before.deaf:
-                    histories.append(getHistoryObject(4, {"channel_id": before.channel.id}))
+                    histories.append(getHistoryObject(4, before.channel.id))
 
                 # stop streaming upon leaving
                 if before.self_video or before.self_stream:
-                    histories.append(getHistoryObject(6, {"channel_id": before.channel.id}))
+                    histories.append(getHistoryObject(6, before.channel.id))
 
                 # insert last to complete the join-leave-circle
-                histories.append(getHistoryObject(8, {"channel_id": before.channel.id, }))
+                histories.append(getHistoryObject(8, before.channel.id))
                 memberLeft = True
 
             if len(histories) == 0:

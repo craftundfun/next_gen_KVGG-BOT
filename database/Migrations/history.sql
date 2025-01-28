@@ -18,13 +18,15 @@ CREATE TABLE IF NOT EXISTS history (
 	guild_id        BIGINT UNSIGNED                NOT NULL,
 	event_id        BIGINT UNSIGNED                NOT NULL,
 	time            TIMESTAMP                      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	channel_id      BIGINT UNSIGNED                NULL     DEFAULT NULL,
 	additional_info JSON                           NULL     DEFAULT NULL,
 
 	PRIMARY KEY (id),
 	# at the moment we dont need the history longer than for the time calculation, so we can safely delete it
 	FOREIGN KEY (discord_id) REFERENCES discord_user(discord_id) ON DELETE CASCADE,
 	FOREIGN KEY (guild_id) REFERENCES guild(guild_id) ON DELETE CASCADE,
-	FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE
+	FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE,
+	FOREIGN KEY (channel_id) REFERENCES channel(channel_id) ON DELETE CASCADE
 )
 	ENGINE = InnoDB
 	CHARSET = UTF8MB4;

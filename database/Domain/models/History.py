@@ -14,6 +14,7 @@ class History(Base):
     guild_id = Column(BigInteger, ForeignKey("guild.guild_id"), nullable=False)
     event_id = Column(BigInteger, ForeignKey("event.id"), nullable=False)
     time = Column(TIMESTAMP, nullable=False, default=func.current_timestamp())
+    channel_id = Column(BigInteger, nullable=True, default=null())
     additional_info = Column(JSON, nullable=True)
 
     discord_user: Mapped[Optional["DiscordUser"]] = relationship("DiscordUser")
@@ -21,5 +22,12 @@ class History(Base):
     event: Mapped[Optional["Event"]] = relationship("Event")
 
     def __repr__(self):
-        return (f"History(id={self.id}, discord_id={self.discord_id}, guild_id={self.guild_id}, "
-                f"event_id={self.event_id}, time={self.time}, additional_info={self.additional_info})")
+        return (
+            f"History(id={self.id}, "
+            f"discord_id={self.discord_id}, "
+            f"guild_id={self.guild_id}, "
+            f"event_id={self.event_id}, "
+            f"time={self.time}, "
+            f"channel_id={self.channel_id}, "
+            f"additional_info={self.additional_info})"
+        )
