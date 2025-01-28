@@ -83,6 +83,8 @@ class TimeCalculator:
 
                 return
 
+            self.insertMidnightEvent(history)
+
             selectQuery = (select(Statistic)
                            .where(Statistic.discord_id == member.id,
                                   Statistic.guild_id == member.guild.id, ))
@@ -138,6 +140,33 @@ class TimeCalculator:
         for listener in self.memberLeaveListeners:
             await listener(member, onlineTime, streamTime, muteTime)
             logger.debug(f"Invoked listener: {listenerName(listener)}")
+
+    def insertMidnightEvent(self, history: Sequence[History]):
+        """
+        If the user was online over midnight, leave events are inserted at midnight and join events after midnight
+        to have one leave-join circle per day.
+        This makes it easier to calculate the time.
+        """
+        if len(history) == 0:
+            return
+
+        print(history)
+
+        # all events happened on the same day, no need to insert anything
+        if history[0].time.date() == history[-1].time.date():
+            logger.debug("All events happened on the same day, no need to insert anything")
+
+            return
+
+        # count how many midnight events are needed
+        midnightEvents = (history[-1].time - history[0].time).days
+        # list of tuples with the day before and after midnight
+        dates = []
+
+        for i in range(midnightEvents):
+            dates.append((history[0].time.date() + timedelta(days=i), history[0].time.date() + timedelta(days=i + 1)))
+
+        print(midnightEvents, dates)
 
     def _calculateOnlineTime(self, member: Member, history: Sequence[History]) -> tuple[int, int]:
         """
