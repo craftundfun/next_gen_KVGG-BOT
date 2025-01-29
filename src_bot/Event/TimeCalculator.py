@@ -1,8 +1,9 @@
+import datetime
 from datetime import timedelta
 from typing import Sequence
 
 from discord import Member
-from sqlalchemy import select
+from sqlalchemy import select, null
 from sqlalchemy.orm.exc import NoResultFound
 
 from database.Domain.models import History, Statistic
@@ -83,7 +84,7 @@ class TimeCalculator:
 
                 return
 
-            self.insertMidnightEvent(history)
+            self._insertMidnightEvent(history)
 
             selectQuery = (select(Statistic)
                            .where(Statistic.discord_id == member.id,
@@ -141,7 +142,8 @@ class TimeCalculator:
             await listener(member, onlineTime, streamTime, muteTime)
             logger.debug(f"Invoked listener: {listenerName(listener)}")
 
-    def insertMidnightEvent(self, history: Sequence[History]):
+    # TODO clean this mess up and check for further improvements
+    def _insertMidnightEvent(self, history: Sequence[History]):
         """
         If the user was online over midnight, leave events are inserted at midnight and join events after midnight
         to have one leave-join circle per day.
@@ -150,8 +152,6 @@ class TimeCalculator:
         if len(history) == 0:
             return
 
-        print(history)
-
         # all events happened on the same day, no need to insert anything
         if history[0].time.date() == history[-1].time.date():
             logger.debug("All events happened on the same day, no need to insert anything")
@@ -159,14 +159,185 @@ class TimeCalculator:
             return
 
         # count how many midnight events are needed
-        midnightEvents = (history[-1].time - history[0].time).days
+        midnightEvents = (history[-1].time.date() - history[0].time.date()).days
         # list of tuples with the day before and after midnight
         dates = []
 
-        for i in range(midnightEvents):
-            dates.append((history[0].time.date() + timedelta(days=i), history[0].time.date() + timedelta(days=i + 1)))
+        print("midnightEvents", midnightEvents)
 
-        print(midnightEvents, dates)
+        for i in range(midnightEvents):
+            dates.append(history[0].time.date() + timedelta(days=i))
+
+        dates.append(history[-1].time.date())
+
+        lastEvents = {
+            1: None,
+            2: None,
+            3: None,
+            4: None,
+            5: None,
+            6: None,
+        }
+        # TODO return the correct things, rn nothing is getting returned
+        subHistories = []
+        tempHistories = []
+        dateIndex = 0
+
+        # walk through the whole history once
+        for history in history:
+            # when the date does not change, just add the history to the temp list
+            if history.time.date() == dates[dateIndex]:
+                print("dates are the same")
+                tempHistories.append(history)
+
+                # save the event if it is an important event
+                if history.event_id in lastEvents.keys():
+                    lastEvents[history.event_id] = history
+            elif dateIndex + 1 < len(dates) and history.time.date() > dates[dateIndex + 1]:
+                print("index is small enough")
+                print("the next history event is not tomorrow")
+                tempHistoriesToInsert = []
+                for i in range((history.time.date() - dates[dateIndex]).days):
+                    tempHistoriesToInsert.append(
+                        History(
+                            discord_id=history.discord_id,
+                            guild_id=history.guild_id,
+                            event_id=8,
+                            channel_id=history.channel_id,
+                            time=datetime.datetime(
+                                dates[dateIndex].year,
+                                dates[dateIndex].month,
+                                dates[dateIndex].day,
+                                23,
+                                59,
+                                59,
+                            ),
+                            additional_info=history.additional_info if history.additional_info else null(),
+                        )
+                    )
+                    tempHistoriesToInsert.append(
+                        History(
+                            discord_id=history.discord_id,
+                            guild_id=history.guild_id,
+                            event_id=7,
+                            channel_id=history.channel_id,
+                            time=datetime.datetime(
+                                dates[dateIndex + 1].year,
+                                dates[dateIndex + 1].month,
+                                dates[dateIndex + 1].day,
+                                0,
+                                0,
+                                0,
+                            ),
+                            additional_info=history.additional_info if history.additional_info else null(),
+                        )
+                    )
+                    dateIndex += 1
+                self.session.bulk_save_objects(tempHistoriesToInsert, preserve_order=True)
+                self.session.commit()
+                tempHistories.extend(tempHistoriesToInsert)
+            # date changed
+            else:
+                # for every "opening" event, insert a "closing" event
+                for key in range(len(lastEvents) - 1):
+                    if key not in [1, 3, 5]:
+                        continue
+
+                    if not (currentEvent := lastEvents[key]):
+                        continue
+
+                    # when a closing event exists, check if the opening event is before the closing event
+                    if lastEvents[key + 1]:
+                        # the opening event has a closing event
+                        if lastEvents[key + 1].time > currentEvent.time:
+                            continue
+
+                    tempHistory = History(
+                        discord_id=currentEvent.discord_id,
+                        guild_id=currentEvent.guild_id,
+                        event_id=currentEvent.event_id + 1,
+                        channel_id=currentEvent.channel_id,
+                        time=datetime.datetime(
+                            dates[dateIndex].year,
+                            dates[dateIndex].month,
+                            dates[dateIndex].day,
+                            23,
+                            59,
+                            59
+                        ),
+                        additional_info=currentEvent.additional_info if currentEvent.additional_info else null(),
+                    )
+                    self.session.add(tempHistory)
+                    tempHistories.append(tempHistory)
+
+                    tempHistory = History(
+                        discord_id=currentEvent.discord_id,
+                        guild_id=currentEvent.guild_id,
+                        event_id=currentEvent.event_id,
+                        channel_id=currentEvent.channel_id,
+                        time=datetime.datetime(
+                            dates[dateIndex + 1].year,
+                            dates[dateIndex + 1].month,
+                            dates[dateIndex + 1].day,
+                            0,
+                            0,
+                            0,
+                        ),
+                        additional_info=currentEvent.additional_info if currentEvent.additional_info else null(),
+                    )
+                    self.session.add(tempHistory)
+                    tempHistories.append(tempHistory)
+
+                tempHistory = History(
+                    discord_id=history.discord_id,
+                    guild_id=history.guild_id,
+                    event_id=8,
+                    channel_id=history.channel_id,
+                    time=datetime.datetime(
+                        dates[dateIndex].year,
+                        dates[dateIndex].month,
+                        dates[dateIndex].day,
+                        23,
+                        59,
+                        59,
+                    ),
+                    additional_info=history.additional_info if history.additional_info else null(),
+                )
+                self.session.add(tempHistory)
+
+                # TODO join before any opening events
+                tempHistory = History(
+                    discord_id=history.discord_id,
+                    guild_id=history.guild_id,
+                    event_id=7,
+                    channel_id=history.channel_id,
+                    time=datetime.datetime(
+                        dates[dateIndex + 1].year,
+                        dates[dateIndex + 1].month,
+                        dates[dateIndex + 1].day,
+                        0,
+                        0,
+                        0,
+                    ),
+                    additional_info=history.additional_info if history.additional_info else null(),
+                )
+                self.session.add(tempHistory)
+
+                tempHistories.append(tempHistory)
+                subHistories.append(tempHistories)
+
+                tempHistories = []
+                dateIndex += 1
+
+                try:
+                    self.session.commit()
+                except Exception as error:
+                    logger.error("Error while committing changes", exc_info=error)
+                    self.session.rollback()
+                else:
+                    logger.debug("Inserted midnight events")
+
+        print(subHistories)
 
     def _calculateOnlineTime(self, member: Member, history: Sequence[History]) -> tuple[int, int]:
         """
