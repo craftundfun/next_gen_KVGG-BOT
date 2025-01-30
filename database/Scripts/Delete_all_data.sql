@@ -11,6 +11,7 @@ DELETE FROM category;
 
 DELETE FROM guild_discord_user_mapping;
 DELETE FROM statistic;
+DELETE FROM history;
 DELETE FROM discord_user;
 
 DELETE FROM channel;

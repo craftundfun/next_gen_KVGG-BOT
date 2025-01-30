@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS history (
 	discord_id      BIGINT UNSIGNED                NOT NULL,
 	guild_id        BIGINT UNSIGNED                NOT NULL,
 	event_id        BIGINT UNSIGNED                NOT NULL,
-	time            TIMESTAMP                      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	time            DATETIME(3)                    NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	channel_id      BIGINT UNSIGNED                NULL     DEFAULT NULL,
 	additional_info JSON                           NULL     DEFAULT NULL,
 

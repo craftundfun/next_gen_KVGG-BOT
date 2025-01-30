@@ -13,7 +13,7 @@ class History(Base):
     discord_id = Column(BigInteger, ForeignKey("discord_user.discord_id"), nullable=False)
     guild_id = Column(BigInteger, ForeignKey("guild.guild_id"), nullable=False)
     event_id = Column(BigInteger, ForeignKey("event.id"), nullable=False)
-    time = Column(TIMESTAMP, nullable=False, default=func.current_timestamp())
+    time = Column(DATETIME, nullable=False, default=func.current_timestamp(3))
     channel_id = Column(BigInteger, nullable=True, default=null())
     additional_info = Column(JSON, nullable=True)
 
