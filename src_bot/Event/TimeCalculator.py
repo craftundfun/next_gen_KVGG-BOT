@@ -187,16 +187,17 @@ class TimeCalculator:
         for history in history:
             # when the date does not change, just add the history to the temp list
             if history.time.date() == dates[dateIndex]:
-                print("dates are the same")
+                print("dates are the same", history, dates[dateIndex])
                 tempHistories.append(history)
 
                 # save the event if it is an important event
                 if history.event_id in lastEvents.keys():
+                    print("save to lastEvents", history)
                     lastEvents[history.event_id] = history
             elif dateIndex + 1 < len(dates) and history.time.date() > dates[dateIndex + 1]:
-                print("index is small enough")
                 print("the next history event is not tomorrow")
                 tempHistoriesToInsert = []
+
                 for i in range((history.time.date() - dates[dateIndex]).days):
                     tempHistoriesToInsert.append(
                         History(
@@ -232,12 +233,75 @@ class TimeCalculator:
                             additional_info=history.additional_info if history.additional_info else null(),
                         )
                     )
+
+                    print("lastEvents", lastEvents)
+                    print("lastEvents length", len(lastEvents))
+
+                    for key in range(1, len(lastEvents)):
+                        if key not in [1, 3, 5]:
+                            print(f"{key} not in [1, 3, 5]")
+                            continue
+
+                        print(f"{key} in [1, 3, 5]")
+
+                        if not (currentEvent := lastEvents[key]):
+                            continue
+
+                        print(f"{key} has a current event", currentEvent)
+
+                        if lastEvents[key + 1]:
+                            if lastEvents[key + 1].time > currentEvent.time:
+                                continue
+
+                        print(f"{key} has no closing event")
+
+                        tempHistoriesToInsert.append(temp := (
+                            History(
+                                discord_id=currentEvent.discord_id,
+                                guild_id=currentEvent.guild_id,
+                                event_id=currentEvent.event_id + 1,
+                                channel_id=currentEvent.channel_id,
+                                time=datetime.datetime(
+                                    dates[dateIndex].year,
+                                    dates[dateIndex].month,
+                                    dates[dateIndex].day,
+                                    23,
+                                    59,
+                                    59
+                                ),
+                                additional_info=currentEvent.additional_info if currentEvent.additional_info else null(),
+                            )
+                        )
+                                                     )
+                        print("inserted", temp)
+
+                        tempHistoriesToInsert.append(temp := (
+                            History(
+                                discord_id=currentEvent.discord_id,
+                                guild_id=currentEvent.guild_id,
+                                event_id=currentEvent.event_id,
+                                channel_id=currentEvent.channel_id,
+                                time=datetime.datetime(
+                                    dates[dateIndex + 1].year,
+                                    dates[dateIndex + 1].month,
+                                    dates[dateIndex + 1].day,
+                                    0,
+                                    0,
+                                    0,
+                                ),
+                                additional_info=currentEvent.additional_info if currentEvent.additional_info else null(),
+                            ))
+                                                     )
+                        print("inserted", temp)
+
                     dateIndex += 1
                 self.session.bulk_save_objects(tempHistoriesToInsert, preserve_order=True)
                 self.session.commit()
                 tempHistories.extend(tempHistoriesToInsert)
             # date changed
             else:
+                openingEventsToAdd = []
+
                 # for every "opening" event, insert a "closing" event
                 for key in range(len(lastEvents) - 1):
                     if key not in [1, 3, 5]:
@@ -285,8 +349,8 @@ class TimeCalculator:
                         ),
                         additional_info=currentEvent.additional_info if currentEvent.additional_info else null(),
                     )
-                    self.session.add(tempHistory)
                     tempHistories.append(tempHistory)
+                    openingEventsToAdd.append(tempHistory)
 
                 tempHistory = History(
                     discord_id=history.discord_id,
@@ -305,7 +369,8 @@ class TimeCalculator:
                 )
                 self.session.add(tempHistory)
 
-                # TODO join before any opening events
+                self.session.bulk_save_objects(openingEventsToAdd, preserve_order=True)
+
                 tempHistory = History(
                     discord_id=history.discord_id,
                     guild_id=history.guild_id,
