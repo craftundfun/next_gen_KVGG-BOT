@@ -49,7 +49,7 @@ class TimeCalculator:
         """
         self.eventHandler.addListener(EventHandlerType.MEMBER_LEAVE, self.onMemberLeave)
 
-    def calculate_online_time(self, member, history):
+    def calculate_online_time(self, history):
         """
         Calculate the online, mute, and stream time of a member per day.
         :param member: The member to calculate the time for.
@@ -167,7 +167,8 @@ class TimeCalculator:
 
                 return
 
-            print(self.calculate_online_time(history))
+            print(time := self.calculate_online_time(history))
+            logger.error(f"Hier ist die \"Historie\" von {member.display_name}: {time}")
 
             return
 
