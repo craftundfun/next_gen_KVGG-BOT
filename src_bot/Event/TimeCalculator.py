@@ -85,6 +85,11 @@ class TimeCalculator:
 
             editedHistory = self._insertMidnightEvent(history, member)
 
+            # TODO remove after debugging
+            if type(editedHistory) is dict:
+                for key in editedHistory.keys():
+                    print(key, editedHistory[key])
+
             selectQuery = (select(Statistic)
                            .where(Statistic.discord_id == member.id,
                                   Statistic.guild_id == member.guild.id, ))
@@ -282,14 +287,8 @@ class TimeCalculator:
 
         # walk through the whole history once
         for history in historyFromMember:
-            if history.event_id == 8 and history.time.date() == datetime.now().date():
-                print("Now we look at today's leave event")
-
             # when the date does not change, just add the history to the temp list
             if history.time.date() == dates[dateIndex]:
-                if history.event_id == 8 and history.time.date() == datetime.now().date():
-                    print("The leave event is in sync with the dates, insert it")
-
                 historiesPerDay[dates[dateIndex]].append(history)
 
                 # save the event if it is an important event
@@ -297,8 +296,6 @@ class TimeCalculator:
                     lastEvents[history.event_id] = history
             # when the date changes and there are no events between the two dates
             elif dateIndex + 1 < len(dates) and history.time.date() > dates[dateIndex + 1]:
-                if history.event_id == 8 and history.time.date() == datetime.now().date():
-                    print("Index is small enough and the leave event date is greater than the next date")
                 # one list for each day
                 days = {date: [] for date in dates}
 
@@ -313,6 +310,8 @@ class TimeCalculator:
                     historiesPerDay[dates[dateIndex]].extend(historiesForThisDay)
                     historiesPerDay[dates[dateIndex + 1]].append(historyForNextDay)
                     dateIndex += 1
+
+                historiesPerDay[dates[dateIndex]].append(history)
 
                 # unpack all events for this the days
                 allDays = [event for key in days for event in days[key]]
@@ -329,11 +328,6 @@ class TimeCalculator:
                     return historyFromMember
             # date changed and the next history event is on the next day
             else:
-                # TODO detect here the upcoming events on this day.
-                # TODO otherwise an unmute event for the event the day before
-                # TODO will not be spotted here and goes undetected
-                if history.event_id == 8 and history.time.date() == datetime.now().date():
-                    print(f"We calculate the events for the current date ({dates[dateIndex]})")
                 historiesForThisDay, historyForNextDay = _getEventsForCurrentDateIndex()
 
                 historiesPerDay[dates[dateIndex + 1]].append(historyForNextDay)
@@ -351,10 +345,6 @@ class TimeCalculator:
                 else:
                     logger.debug(f"Inserted midnight events for {member.display_name, member.id} "
                                  f"on {member.guild.name, member.guild.id}")
-
-        for key in historiesPerDay.keys():
-            for history in historiesPerDay[key]:
-                print(key, history)
 
         return historiesPerDay
 
