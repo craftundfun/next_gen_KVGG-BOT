@@ -86,6 +86,7 @@ class TimeCalculator:
             editedHistory = self._insertMidnightEvent(history, member)
 
             # TODO remove after debugging
+            # TODO history are not correctly inserted at the correct date
             if type(editedHistory) is dict:
                 for key in editedHistory.keys():
                     print(key, editedHistory[key])
@@ -161,6 +162,9 @@ class TimeCalculator:
         :param historyFromMember: The history of the member.
         :param member: Just for logging purposes.
         """
+        # TODO 25 gejoined, 25 gemutet, 27 unmutet, 31 verlassen => kaputt
+
+
         if len(historyFromMember) == 0:
             logger.error(f"No history found for {member.display_name, member.id} on "
                          f"{member.guild.name, member.guild.id}, this should not happen")
@@ -190,13 +194,13 @@ class TimeCalculator:
 
         # save the time of the last events
         # the key is the event id
-        lastEvents: dict[int, None | History] = {
-            1: None,
-            2: None,
-            3: None,
-            4: None,
-            5: None,
-            6: None,
+        lastEvents: dict[int, list] = {
+            1: [],
+            2: [],
+            3: [],
+            4: [],
+            5: [],
+            6: [],
         }
         dateIndex = 0
         # empty list for each day the member was online in this session
@@ -250,13 +254,27 @@ class TimeCalculator:
                 if key not in [1, 3, 5]:
                     continue
 
+                currentEvent = None
+
+                for i in range(len(lastEvents[key])):
+                    if lastEvents[key][i].time.date() == dates[dateIndex]:
+                        currentEvent = lastEvents[key][i]
+                        break
+
                 # no opening event exists
-                if not (currentEvent := lastEvents[key]):
+                if not currentEvent:
                     continue
 
+                closingEvent = None
+
+                for i in range(len(lastEvents[key])):
+                    if lastEvents[key + 1][i].time.date() == dates[dateIndex]:
+                        closingEvent = lastEvents[key + 1][i]
+                        break
+
                 # when a closing event exists, check if the opening event is before the closing event
-                if lastEvents[key + 1]:
-                    if lastEvents[key + 1].time > currentEvent.time:
+                if closingEvent:
+                    if closingEvent.time > currentEvent.time:
                         continue
 
                 # close the event
@@ -285,15 +303,16 @@ class TimeCalculator:
 
             return historiesForThisDay[:-1], historiesForThisDay[-1]
 
+        # fill event list first
+        for history in historyFromMember:
+            if history.event_id in lastEvents.keys():
+                lastEvents[history.event_id].append(history)
+
         # walk through the whole history once
         for history in historyFromMember:
             # when the date does not change, just add the history to the temp list
             if history.time.date() == dates[dateIndex]:
                 historiesPerDay[dates[dateIndex]].append(history)
-
-                # save the event if it is an important event
-                if history.event_id in lastEvents.keys():
-                    lastEvents[history.event_id] = history
             # when the date changes and there are no events between the two dates
             elif dateIndex + 1 < len(dates) and history.time.date() > dates[dateIndex + 1]:
                 # one list for each day
