@@ -277,8 +277,8 @@ class EventHandler:
                     discord_id=member.id,
                     guild_id=member.guild.id,
                     event_id=eventId,
-                    channel_id=channelId if channelId else null(),
-                    additional_info=additionalInfo if additionalInfo else null(),
+                    channel_id=channelId,
+                    additional_info=additionalInfo,
                 )
 
             if member.bot:

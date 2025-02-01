@@ -9,7 +9,7 @@ from typing import Optional, TYPE_CHECKING
 # noinspection PyUnresolvedReferences
 from sqlalchemy import Column, BigInteger, VARCHAR, ForeignKey, DATETIME, TEXT, Integer, TIMESTAMP, JSON, BOOLEAN, Enum
 # noinspection PyUnresolvedReferences
-from sqlalchemy import null
+from sqlalchemy import null, Date
 # noinspection PyUnresolvedReferences
 from sqlalchemy.orm import DeclarativeBase, relationship
 # noinspection PyUnresolvedReferences
