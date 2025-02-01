@@ -198,7 +198,6 @@ class TimeCalculator:
                 return
 
             times = self.calculateTimesPerDay(member, history)
-            logger.error(f"Hier ist die \"Historie\" von {member.display_name}: {times}")
 
         # TODO maybe do this in another way?
         for listener in self.memberLeaveListeners:
