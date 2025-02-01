@@ -1,11 +1,11 @@
-from datetime import timedelta
+from collections import defaultdict
+from datetime import timedelta, datetime
 from typing import Sequence
 
 from discord import Member
 from sqlalchemy import select
-from sqlalchemy.orm.exc import NoResultFound
 
-from database.Domain.models import History, Statistic
+from database.Domain.models import History
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Event.EventHandler import EventHandler
 from src_bot.Helpers.FunctionName import listenerName
@@ -48,6 +48,114 @@ class TimeCalculator:
         """
         self.eventHandler.addListener(EventHandlerType.MEMBER_LEAVE, self.onMemberLeave)
 
+    # noinspection PyMethodMayBeStatic
+    def calculateTimesPerDay(self, member: Member, history: Sequence[History]) -> dict | None:
+        """
+        Calculate the online, mute and stream times per day.
+
+        :param member: Member to calculate the times for, but this is only needed for logging.
+        :param history: History of the member.
+        :return: Dictionary with the times per day.
+        """
+        if not history:
+            logger.error(f"No history given for {member.display_name, member.id} "
+                         f"on {member.guild.name, member.guild.id}")
+            return None
+
+        # dictionary with the times per day and a default value of 0
+        dailyTimes = defaultdict(lambda: {"online": 0, "mute": 0, "deaf": 0, "stream": 0})
+
+        onlineSince: datetime = history[0].time
+
+        # list of tuples with the start and end time of the mute and stream intervals
+        muteIntervals: list[tuple[datetime, datetime]] = []
+        streamIntervals: list[tuple[datetime, datetime]] = []
+        deafIntervals: list[tuple[datetime, datetime]] = []
+
+        muteActive: datetime | None = None
+        streamActive: datetime | None = None
+        deafActive: datetime | None = None
+
+        for event in history:
+            # mute
+            if event.event_id == 1:
+                muteActive = event.time
+            # unmute
+            elif event.event_id == 2 and muteActive:
+                muteIntervals.append((muteActive, event.time))
+                muteActive = None
+            # deaf
+            elif event.event_id == 3:
+                deafActive = event.time
+            # undeaf
+            elif event.event_id == 4 and deafActive:
+                deafIntervals.append((deafActive, event.time))
+                deafActive = None
+            # stream start
+            elif event.event_id == 5:
+                streamActive = event.time
+            # stream end
+            elif event.event_id == 6 and streamActive:
+                streamIntervals.append((streamActive, event.time))
+                streamActive = None
+
+        def timedelta_to_microseconds(delta: timedelta) -> int:
+            """
+            Returns the microseconds of a timedelta.
+            """
+            return delta.days * 86400 * 1_000_000 + delta.seconds * 1_000_000 + delta.microseconds
+
+        endTime: datetime = history[-1].time
+
+        while onlineSince.date() < endTime.date():
+            midnight = datetime.combine(onlineSince.date() + timedelta(days=1), datetime.min.time())
+            delta = midnight - onlineSince
+            dailyTimes[onlineSince.date()]["online"] += timedelta_to_microseconds(delta)
+            onlineSince = midnight
+
+        # add the time left until the last event
+        delta = endTime - onlineSince
+        dailyTimes[endTime.date()]["online"] += timedelta_to_microseconds(delta)
+
+        # TODO perhaps outsource it to a function?
+        for start, end in muteIntervals:
+            current = start
+
+            while current.date() < end.date():
+                midnight = datetime.combine(current.date() + timedelta(days=1), datetime.min.time())
+                delta = midnight - current
+                dailyTimes[current.date()]["mute"] += timedelta_to_microseconds(delta)
+                current = midnight
+
+            delta = end - current
+            dailyTimes[end.date()]["mute"] += timedelta_to_microseconds(delta)
+
+        for start, end in deafIntervals:
+            current = start
+
+            while current.date() < end.date():
+                midnight = datetime.combine(current.date() + timedelta(days=1), datetime.min.time())
+                delta = midnight - current
+                dailyTimes[current.date()]["deaf"] += timedelta_to_microseconds(delta)
+                current = midnight
+
+            delta = end - current
+            dailyTimes[end.date()]["deaf"] += timedelta_to_microseconds(delta)
+
+        for start, end in streamIntervals:
+            current = start
+
+            while current.date() < end.date():
+                midnight = datetime.combine(current.date() + timedelta(days=1), datetime.min.time())
+                delta = midnight - current
+                dailyTimes[current.date()]["stream"] += timedelta_to_microseconds(delta)
+                current = midnight
+
+            delta = end - current
+            dailyTimes[end.date()]["stream"] += timedelta_to_microseconds(delta)
+
+        return dict(dailyTimes)
+
     async def onMemberLeave(self, member: Member):
         """
         Fetch the online history and invoke the online and stream time calculation.
@@ -83,236 +191,22 @@ class TimeCalculator:
 
                 return
 
-            self.insertMidnightEvent(history)
-
-            selectQuery = (select(Statistic)
-                           .where(Statistic.discord_id == member.id,
-                                  Statistic.guild_id == member.guild.id, ))
-
-            # get the statistic for the member and simultaneously check if they already have one
-            try:
-                statistic = self.session.execute(selectQuery).scalars().one()
-            except NoResultFound:
-                statistic = Statistic(
-                    discord_id=member.id,
-                    guild_id=member.guild.id,
-                    # it has a default yes, but until its committed the object does not have it and its None
-                    online_time=0,
-                    mute_time=0,
-                    deaf_time=0,
-                    stream_time=0,
-                )
-
-                logger.debug(f"Created new statistic for {member.display_name, member.id} on "
-                             f"{member.guild.name, member.guild.id}")
-            except Exception as error:
-                logger.error(f"Error while fetching statistic for {member.display_name, member.id} on "
-                             f"{member.guild.name, member.guild.id}", exc_info=error)
-                self.session.rollback()
+            if not history:
+                logger.error(f"No history found for {member.display_name, member.id} "
+                             f"on {member.guild.name, member.guild.id}")
 
                 return
 
-            onlineTime, muteTime = self._calculateOnlineTime(member, history)
-            statistic.online_time += onlineTime
+            times = self.calculateTimesPerDay(member, history)
+            logger.error(f"Hier ist die \"Historie\" von {member.display_name}: {times}")
 
-            # this should only happen to short online times, because the database refresh will handle that
-            if onlineTime - muteTime > 0:
-                statistic.mute_time += muteTime
-            else:
-                logger.error(f"Mute time is greater than online time, this should not happen for "
-                             f"{member.display_name, member.id} on {member.guild.name, member.guild.id}")
-
-            statistic.stream_time += (streamTime := self._calculateStreamTime(member, history))
-
-            try:
-                # add regardless of whether the member has a statistic or not
-                self.session.add(statistic)
-                self.session.commit()
-            except Exception as error:
-                logger.error("Error while committing changes", exc_info=error)
-                self.session.rollback()
-
-                return
-            else:
-                logger.debug(f"Updated statistics for {member.display_name, member.id} on "
-                             f"{member.guild.name, member.guild.id}")
-
+        # TODO maybe do this in another way?
         for listener in self.memberLeaveListeners:
-            await listener(member, onlineTime, streamTime, muteTime)
-            logger.debug(f"Invoked listener: {listenerName(listener)}")
+            for key in times:
+                onlineTime = times[key]["online"]
+                muteTime = times[key]["mute"]
+                deafTime = times[key]["deaf"]
+                streamTime = times[key]["stream"]
 
-    def insertMidnightEvent(self, history: Sequence[History]):
-        """
-        If the user was online over midnight, leave events are inserted at midnight and join events after midnight
-        to have one leave-join circle per day.
-        This makes it easier to calculate the time.
-        """
-        if len(history) == 0:
-            return
-
-        print(history)
-
-        # all events happened on the same day, no need to insert anything
-        if history[0].time.date() == history[-1].time.date():
-            logger.debug("All events happened on the same day, no need to insert anything")
-
-            return
-
-        # count how many midnight events are needed
-        midnightEvents = (history[-1].time - history[0].time).days
-        # list of tuples with the day before and after midnight
-        dates = []
-
-        for i in range(midnightEvents):
-            dates.append((history[0].time.date() + timedelta(days=i), history[0].time.date() + timedelta(days=i + 1)))
-
-        print(midnightEvents, dates)
-
-    def _calculateOnlineTime(self, member: Member, history: Sequence[History]) -> tuple[int, int]:
-        """
-        Calculate the online time of a member by subtracting the time they were muted from the time they were online.
-
-        :param member: The member to calculate the online time for.
-        :param history: The history of the member.
-        :return: The online time and the mute time of the member in seconds.
-        """
-        onlineTime: timedelta = history[-1].time - history[0].time
-        logger.debug(f"Raw online time for {member.display_name, member.id} on "
-                     f"{member.guild.name, member.guild.id}: {onlineTime}")
-
-        muteTime = timedelta()
-        muteEvents = []
-        unmuteEvents = []
-
-        # find all wanted events
-        for history in history:
-            if history.event_id == 1:
-                muteEvents.append(history)
-            elif history.event_id == 2:
-                unmuteEvents.append(history)
-
-        # if
-        if len(muteEvents) == len(unmuteEvents):
-            for i in range(len(muteEvents)):
-                muteTime += unmuteEvents[i].time - muteEvents[i].time
-
-            logger.debug(f"Mute and unmute events match for {member.display_name, member.id} "
-                         f"on {member.guild.name, member.guild.id}")
-        else:
-            # maybe use a lower log level here in the future
-            logger.error(f"Mute and unmute events do not match for {member.display_name, member.id} on "
-                         f"{member.guild.name, member.guild.id}, trying to recover.")
-
-            # use a try block here in case anything goes wrong
-            try:
-                # more mutes than unmutes
-                if len(muteEvents) > len(unmuteEvents):
-                    for i in range(len(muteEvents) - 1):
-                        for j in range(len(unmuteEvents)):
-                            # if the unmute event is between two mute events
-                            if muteEvents[i].time <= unmuteEvents[j].time <= muteEvents[i + 1].time:
-                                muteTime += unmuteEvents[j].time - muteEvents[i].time
-
-                                break
-
-                    if len(unmuteEvents) > 0:
-                        # if the last unmute event is after the last mute event
-                        if unmuteEvents[-1].time >= muteEvents[-1].time:
-                            muteTime += unmuteEvents[-1].time - muteEvents[-1].time
-                else:
-                    usedMuteIndex = []
-
-                    for i in range(len(unmuteEvents)):
-                        for j in range(len(muteEvents)):
-                            # if the mute event is before the unmute event, and it has not been used yet
-                            if muteEvents[j].time <= unmuteEvents[i].time and not j in usedMuteIndex:
-                                muteTime += unmuteEvents[i].time - muteEvents[j].time
-                                usedMuteIndex.append(j)
-
-                                break
-            except Exception as error:
-                logger.error(f"Error while trying to recover mute and unmute times for "
-                             f"{member.display_name, member.id} on {member.guild.name, member.guild.id}",
-                             exc_info=error, )
-
-        logger.debug(f"Online time for {member.display_name, member.id} on "
-                     f"{member.guild.name, member.guild.id}: {onlineTime}")
-
-        return int(onlineTime.total_seconds()), int(muteTime.total_seconds())
-
-    def _calculateStreamTime(self, member: Member, history: Sequence[History]) -> int:
-        """
-        Calculate the time a member has streamed in a voice channel.
-
-        :param member: The member to calculate the stream time for.
-        :param history: The history of the member.
-        :return: The time the member has streamed in seconds.
-        """
-        streamStartEvents = []
-        streamStopEvents = []
-
-        for history in history:
-            if history.event_id == 5:
-                streamStartEvents.append(history)
-            elif history.event_id == 6:
-                streamStopEvents.append(history)
-
-        # if one of the lists is empty, the member did not stream or we cant recover the time
-        if len(streamStartEvents) == 0 or len(streamStopEvents) == 0:
-            logger.debug(f"{member.display_name, member.id} on {member.guild.name, member.guild.id} did not stream or "
-                         f"we are unable to recover the time, idk tho")
-
-            return 0
-
-        streamTime = timedelta()
-
-        if len(streamStartEvents) == len(streamStopEvents):
-            logger.debug(f"Stream start and stop events match for {member.display_name, member.id} on "
-                         f"{member.guild.name, member.guild.id}")
-
-            for i in range(len(streamStartEvents)):
-                streamTime += streamStopEvents[i].time - streamStartEvents[i].time
-
-            logger.debug(f"Stream time for {member.display_name, member.id} on {member.guild.name, member.guild.id}: "
-                         f"{streamTime}")
-
-            return int(streamTime.total_seconds())
-        else:
-            logger.error(f"Stream start and stop events do not match for {member.display_name, member.id} on "
-                         f"{member.guild.name, member.guild.id}, trying to recover.")
-
-            try:
-                # more start events than stop events
-                if len(streamStartEvents) > len(streamStopEvents):
-                    for i in range(len(streamStartEvents) - 1):
-                        for j in range(len(streamStopEvents)):
-                            # if the stop event is between two start events
-                            if streamStartEvents[i].time <= streamStopEvents[j].time <= streamStartEvents[i + 1].time:
-                                streamTime += streamStopEvents[j].time - streamStartEvents[i].time
-
-                                break
-
-                    if len(streamStopEvents) > 0:
-                        # if the last stop event is after the last start event
-                        if streamStopEvents[-1].time >= streamStartEvents[-1].time:
-                            streamTime += streamStopEvents[-1].time - streamStartEvents[-1].time
-                else:
-                    usedStartIndex = []
-
-                    for i in range(len(streamStopEvents)):
-                        for j in range(len(streamStartEvents)):
-                            # if the start event is before the stop event, and it has not been used yet
-                            if streamStartEvents[j].time <= streamStopEvents[i].time and not j in usedStartIndex:
-                                streamTime += streamStopEvents[i].time - streamStartEvents[j].time
-                                usedStartIndex.append(j)
-
-                                break
-
-                logger.debug(f"Recovered stream time for {member.display_name, member.id} on "
-                             f"{member.guild.name, member.guild.id}: {streamTime}")
-
-                return int(streamTime.total_seconds())
-            except Exception as error:
-                logger.error("Error while trying to recover stream time", exc_info=error)
-
-                return int(streamTime.total_seconds())
+                await listener(member, key, onlineTime, muteTime, deafTime, streamTime, )
+                logger.debug(f"Invoked listener: {listenerName(listener)}")

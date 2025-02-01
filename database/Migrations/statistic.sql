@@ -3,23 +3,23 @@ USE kvgg_next_beta;
 DROP TABLE IF EXISTS statistic;
 
 CREATE TABLE IF NOT EXISTS statistic (
-	id            BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
-	discord_id    BIGINT UNSIGNED                NOT NULL,
-	guild_id      BIGINT UNSIGNED                NOT NULL,
+	discord_id    BIGINT UNSIGNED NOT NULL,
+	guild_id      BIGINT UNSIGNED NOT NULL,
+	date          DATE            NOT NULL,
 	# Auch wenn es gegen die Datenbank-Konsistenz spricht,
 	# ist es einfacher beide Foreign Keys aus DiscordID und GuildID zu nutzen.
 	# Andernfalls müsste man beim einfügen immer erst joinen bzw. die passende ID suchen.
 	# guild_discord_user_mapping_id BIGINT UNSIGNED                NOT NULL,
 
-	# seconds online due to lack of timedelta in MySQL
-	online_time   BIGINT UNSIGNED                NOT NULL DEFAULT 0,
-	stream_time   BIGINT UNSIGNED                NOT NULL DEFAULT 0,
-	mute_time     BIGINT UNSIGNED                NOT NULL DEFAULT 0,
-	deaf_time     BIGINT UNSIGNED                NOT NULL DEFAULT 0,
-	message_count BIGINT UNSIGNED                NOT NULL DEFAULT 0,
-	command_count BIGINT UNSIGNED                NOT NULL DEFAULT 0,
+	# microseconds online due to lack of timedelta in MySQL
+	online_time   BIGINT UNSIGNED NOT NULL DEFAULT 0,
+	stream_time   BIGINT UNSIGNED NOT NULL DEFAULT 0,
+	mute_time     BIGINT UNSIGNED NOT NULL DEFAULT 0,
+	deaf_time     BIGINT UNSIGNED NOT NULL DEFAULT 0,
+	message_count BIGINT UNSIGNED NOT NULL DEFAULT 0,
+	command_count BIGINT UNSIGNED NOT NULL DEFAULT 0,
 
-	PRIMARY KEY (id),
+	PRIMARY KEY (discord_id, guild_id, date),
 	FOREIGN KEY (discord_id) REFERENCES discord_user(discord_id),
 	FOREIGN KEY (guild_id) REFERENCES guild(guild_id)
 )
@@ -27,3 +27,4 @@ CREATE TABLE IF NOT EXISTS statistic (
 	CHARSET = UTF8MB4;
 
 CREATE INDEX idc_discord_guild_id ON statistic(discord_id, guild_id);
+CREATE INDEX idc_discord_guild_date ON statistic(discord_id, guild_id, date);

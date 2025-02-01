@@ -12,6 +12,7 @@ from src_bot.Experience.ExperienceManager import ExperienceManager
 from src_bot.Guild.GuildManager import GuildManager
 from src_bot.Logging.Logger import Logger
 from src_bot.Member.MemberManager import MemberManager
+from src_bot.Statistic.StatisticManager import StatisticManager
 from src_bot.Timer.Timer import Timer
 
 logger = Logger("Controller")
@@ -36,6 +37,7 @@ class Controller:
         self.eventHandler = EventHandler(self.client, self.guildManager)
         self.timeCalculator = TimeCalculator(self.eventHandler)
         self.timer = Timer(self.client)
+        self.statisticManager = StatisticManager(self.client, self.timeCalculator)
         # self.ExperienceManager = ExperienceManager(self.client, self.timer, self.guildManager)
 
         self.registerListeners()

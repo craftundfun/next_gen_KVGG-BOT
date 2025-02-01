@@ -4,9 +4,9 @@ from database.Domain.BaseClass import *
 class Statistic(Base):
     __tablename__ = "statistic"
 
-    id = Column(BigInteger, primary_key=True, nullable=False)
-    discord_id = Column(BigInteger, ForeignKey("discord_user.discord_id"), nullable=False)
-    guild_id = Column(BigInteger, ForeignKey("guild.guild_id"), nullable=False)
+    discord_id = Column(BigInteger, ForeignKey("discord_user.discord_id"), primary_key=True, nullable=False)
+    guild_id = Column(BigInteger, ForeignKey("guild.guild_id"), primary_key=True, nullable=False)
+    date = Column(Date, primary_key=True, nullable=False)
     online_time = Column(BigInteger, nullable=False, default=0)
     stream_time = Column(BigInteger, nullable=False, default=0)
     mute_time = Column(BigInteger, nullable=False, default=0)
