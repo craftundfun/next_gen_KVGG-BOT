@@ -30,14 +30,14 @@ class CommandManager:
 
     def registerListeners(self):
         self.client.addListener(self.onBotReady, ClientListenerType.READY)
-
         logger.debug("Registered ready listener to Client")
 
     def addCommands(self, guilds: list[discord.Object]):
         # TODO dont hardcode the commands
-        command = PingCommand(self.tree, guilds)
-        self.commands.append(command)
-        self.commandWorker.registerListenersAtCommand(command)
+        pingCommand = PingCommand(self.tree, guilds)
+
+        self.commands.append(pingCommand)
+        self.commandWorker.registerListenersAtCommand(pingCommand)
 
     async def syncCommands(self):
         self.addCommands(self.guilds)

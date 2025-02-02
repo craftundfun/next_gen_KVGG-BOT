@@ -1,13 +1,12 @@
-import discord
 from discord import Interaction
 
-from src_bot.Command.CommandBase import CommandBase
+from src_bot.Command.CommandSkeleton import CommandSkeleton
 from src_bot.Logging.Logger import Logger
 
 logger = Logger("PingCommand")
 
 
-class PingCommand(CommandBase):
+class PingCommand(CommandSkeleton):
 
     def registerCommand(self):
         @self.tree.command(name="ping_command",

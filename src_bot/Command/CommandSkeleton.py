@@ -8,10 +8,10 @@ from src_bot.Helpers.FunctionName import listenerName
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.CommandListenerType import CommandListenerType
 
-logger = Logger("CommandBase")
+logger = Logger("CommandSkeleton")
 
 
-class CommandBase(ABC):
+class CommandSkeleton(ABC):
     """
     Base class for all commands that are registered in the command tree with listeners
     """
