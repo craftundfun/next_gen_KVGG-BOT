@@ -228,3 +228,7 @@ class Client(discordClient):
         for listener in self.voiceUpdateListener:
             await listener(member, before, after)
             logger.debug(f"Notified voice state update listener: {listenerName(listener)}")
+
+    async def on_presence_update(self, before: Member, after: Member):
+        print(f"Before: online - {before.status}, activity - {before.activity.to_dict()}")
+        print(f"After: online - {after.status}, activity - {after.activity.to_dict()}")
