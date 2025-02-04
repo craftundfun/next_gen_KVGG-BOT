@@ -248,6 +248,11 @@ class Client(discordClient):
                 elif before.activity and not after.activity:
                     activityToLookAt = before.activity
                     event = 11
+                # TODO if implemented correctly, watch out for game changes
+                elif before.activity != after.activity:
+                    logger.warning(f"Activity changed for {before.display_name, before.id}")
+                    activityToLookAt = after.activity
+                    event = 10
 
                 if not activityToLookAt:
                     logger.warning(f"Nothing changed: {before.activity} -> {after.activity}")
