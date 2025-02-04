@@ -230,5 +230,70 @@ class Client(discordClient):
             logger.debug(f"Notified voice state update listener: {listenerName(listener)}")
 
     async def on_presence_update(self, before: Member, after: Member):
-        print(f"Before: online - {before.status}, activity - {before.activity.to_dict()}")
-        print(f"After: online - {after.status}, activity - {after.activity.to_dict()}")
+        # TODO remove, its only temporary
+        from src_bot.Database.DatabaseConnection import getSession
+        from database.Domain.models.Activity import Activity
+        from database.Domain.models.ActivityHistory import ActivityHistory
+        from database.Domain.models.ActivityMapping import ActivityMapping
+        from sqlalchemy import select
+        from sqlalchemy.orm.exc import NoResultFound
+
+        try:
+            with getSession() as session:
+                activityToLookAt = None
+
+                if not before.activity and after.activity:
+                    activityToLookAt = after.activity
+                    event = 10
+                elif before.activity and not after.activity:
+                    activityToLookAt = before.activity
+                    event = 11
+
+                if not activityToLookAt:
+                    logger.warning(f"Nothing changed: {before.activity} -> {after.activity}")
+
+                    return
+
+                selectQuery = select(Activity).where(Activity.external_activity_id == activityToLookAt.application_id, )
+
+                try:
+                    activity = session.execute(selectQuery).scalars().one()
+                except NoResultFound:
+                    logger.debug("creating new activity")
+
+                    activity = Activity(
+                        external_activity_id=activityToLookAt.application_id,
+                        name=activityToLookAt.name,
+                    )
+
+                    session.add(activity)
+                    # commit to trigger the trigger
+                    session.commit()
+
+                selectQuery = select(ActivityMapping).where(
+                    ActivityMapping.secondary_activity_id == activity.id, )
+
+                try:
+                    activityMapping = session.execute(selectQuery).scalars().one()
+                except NoResultFound:
+                    logger.error(f"No activity mapping found for activity {activityToLookAt}")
+
+                    return
+
+                activityHistory = ActivityHistory(
+                    discord_id=after.id,
+                    guild_id=after.guild.id,
+                    activity_id=activityMapping.primary_activity_id,
+                    event_id=event,
+                )
+
+                session.add(activityHistory)
+                session.commit()
+
+                logger.debug(f"Added activity history: {activityHistory} for {after.display_name, after.id}")
+        except AttributeError:
+            logger.warning("Activity has no application id, aborting")
+
+            return
+        except Exception as error:
+            logger.error("Error while updating presence", exc_info=error)

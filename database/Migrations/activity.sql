@@ -1,40 +1,50 @@
 USE kvgg_next_beta;
 
-CREATE TABLE game (
-	game_id BIGINT UNSIGNED NOT NULL,
-	name    TEXT            NOT NULL,
+DROP TABLE IF EXISTS activity_history;
+DROP TABLE IF EXISTS activity_mapping;
+DROP TABLE IF EXISTS activity;
+DROP TRIGGER IF EXISTS activity_insert;
 
-	PRIMARY KEY (game_id)
+CREATE TABLE activity (
+	# not all activities have an id given by Discord
+	id                   BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+	external_activity_id BIGINT UNSIGNED                NULL DEFAULT NULL,
+	name                 TEXT                           NOT NULL,
+
+	PRIMARY KEY (id)
 )
 	ENGINE = InnoDB
 	CHARSET = UTF8MB4;
 
-CREATE TABLE game_mapping (
-	primary_game_id   BIGINT UNSIGNED        NOT NULL,
-	# every game will be in the secondary_game_id column
-	# also every game can only be the secondary_game_id of one primary_game_id
+CREATE TABLE activity_mapping (
+	primary_activity_id   BIGINT UNSIGNED        NOT NULL,
+	# every activity will be in the secondary_activity_id column
+	# also every game can only be the secondary_activity_id of one primary_activity_id
 	# game 1, 2, 3 with 1 = 2, 3
-	# primary_game_id = 1, secondary_game_id = 1
-	# primary_game_id = 1, secondary_game_id = 2
-	# primary_game_id = 3, secondary_game_id = 3
-	secondary_game_id BIGINT UNSIGNED UNIQUE NOT NULL,
+	# primary_activity_id = 1, secondary_activity_id = 1
+	# primary_activity_id = 1, secondary_activity_id = 2
+	# primary_activity_id = 3, secondary_activity_id = 3
+	secondary_activity_id BIGINT UNSIGNED UNIQUE NOT NULL,
 
-	PRIMARY KEY (primary_game_id, secondary_game_id),
-	FOREIGN KEY (primary_game_id) REFERENCES game(game_id) ON DELETE CASCADE,
-	FOREIGN KEY (secondary_game_id) REFERENCES game(game_id) ON DELETE CASCADE
+	PRIMARY KEY (primary_activity_id, secondary_activity_id),
+	FOREIGN KEY (primary_activity_id) REFERENCES activity(id) ON DELETE CASCADE,
+	FOREIGN KEY (secondary_activity_id) REFERENCES activity(id) ON DELETE CASCADE
 )
 	ENGINE = InnoDB
 	CHARSET = UTF8MB4;
 
 CREATE TABLE activity_history (
-	id         BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
-	discord_id BIGINT UNSIGNED                NOT NULL,
-	game_id    BIGINT UNSIGNED                NOT NULL,
-	event_id   BIGINT UNSIGNED                NOT NULL,
+	id          BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+	discord_id  BIGINT UNSIGNED                NOT NULL,
+	guild_id    BIGINT UNSIGNED                NOT NULL,
+	activity_id BIGINT UNSIGNED                NOT NULL,
+	event_id    BIGINT UNSIGNED                NOT NULL,
+	time        DATETIME(6)                    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
 
 	PRIMARY KEY (id),
 	FOREIGN KEY (discord_id) REFERENCES discord_user(discord_id) ON DELETE CASCADE,
-	FOREIGN KEY (game_id) REFERENCES game_mapping(secondary_game_id) ON DELETE CASCADE,
+	FOREIGN KEY (guild_id) REFERENCES guild(guild_id) ON DELETE CASCADE,
+	FOREIGN KEY (activity_id) REFERENCES activity_mapping(secondary_activity_id) ON DELETE CASCADE,
 	FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE,
 
 	# only the activity start and end events are allowed
@@ -42,3 +52,12 @@ CREATE TABLE activity_history (
 )
 	ENGINE = InnoDB
 	CHARSET = UTF8MB4;
+
+# automatically create the mapping for the activity with itself
+CREATE TRIGGER activity_insert
+	AFTER INSERT
+	ON activity
+	FOR EACH ROW
+BEGIN
+	INSERT INTO activity_mapping (primary_activity_id, secondary_activity_id) VALUES (NEW.id, NEW.id);
+END;
