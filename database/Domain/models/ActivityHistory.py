@@ -13,7 +13,7 @@ class ActivityHistory(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=True, nullable=False)
     discord_id = Column(BigInteger, ForeignKey('discord_user.discord_id'), nullable=False)
     guild_id = Column(BigInteger, ForeignKey('guild.guild_id'), nullable=False)
-    activity_id = Column(BigInteger, ForeignKey('activity.id'), nullable=False)
+    primary_activity_id = Column(BigInteger, ForeignKey('activity.id'), nullable=False)
     event_id = Column(BigInteger, ForeignKey('event.id'), nullable=False)
     time = Column(DATETIME, nullable=False, default=func.current_timestamp(6))
 

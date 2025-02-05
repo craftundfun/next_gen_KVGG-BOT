@@ -27,6 +27,8 @@ class Client(discordClient):
     memberRemoveListenerRaw = []
     memberUpdateListener = []
     voiceUpdateListener = []
+    memberPresenceUpdateListener = []
+    memberActivityUpdateListener = []
 
     ready = False
 
@@ -79,6 +81,10 @@ class Client(discordClient):
                 self.memberUpdateListener.append(listener)
             case ClientListenerType.VOICE_UPDATE:
                 self.voiceUpdateListener.append(listener)
+            case ClientListenerType.STATUS_UPDATE:
+                self.memberPresenceUpdateListener.append(listener)
+            case ClientListenerType.ACTIVITY_UPDATE:
+                self.memberActivityUpdateListener.append(listener)
             case _:
                 logger.error(f"Invalid listener type: {listenerType}")
 
@@ -100,6 +106,7 @@ class Client(discordClient):
 
         self.ready = True
 
+        # TODO write a wrapper for calling listeners and include error handling
         for listener in self.readyListener:
             await listener()
             logger.debug(f"Notified ready listener: {listenerName(listener)}")
@@ -230,75 +237,97 @@ class Client(discordClient):
             logger.debug(f"Notified voice state update listener: {listenerName(listener)}")
 
     async def on_presence_update(self, before: Member, after: Member):
-        # TODO remove, its only temporary
-        from src_bot.Database.DatabaseConnection import getSession
-        from database.Domain.models.Activity import Activity
-        from database.Domain.models.ActivityHistory import ActivityHistory
-        from database.Domain.models.ActivityMapping import ActivityMapping
-        from sqlalchemy import select
-        from sqlalchemy.orm.exc import NoResultFound
+        """
+        When a member has a presence update, such as status or activity change.
 
-        try:
-            with getSession() as session:
-                activityToLookAt = None
+        :param before: The member's presence before the update.
+        :param after: The member's presence after the update.
+        """
+        # TODO maybe look at every activity in the list
+        if before.activity != after.activity:
+            logger.debug(f"Activity changed for {before.display_name, before.id} "
+                         f"on {before.guild.name, before.guild.id}")
 
-                if not before.activity and after.activity:
-                    activityToLookAt = after.activity
-                    event = 10
-                elif before.activity and not after.activity:
-                    activityToLookAt = before.activity
-                    event = 11
-                # TODO if implemented correctly, watch out for game changes
-                elif before.activity != after.activity:
-                    logger.warning(f"Activity changed for {before.display_name, before.id}")
-                    activityToLookAt = after.activity
-                    event = 10
+            for listener in self.memberActivityUpdateListener:
+                await listener(before, after)
+                logger.debug(f"Notified activity update listener: {listenerName(listener)}")
 
-                if not activityToLookAt:
-                    logger.warning(f"Nothing changed: {before.activity} -> {after.activity}")
+        if before.status != after.status:
+            logger.debug(f"Status changed for {before.display_name, before.id} on {before.guild.name, before.guild.id}")
 
-                    return
+            for listener in self.memberPresenceUpdateListener:
+                await listener(before, after)
+                logger.debug(f"Notified presence update listener: {listenerName(listener)}")
 
-                selectQuery = select(Activity).where(Activity.external_activity_id == activityToLookAt.application_id, )
-
-                try:
-                    activity = session.execute(selectQuery).scalars().one()
-                except NoResultFound:
-                    logger.debug("creating new activity")
-
-                    activity = Activity(
-                        external_activity_id=activityToLookAt.application_id,
-                        name=activityToLookAt.name,
-                    )
-
-                    session.add(activity)
-                    # commit to trigger the trigger
-                    session.commit()
-
-                selectQuery = select(ActivityMapping).where(
-                    ActivityMapping.secondary_activity_id == activity.id, )
-
-                try:
-                    activityMapping = session.execute(selectQuery).scalars().one()
-                except NoResultFound:
-                    logger.error(f"No activity mapping found for activity {activityToLookAt}")
-
-                    return
-
-                activityHistory = ActivityHistory(
-                    discord_id=after.id,
-                    guild_id=after.guild.id,
-                    activity_id=activityMapping.primary_activity_id,
-                    event_id=event,
-                )
-
-                session.add(activityHistory)
-                session.commit()
-
-                logger.debug(f"Added activity history: {activityHistory} for {after.display_name, after.id}")
-        except AttributeError:
-            logger.warning("Activity has no application id, aborting")
-
-            return
-        except Exception as error:
-            logger.error("Error while updating presence", exc_info=error)
+        # # TODO remove, its only temporary
+        # from src_bot.Database.DatabaseConnection import getSession
+        # from database.Domain.models.Activity import Activity
+        # from database.Domain.models.ActivityHistory import ActivityHistory
+        # from database.Domain.models.ActivityMapping import ActivityMapping
+        # from sqlalchemy import select
+        # from sqlalchemy.orm.exc import NoResultFound
+#
+# try:
+#     with getSession() as session:
+#         activityToLookAt = None
+#
+#         if not before.activity and after.activity:
+#             activityToLookAt = after.activity
+#             event = 10
+#         elif before.activity and not after.activity:
+#             activityToLookAt = before.activity
+#             event = 11
+#         # TODO if implemented correctly, watch out for game changes
+#         elif before.activity != after.activity:
+#             logger.warning(f"Activity changed for {before.display_name, before.id}")
+#             activityToLookAt = after.activity
+#             event = 10
+#
+#         if not activityToLookAt:
+#             logger.warning(f"Nothing changed: {before.activity} -> {after.activity}")
+#
+#             return
+#
+#         selectQuery = select(Activity).where(Activity.external_activity_id == activityToLookAt.application_id, )
+#
+#         try:
+#             activity = session.execute(selectQuery).scalars().one()
+#         except NoResultFound:
+#             logger.debug("creating new activity")
+#
+#             activity = Activity(
+#                 external_activity_id=activityToLookAt.application_id,
+#                 name=activityToLookAt.name,
+#             )
+#
+#             session.add(activity)
+#             # commit to trigger the trigger
+#             session.commit()
+#
+#         selectQuery = select(ActivityMapping).where(
+#             ActivityMapping.secondary_activity_id == activity.id, )
+#
+#         try:
+#             activityMapping = session.execute(selectQuery).scalars().one()
+#         except NoResultFound:
+#             logger.error(f"No activity mapping found for activity {activityToLookAt}")
+#
+#             return
+#
+#         activityHistory = ActivityHistory(
+#             discord_id=after.id,
+#             guild_id=after.guild.id,
+#             activity_id=activityMapping.primary_activity_id,
+#             event_id=event,
+#         )
+#
+#         session.add(activityHistory)
+#         session.commit()
+#
+#         logger.debug(f"Added activity history: {activityHistory} for {after.display_name, after.id}")
+# except AttributeError:
+#     logger.warning("Activity has no application id, aborting")
+#
+#     return
+# except Exception as error:
+#     logger.error("Error while updating presence", exc_info=error)

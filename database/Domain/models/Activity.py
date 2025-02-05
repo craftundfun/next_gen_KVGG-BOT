@@ -1,5 +1,6 @@
 from database.Domain.BaseClass import *
 
+
 # if TYPE_CHECKING:
 #     from database.Domain.models.ActivityMapping import ActivityMapping
 
@@ -9,7 +10,7 @@ class Activity(Base):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True, nullable=False)
     external_activity_id = Column(BigInteger, nullable=True, default=null())
-    name = Column(TEXT, nullable=False)
+    name = Column(VARCHAR(255), nullable=False)
 
     # activityMappings: Mapped["ActivityMapping"] = relationship(
     #     "ActivityMapping",

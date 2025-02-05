@@ -4,12 +4,15 @@ DROP TABLE IF EXISTS activity_history;
 DROP TABLE IF EXISTS activity_mapping;
 DROP TABLE IF EXISTS activity;
 DROP TRIGGER IF EXISTS activity_insert;
+DROP TRIGGER IF EXISTS activity_history_insert;
+DROP TRIGGER IF EXISTS activity_history_update;
 
 CREATE TABLE activity (
 	# not all activities have an id given by Discord
 	id                   BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
 	external_activity_id BIGINT UNSIGNED                NULL DEFAULT NULL,
-	name                 TEXT                           NOT NULL,
+	# make the name unique in case we have no external id to distinguish between activities
+	name                 VARCHAR(255) UNIQUE            NOT NULL,
 
 	PRIMARY KEY (id)
 )
@@ -34,17 +37,17 @@ CREATE TABLE activity_mapping (
 	CHARSET = UTF8MB4;
 
 CREATE TABLE activity_history (
-	id          BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
-	discord_id  BIGINT UNSIGNED                NOT NULL,
-	guild_id    BIGINT UNSIGNED                NOT NULL,
-	activity_id BIGINT UNSIGNED                NOT NULL,
-	event_id    BIGINT UNSIGNED                NOT NULL,
-	time        DATETIME(6)                    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+	id                  BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
+	discord_id          BIGINT UNSIGNED                NOT NULL,
+	guild_id            BIGINT UNSIGNED                NOT NULL,
+	primary_activity_id BIGINT UNSIGNED                NOT NULL,
+	event_id            BIGINT UNSIGNED                NOT NULL,
+	time                DATETIME(6)                    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
 
 	PRIMARY KEY (id),
 	FOREIGN KEY (discord_id) REFERENCES discord_user(discord_id) ON DELETE CASCADE,
 	FOREIGN KEY (guild_id) REFERENCES guild(guild_id) ON DELETE CASCADE,
-	FOREIGN KEY (activity_id) REFERENCES activity_mapping(secondary_activity_id) ON DELETE CASCADE,
+	FOREIGN KEY (primary_activity_id) REFERENCES activity(id) ON DELETE CASCADE,
 	FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE,
 
 	# only the activity start and end events are allowed
@@ -61,3 +64,35 @@ CREATE TRIGGER activity_insert
 BEGIN
 	INSERT INTO activity_mapping (primary_activity_id, secondary_activity_id) VALUES (NEW.id, NEW.id);
 END;
+
+# when the given key is not a primary id from the mapping table, the insert has to fail
+# we only want the primary games listed in the history
+CREATE TRIGGER activity_history_insert
+	BEFORE INSERT
+	ON activity_history
+	FOR EACH ROW
+BEGIN
+	IF NOT EXISTS(SELECT 1
+				  FROM activity_mapping
+				  WHERE primary_activity_id = NEW.primary_activity_id)
+	THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT =
+					'The given primary activity id is not a primary activity! Find the primary activities in the activity_mapping table first.';
+	END IF;
+end;
+
+CREATE TRIGGER activity_history_update
+	BEFORE UPDATE
+	ON activity_history
+	FOR EACH ROW
+BEGIN
+	IF NOT EXISTS(SELECT 1
+				  FROM activity_mapping
+				  WHERE primary_activity_id = NEW.primary_activity_id)
+	THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT =
+					'The given primary activity id is not a primary activity! Find the primary activities in the activity_mapping table first.';
+	END IF;
+end;
