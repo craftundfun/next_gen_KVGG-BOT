@@ -1,4 +1,4 @@
-from discord import Member
+from discord import Member, CustomActivity, Streaming, BaseActivity
 from sqlalchemy import select, null, insert
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -28,6 +28,17 @@ class ActivityManager:
         self.client.addListener(self.onActivityUpdate, ClientListenerType.ACTIVITY_UPDATE)
         logger.debug("Registered ActivityManager listener")
 
+    def _isActivityFeasible(self, activity: BaseActivity) -> bool:
+        """
+        Check if the activity is feasible for the activity manager.
+
+        :param activity: The activity to check.
+        :return: True if the activity is feasible, otherwise False.
+        """
+        return not isinstance(activity, CustomActivity) and not isinstance(activity, Streaming)
+
+    # def _getSelectQueryForActivity(self, activity: BaseActivity):
+
     async def onActivityUpdate(self, before: Member, after: Member):
         """
         Handle the activity update event.
@@ -40,6 +51,12 @@ class ActivityManager:
             if not before.activity and after.activity:
                 logger.debug(f"{after.display_name, after.id} started the activity {after.activity} "
                              f"on {after.guild.name, after.guild.id}")
+
+                if not self._isActivityFeasible(after.activity):
+                    logger.debug(f"{after.display_name, after.id} started an activity that is not feasible for the "
+                                 "tracking")
+
+                    return
 
                 # use a boolean, otherwise every access would end in an AttributeError
                 hasApplicationId = True
@@ -93,3 +110,15 @@ class ActivityManager:
                 else:
                     logger.debug(f"Inserted activity history for {after.display_name, after.id} "
                                  f"on {after.guild.name, after.guild.id}")
+            # member switched activity
+            elif before.activity and after.activity:
+                logger.debug(f"{after.display_name, after.id} switched the activity from {before.activity} to "
+                             f"{after.activity} on {after.guild.name, after.guild.id}")
+
+                if not self._isActivityFeasible(before.activity) or not self._isActivityFeasible(after.activity):
+                    logger.debug(f"{after.display_name, after.id} switched to an activity that is not feasible for the "
+                                 "tracking")
+
+                    return
+
+
