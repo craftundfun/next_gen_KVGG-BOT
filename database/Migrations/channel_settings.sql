@@ -6,8 +6,7 @@ CREATE TABLE IF NOT EXISTS channel_setting (
 	track_time TINYINT(1)                     NOT NULL DEFAULT 0,
 
 	PRIMARY KEY (id),
-	# if we delete the channel, we delete the settings
-	FOREIGN KEY (channel_id) REFERENCES channel(channel_id) ON DELETE CASCADE
+	FOREIGN KEY (channel_id) REFERENCES channel(channel_id)
 )
 	ENGINE = InnoDB
 	CHARSET = UTF8MB4;

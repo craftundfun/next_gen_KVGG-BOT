@@ -9,7 +9,7 @@ class Activity(Base):
     __tablename__ = "activity"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True, nullable=False)
-    external_activity_id = Column(BigInteger, nullable=True, default=null())
+    external_activity_id = Column(BigInteger, nullable=True, server_default=null())
     name = Column(VARCHAR(255), nullable=False)
 
     # activityMappings: Mapped["ActivityMapping"] = relationship(

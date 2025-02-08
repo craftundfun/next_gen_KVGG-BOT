@@ -3,6 +3,7 @@ USE kvgg_next_beta;
 DROP TABLE IF EXISTS activity_history;
 DROP TABLE IF EXISTS activity_mapping;
 DROP TABLE IF EXISTS activity;
+
 DROP TRIGGER IF EXISTS activity_insert;
 DROP TRIGGER IF EXISTS activity_history_insert;
 DROP TRIGGER IF EXISTS activity_history_update;
@@ -30,8 +31,8 @@ CREATE TABLE activity_mapping (
 	secondary_activity_id BIGINT UNSIGNED UNIQUE NOT NULL,
 
 	PRIMARY KEY (primary_activity_id, secondary_activity_id),
-	FOREIGN KEY (primary_activity_id) REFERENCES activity(id) ON DELETE CASCADE,
-	FOREIGN KEY (secondary_activity_id) REFERENCES activity(id) ON DELETE CASCADE
+	FOREIGN KEY (primary_activity_id) REFERENCES activity(id),
+	FOREIGN KEY (secondary_activity_id) REFERENCES activity(id)
 )
 	ENGINE = InnoDB
 	CHARSET = UTF8MB4;
@@ -42,13 +43,13 @@ CREATE TABLE activity_history (
 	guild_id            BIGINT UNSIGNED                NOT NULL,
 	primary_activity_id BIGINT UNSIGNED                NOT NULL,
 	event_id            BIGINT UNSIGNED                NOT NULL,
-	time                DATETIME(6)                    NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+	time                DATETIME(6)                    NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
 
 	PRIMARY KEY (id),
-	FOREIGN KEY (discord_id) REFERENCES discord_user(discord_id) ON DELETE CASCADE,
-	FOREIGN KEY (guild_id) REFERENCES guild(guild_id) ON DELETE CASCADE,
-	FOREIGN KEY (primary_activity_id) REFERENCES activity(id) ON DELETE CASCADE,
-	FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE,
+	FOREIGN KEY (discord_id) REFERENCES discord_user(discord_id),
+	FOREIGN KEY (guild_id) REFERENCES guild(guild_id),
+	FOREIGN KEY (primary_activity_id) REFERENCES activity(id),
+	FOREIGN KEY (event_id) REFERENCES event(id),
 
 	# only the activity start and end events are allowed
 	CHECK ( event_id = 10 OR event_id = 11 )

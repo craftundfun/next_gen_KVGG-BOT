@@ -15,7 +15,7 @@ class ActivityHistory(Base):
     guild_id = Column(BigInteger, ForeignKey('guild.guild_id'), nullable=False)
     primary_activity_id = Column(BigInteger, ForeignKey('activity.id'), nullable=False)
     event_id = Column(BigInteger, ForeignKey('event.id'), nullable=False)
-    time = Column(DATETIME, nullable=False, default=func.current_timestamp(6))
+    time = Column(DATETIME, nullable=False, server_default=func.utc_timestamp(6))
 
     discordUser: Mapped["DiscordUser"] = relationship("DiscordUser", uselist=False)
     activityMapping: Mapped["ActivityMapping"] = relationship("Activity", uselist=False)
