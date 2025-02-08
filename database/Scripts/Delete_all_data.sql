@@ -9,9 +9,9 @@ DELETE FROM website_user;
 
 DELETE FROM category;
 
-DELETE FROM activity;
-DELETE FROM activity_mapping;
 DELETE FROM activity_history;
+DELETE FROM activity_mapping;
+DELETE FROM activity;
 
 DELETE FROM guild_discord_user_mapping;
 DELETE FROM statistic;
