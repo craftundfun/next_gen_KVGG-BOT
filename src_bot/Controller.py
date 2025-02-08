@@ -2,6 +2,7 @@ from os import environ
 
 from discord import Intents
 
+from src_bot.Activity.ActivityManager import ActivityManager
 from src_bot.Category.CategoryManager import CategoryManager
 from src_bot.Channel.ChannelManager import ChannelManager
 from src_bot.Client.Client import Client
@@ -38,6 +39,7 @@ class Controller:
         self.timeCalculator = TimeCalculator(self.eventHandler)
         self.timer = Timer(self.client)
         self.statisticManager = StatisticManager(self.client, self.timeCalculator)
+        self.activityManager = ActivityManager(self.client)
         # self.ExperienceManager = ExperienceManager(self.client, self.timer, self.guildManager)
 
         self.registerListeners()

@@ -32,12 +32,12 @@ CREATE TABLE IF NOT EXISTS boost (
 	CHARSET = UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS experience_boost_mapping (
-	id             BIGINT UNSIGNED                     NOT NULL AUTO_INCREMENT,
-	boost_id       BIGINT UNSIGNED                     NOT NULL,
-	discord_id     BIGINT UNSIGNED                     NOT NULL,
-	guild_id       BIGINT UNSIGNED                     NOT NULL,
-	remaining_time BIGINT UNSIGNED                     NOT NULL,
-	created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	id             BIGINT UNSIGNED                        NOT NULL AUTO_INCREMENT,
+	boost_id       BIGINT UNSIGNED                        NOT NULL,
+	discord_id     BIGINT UNSIGNED                        NOT NULL,
+	guild_id       BIGINT UNSIGNED                        NOT NULL,
+	remaining_time BIGINT UNSIGNED                        NOT NULL,
+	created_at     DATETIME(6) DEFAULT (UTC_TIMESTAMP(6)) NOT NULL,
 
 	PRIMARY KEY (id),
 	FOREIGN KEY (boost_id) REFERENCES boost(boost_id) ON DELETE CASCADE,

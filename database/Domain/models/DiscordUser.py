@@ -9,7 +9,7 @@ class DiscordUser(Base):
 
     discord_id = Column(BigInteger, primary_key=True, unique=True, nullable=False)
     global_name = Column(VARCHAR(255), nullable=False)
-    created_at = Column(DATETIME, nullable=False, default=func.NOW())
+    created_at = Column(DATETIME, nullable=False, server_default=func.utc_timestamp(6))
     profile_picture = Column(TEXT)
 
     websiteUser: Mapped[Optional["WebsiteUser"]] = relationship("WebsiteUser",

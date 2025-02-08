@@ -5,8 +5,8 @@ DROP TABLE IF EXISTS guild;
 CREATE TABLE IF NOT EXISTS guild (
 	guild_id  BIGINT UNSIGNED UNIQUE NOT NULL,
 	name      VARCHAR(255)           NOT NULL,
-	joined_at DATETIME DEFAULT NULL,
-	icon      TEXT     DEFAULT NULL,
+	joined_at DATETIME(6)            NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+	icon      TEXT                            DEFAULT NULL,
 
 	PRIMARY KEY (guild_id)
 )
@@ -17,11 +17,10 @@ DROP TABLE IF EXISTS guild_discord_user_mapping;
 
 # maybe we don't need this table, but we will see
 CREATE TABLE IF NOT EXISTS guild_discord_user_mapping (
-	# id              BIGINT UNSIGNED AUTO_INCREMENT UNIQUE NOT NULL,
 	guild_id        BIGINT UNSIGNED NOT NULL,
 	discord_user_id BIGINT UNSIGNED NOT NULL,
 	display_name    VARCHAR(255)    NOT NULL,
-	left_at         DATETIME        NULL,
+	left_at         DATETIME(6)     NULL DEFAULT (UTC_TIMESTAMP(6)),
 
 	PRIMARY KEY (guild_id, discord_user_id),
 	FOREIGN KEY (guild_id) REFERENCES guild(guild_id),

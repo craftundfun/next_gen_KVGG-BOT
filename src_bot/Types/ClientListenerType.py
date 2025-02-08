@@ -18,5 +18,5 @@ class ClientListenerType(Enum):
     MEMBER_UPDATE = "member_update"
 
     VOICE_UPDATE = "voice_update"
-
-
+    ACTIVITY_UPDATE = "activity_update"
+    STATUS_UPDATE = "status_update"

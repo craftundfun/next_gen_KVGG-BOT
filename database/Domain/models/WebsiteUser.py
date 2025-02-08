@@ -8,7 +8,7 @@ class WebsiteUser(Base):
     __tablename__ = "website_user"
 
     discord_id = Column(BigInteger, ForeignKey("discord_user.discord_id"), primary_key=True)
-    created_at = Column(DATETIME, default=datetime.now(), nullable=False)
+    created_at = Column(DATETIME, server_default=func.utc_timestamp(6), nullable=False)
     email = Column(VARCHAR(255), nullable=True)
 
     discordUser: Mapped[Optional["DiscordUser"]] = relationship("DiscordUser",

@@ -7,7 +7,7 @@ class Guild(Base):
     # id = Column(BigInteger, autoincrement=True, unique=True, nullable=False)
     guild_id = Column(BigInteger, primary_key=True, autoincrement=True, unique=True)
     name = Column(VARCHAR(255), nullable=False)
-    joined_at = Column(DATETIME, nullable=True)
+    joined_at = Column(DATETIME, nullable=True, server_default=func.utc_timestamp(6))
     icon = Column(TEXT, nullable=True)
 
     def __repr__(self):
