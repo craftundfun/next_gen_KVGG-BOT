@@ -10,6 +10,7 @@ DELETE FROM website_user;
 DELETE FROM category;
 
 DELETE FROM activity_history;
+DELETE FROM activity_statistic;
 DELETE FROM activity_mapping;
 DELETE FROM activity;
 
