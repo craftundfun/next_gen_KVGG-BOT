@@ -155,7 +155,6 @@ class ActivityManager:
         case = -1
         # track when the activity was stopped to avoid getting more time within the database actions
         # create an aware datetime object to calculate the time later
-        # TODO revert
         endtime = datetime.now(timezone.utc)
 
         async with self.lock:
