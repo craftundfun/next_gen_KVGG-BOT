@@ -4,7 +4,7 @@ from discord import Member, CustomActivity, Streaming, BaseActivity
 from sqlalchemy import select, null, insert
 from sqlalchemy.orm.exc import NoResultFound
 
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from database.Domain.models.Activity import Activity
 from database.Domain.models.ActivityHistory import ActivityHistory
@@ -91,7 +91,8 @@ class ActivityManager:
             return select(Activity).where(Activity.name == activity.name), False
 
     # noinspection PyMethodMayBeStatic
-    def _getActivityHistoryInsertQuery(self, member: Member, activity: Activity, eventId: int) -> insert:
+    def _getActivityHistoryInsertQuery(self, member: Member, activity: Activity, eventId: int,
+                                       endtime: datetime) -> insert:
         """
         Get the insert query for the activity history.
 
@@ -112,7 +113,7 @@ class ActivityManager:
             event_id=eventId,
             # even though the time is set in the database, we set it here to avoid any issues with the order of the
             # events
-            time=datetime.now(),
+            time=endtime,
         )
 
     def _getActivity(self, selectQuery: select, activity: BaseActivity, hasApplicationId: bool) -> Activity | None:
@@ -152,6 +153,9 @@ class ActivityManager:
         """
         # 1: started an activity, 2: switched an activity, 3: stopped an activity
         case = -1
+        # track when the activity was stopped to avoid getting more time within the database actions
+        # create an aware datetime object to calculate the time later
+        endtime = datetime.now(timezone.utc)
 
         async with self.lock:
             # open database session only after acquiring the lock
@@ -167,14 +171,14 @@ class ActivityManager:
 
                         return
 
-                    # use a boolean, otherwise every access would end in an AttributeError
+                    # use a boolean for the application id, otherwise every access would end in an AttributeError
                     selectQuery, hasApplicationId = self._getSelectQueryForActivity(after.activity)
                     activity = self._getActivity(selectQuery, after.activity, hasApplicationId)
 
                     if not activity:
                         return
 
-                    insertQuery = self._getActivityHistoryInsertQuery(after, activity, 10)
+                    insertQuery = self._getActivityHistoryInsertQuery(after, activity, 10, endtime)
 
                     try:
                         self.session.execute(insertQuery)
@@ -220,8 +224,8 @@ class ActivityManager:
                     if not activityBefore or not activityAfter:
                         return
 
-                    insertQueryBefore = self._getActivityHistoryInsertQuery(before, activityBefore, 11)
-                    insertQueryAfter = self._getActivityHistoryInsertQuery(after, activityAfter, 10)
+                    insertQueryBefore = self._getActivityHistoryInsertQuery(before, activityBefore, 11, endtime)
+                    insertQueryAfter = self._getActivityHistoryInsertQuery(after, activityAfter, 10, endtime)
 
                     try:
                         self.session.execute(insertQueryBefore)
@@ -240,6 +244,7 @@ class ActivityManager:
                                      f"on {after.guild.name, after.guild.id}")
 
                     case = 2
+                    activityId = activityBefore.id
 
                 # member stopped an activity
                 elif before.activity and not after.activity:
@@ -259,7 +264,7 @@ class ActivityManager:
                     if not activity:
                         return
 
-                    insertQuery = self._getActivityHistoryInsertQuery(after, activity, 11)
+                    insertQuery = self._getActivityHistoryInsertQuery(after, activity, 11, endtime)
 
                     # TODO maybe do this in a function as well
                     try:
@@ -276,6 +281,7 @@ class ActivityManager:
                                      f"on {after.guild.name, after.guild.id}")
 
                     case = 3
+                    activityId = activity.id
 
         match case:
             case 1:
@@ -288,10 +294,16 @@ class ActivityManager:
 
                 for listener in self.activitySwitchListener:
                     await listener(before, after)
+
+                # also notify the stop listeners, as the activity is stopped before another one is started
+                for listener in self.activityStopListener:
+                    # we need to pass the activity ID of the activity that was stopped, otherwise we would have
+                    # enormous overhead to fetch it again
+                    await listener(before, endtime, activityId)
             case 3:
                 logger.debug("Notifying activity end listeners")
 
                 for listener in self.activityStopListener:
-                    await listener(before)
+                    await listener(before, endtime, activityId)
             case _:
                 logger.error(f"Unknown case: {case}")

@@ -1,6 +1,7 @@
 USE kvgg_next_beta;
 
 DROP TABLE IF EXISTS statistic;
+DROP TABLE IF EXISTS activity_statistic;
 
 CREATE TABLE IF NOT EXISTS statistic (
 	discord_id    BIGINT UNSIGNED NOT NULL,
@@ -28,3 +29,18 @@ CREATE TABLE IF NOT EXISTS statistic (
 
 CREATE INDEX idc_discord_guild_id ON statistic(discord_id, guild_id);
 CREATE INDEX idc_discord_guild_date ON statistic(discord_id, guild_id, date);
+
+CREATE TABLE IF NOT EXISTS activity_statistic (
+	discord_id  BIGINT UNSIGNED NOT NULL,
+	guild_id    BIGINT UNSIGNED NOT NULL,
+	activity_id BIGINT UNSIGNED NOT NULL,
+	date        DATE            NOT NULL,
+	time        BIGINT UNSIGNED NOT NULL DEFAULT 0,
+
+	PRIMARY KEY (discord_id, guild_id, activity_id, date),
+	FOREIGN KEY (discord_id) REFERENCES discord_user(discord_id),
+	FOREIGN KEY (guild_id) REFERENCES guild(guild_id),
+	FOREIGN KEY (activity_id) REFERENCES activity(id)
+)
+	ENGINE = InnoDB
+	CHARSET = UTF8MB4;

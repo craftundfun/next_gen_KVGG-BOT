@@ -1,15 +1,17 @@
 from collections import defaultdict
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 from typing import Sequence
 
 from discord import Member
 from sqlalchemy import select
 
 from database.Domain.models import History
+from src_bot.Activity.ActivityManager import ActivityManager
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Event.EventHandler import EventHandler
 from src_bot.Helpers.FunctionName import listenerName
 from src_bot.Logging.Logger import Logger
+from src_bot.Types.ActivityManagerType import ActivityManagerType
 from src_bot.Types.EventHandlerType import EventHandlerType
 from src_bot.Types.TimeCalculatorType import TimeCalculatorType
 
@@ -18,9 +20,12 @@ logger = Logger("TimeCalculator")
 
 class TimeCalculator:
     memberLeaveListeners = []
+    activityStopListeners = []
 
-    def __init__(self, eventHandler: EventHandler):
+    def __init__(self, eventHandler: EventHandler, activityManager: ActivityManager):
         self.eventHandler = eventHandler
+        self.activityManager = activityManager
+
         self.session = getSession()
 
         self.registerListener()
@@ -35,6 +40,8 @@ class TimeCalculator:
         match type:
             case TimeCalculatorType.MEMBER_LEAVE:
                 self.memberLeaveListeners.append(listener)
+            case TimeCalculatorType.ACTIVITY_STOP:
+                self.activityStopListeners.append(listener)
             case _:
                 logger.error(f"Unknown time calculator type {type}")
 
@@ -47,6 +54,67 @@ class TimeCalculator:
         Register the listener for the time calculator.
         """
         self.eventHandler.addListener(EventHandlerType.MEMBER_LEAVE, self.onMemberLeave)
+        logger.debug("Member leave listener registered")
+
+        self.activityManager.addListener(self.onActivityStop, ActivityManagerType.ACTIVITY_STOP)
+        logger.debug("Activity stop listener registered")
+
+    # noinspection PyMethodMayBeStatic
+    def _timedeltaToMicroseconds(self, delta: timedelta) -> int:
+        """
+        Returns the microseconds of a timedelta.
+        """
+        return delta.days * 86400 * 1_000_000 + delta.seconds * 1_000_000 + delta.microseconds
+
+    async def onActivityStop(self, member: Member, endtime: datetime, activityId: int):
+        """
+        Calculate the time the member did the activity and invoke the listeners.
+
+        :param member: The member that stopped the activity.
+        :param endtime: The time the activity stopped.
+        :param activityId: The database id of the activity.
+        """
+        # check whether the endtime knows the timezone
+        if endtime.tzinfo is None or endtime.tzinfo.utcoffset(endtime) is None:
+            logger.error("Given endtime is a naive datetime, but expected aware datetime")
+
+            return
+
+        async def calculateTimeAndNotifyListeners(time: timedelta, date: datetime.date):
+            timeInMicroseconds = self._timedeltaToMicroseconds(time)
+
+            for listener in self.activityStopListeners:
+                await listener(member, timeInMicroseconds, activityId, date)
+                logger.debug(f"Invoked listener: {listenerName(listener)}")
+
+        startTime = member.activity.created_at
+
+        # the activity happened on the same day
+        if startTime.date() == endtime.date():
+            logger.debug(f"f{member.display_name, member.id} played the activity {activityId} on "
+                         f"{member.guild.name, member.guild.id} on the same day")
+
+            await calculateTimeAndNotifyListeners(endtime - startTime, endtime.date())
+
+            return
+
+        days = (endtime.date() - startTime.date()).days
+
+        # first day
+        midnight = datetime.combine(startTime.date() + timedelta(days=1), datetime.min.time())
+        midnight = midnight.replace(tzinfo=timezone.utc)
+
+        await calculateTimeAndNotifyListeners(midnight - startTime, startTime.date())
+
+        # days in between if there are any
+        for i in range(1, days):
+            midnight = datetime.combine(startTime.date() + timedelta(days=i + 1), datetime.min.time())
+            midnight = midnight.replace(tzinfo=timezone.utc)
+
+            await calculateTimeAndNotifyListeners((timedelta(days=1)), startTime.date() + timedelta(days=i))
+
+        # last day
+        await calculateTimeAndNotifyListeners(endtime - midnight, endtime.date())
 
     # noinspection PyMethodMayBeStatic
     def calculateTimesPerDay(self, member: Member, history: Sequence[History]) -> dict | None:
@@ -99,23 +167,17 @@ class TimeCalculator:
                 streamIntervals.append((streamActive, event.time))
                 streamActive = None
 
-        def timedelta_to_microseconds(delta: timedelta) -> int:
-            """
-            Returns the microseconds of a timedelta.
-            """
-            return delta.days * 86400 * 1_000_000 + delta.seconds * 1_000_000 + delta.microseconds
-
         endTime: datetime = history[-1].time
 
         while onlineSince.date() < endTime.date():
             midnight = datetime.combine(onlineSince.date() + timedelta(days=1), datetime.min.time())
             delta = midnight - onlineSince
-            dailyTimes[onlineSince.date()]["online"] += timedelta_to_microseconds(delta)
+            dailyTimes[onlineSince.date()]["online"] += self._timedeltaToMicroseconds(delta)
             onlineSince = midnight
 
         # add the time left until the last event
         delta = endTime - onlineSince
-        dailyTimes[endTime.date()]["online"] += timedelta_to_microseconds(delta)
+        dailyTimes[endTime.date()]["online"] += self._timedeltaToMicroseconds(delta)
 
         # TODO perhaps outsource it to a function?
         for start, end in muteIntervals:
@@ -124,11 +186,11 @@ class TimeCalculator:
             while current.date() < end.date():
                 midnight = datetime.combine(current.date() + timedelta(days=1), datetime.min.time())
                 delta = midnight - current
-                dailyTimes[current.date()]["mute"] += timedelta_to_microseconds(delta)
+                dailyTimes[current.date()]["mute"] += self._timedeltaToMicroseconds(delta)
                 current = midnight
 
             delta = end - current
-            dailyTimes[end.date()]["mute"] += timedelta_to_microseconds(delta)
+            dailyTimes[end.date()]["mute"] += self._timedeltaToMicroseconds(delta)
 
         for start, end in deafIntervals:
             current = start
@@ -136,11 +198,11 @@ class TimeCalculator:
             while current.date() < end.date():
                 midnight = datetime.combine(current.date() + timedelta(days=1), datetime.min.time())
                 delta = midnight - current
-                dailyTimes[current.date()]["deaf"] += timedelta_to_microseconds(delta)
+                dailyTimes[current.date()]["deaf"] += self._timedeltaToMicroseconds(delta)
                 current = midnight
 
             delta = end - current
-            dailyTimes[end.date()]["deaf"] += timedelta_to_microseconds(delta)
+            dailyTimes[end.date()]["deaf"] += self._timedeltaToMicroseconds(delta)
 
         for start, end in streamIntervals:
             current = start
@@ -148,11 +210,11 @@ class TimeCalculator:
             while current.date() < end.date():
                 midnight = datetime.combine(current.date() + timedelta(days=1), datetime.min.time())
                 delta = midnight - current
-                dailyTimes[current.date()]["stream"] += timedelta_to_microseconds(delta)
+                dailyTimes[current.date()]["stream"] += self._timedeltaToMicroseconds(delta)
                 current = midnight
 
             delta = end - current
-            dailyTimes[end.date()]["stream"] += timedelta_to_microseconds(delta)
+            dailyTimes[end.date()]["stream"] += self._timedeltaToMicroseconds(delta)
 
         return dict(dailyTimes)
 

@@ -36,10 +36,11 @@ class Controller:
         self.categoryManager = CategoryManager(self.client, self.guildManager)
         self.memberManager = MemberManager(self.client)
         self.eventHandler = EventHandler(self.client, self.guildManager)
-        self.timeCalculator = TimeCalculator(self.eventHandler)
+        self.activityManager = ActivityManager(self.client)
+        self.timeCalculator = TimeCalculator(self.eventHandler, self.activityManager)
         self.timer = Timer(self.client)
         self.statisticManager = StatisticManager(self.client, self.timeCalculator)
-        self.activityManager = ActivityManager(self.client)
+
         # self.ExperienceManager = ExperienceManager(self.client, self.timer, self.guildManager)
 
         self.registerListeners()
