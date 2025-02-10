@@ -4,7 +4,7 @@ from discord import Member, CustomActivity, Streaming, BaseActivity
 from sqlalchemy import select, null, insert
 from sqlalchemy.orm.exc import NoResultFound
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from database.Domain.models.Activity import Activity
 from database.Domain.models.ActivityHistory import ActivityHistory
@@ -155,6 +155,7 @@ class ActivityManager:
         case = -1
         # track when the activity was stopped to avoid getting more time within the database actions
         # create an aware datetime object to calculate the time later
+        # TODO revert
         endtime = datetime.now(timezone.utc)
 
         async with self.lock:
@@ -171,7 +172,7 @@ class ActivityManager:
 
                         return
 
-                    # use a boolean, otherwise every access would end in an AttributeError
+                    # use a boolean for the application id, otherwise every access would end in an AttributeError
                     selectQuery, hasApplicationId = self._getSelectQueryForActivity(after.activity)
                     activity = self._getActivity(selectQuery, after.activity, hasApplicationId)
 

@@ -72,6 +72,7 @@ class TimeCalculator:
 
         :param member: The member that stopped the activity.
         :param endtime: The time the activity stopped.
+        :param activityId: The database id of the activity.
         """
         # check whether the endtime knows the timezone
         if endtime.tzinfo is None or endtime.tzinfo.utcoffset(endtime) is None:
@@ -79,69 +80,41 @@ class TimeCalculator:
 
             return
 
+        async def calculateTimeAndNotifyListeners(time: timedelta, date: datetime.date):
+            timeInMicroseconds = self._timedeltaToMicroseconds(time)
+
+            for listener in self.activityStopListeners:
+                await listener(member, timeInMicroseconds, activityId, date)
+                logger.debug(f"Invoked listener: {listenerName(listener)}")
+
         startTime = member.activity.created_at
 
+        # the activity happened on the same day
         if startTime.date() == endtime.date():
             logger.debug(f"f{member.display_name, member.id} played the activity {activityId} on "
                          f"{member.guild.name, member.guild.id} on the same day")
 
-            timeInMicroseconds = self._timedeltaToMicroseconds(endtime - startTime)
-
-            for listener in self.activityStopListeners:
-                await listener(member, timeInMicroseconds, activityId, endtime.date())
-                logger.debug(f"Invoked listener: {listenerName(listener)}")
+            await calculateTimeAndNotifyListeners(endtime - startTime, endtime.date())
 
             return
 
         days = (endtime.date() - startTime.date()).days
 
-        # only one midnight
-        if days == 1:
-            midnight = datetime.combine(startTime.date() + timedelta(days=1), datetime.min.time())
-            midnight = midnight.replace(tzinfo=timezone.utc)
-            timeInMicroseconds = self._timedeltaToMicroseconds(midnight - startTime)
-
-            # call listeners for the first day
-            for listener in self.activityStopListeners:
-                await listener(member, timeInMicroseconds, activityId, startTime.date())
-                logger.debug(f"Invoked listener: {listenerName(listener)}")
-
-            timeInMicroseconds = self._timedeltaToMicroseconds(endtime - midnight)
-
-            # call listeners for the second day
-            for listener in self.activityStopListeners:
-                await listener(member, timeInMicroseconds, activityId, endtime.date())
-                logger.debug(f"Invoked listener: {listenerName(listener)}")
-
-            return
-
-        # TODO improve code, only fast implementation for testing
-        # more than one midnight
+        # first day
         midnight = datetime.combine(startTime.date() + timedelta(days=1), datetime.min.time())
         midnight = midnight.replace(tzinfo=timezone.utc)
-        timeInMicroseconds = self._timedeltaToMicroseconds(midnight - startTime)
 
-        # call listeners for the first day
-        for listener in self.activityStopListeners:
-            await listener(member, timeInMicroseconds, activityId, startTime.date())
-            logger.debug(f"Invoked listener: {listenerName(listener)}")
+        await calculateTimeAndNotifyListeners(midnight - startTime, startTime.date())
 
+        # days in between if there are any
         for i in range(1, days):
             midnight = datetime.combine(startTime.date() + timedelta(days=i + 1), datetime.min.time())
             midnight = midnight.replace(tzinfo=timezone.utc)
-            timeInMicroseconds = self._timedeltaToMicroseconds(timedelta(days=1))
 
-            # call listeners for the days in between
-            for listener in self.activityStopListeners:
-                await listener(member, timeInMicroseconds, activityId, startTime.date() + timedelta(days=i))
-                logger.debug(f"Invoked listener: {listenerName(listener)}")
+            await calculateTimeAndNotifyListeners((timedelta(days=1)), startTime.date() + timedelta(days=i))
 
-        timeInMicroseconds = self._timedeltaToMicroseconds(endtime - midnight)
-
-        # call listeners for the last day
-        for listener in self.activityStopListeners:
-            await listener(member, timeInMicroseconds, activityId, endtime.date())
-            logger.debug(f"Invoked listener: {listenerName(listener)}")
+        # last day
+        await calculateTimeAndNotifyListeners(endtime - midnight, endtime.date())
 
     # noinspection PyMethodMayBeStatic
     def calculateTimesPerDay(self, member: Member, history: Sequence[History]) -> dict | None:
