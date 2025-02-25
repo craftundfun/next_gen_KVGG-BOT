@@ -139,6 +139,8 @@ class ActivityManager:
             self.session.add(activity)
             # commit here to trigger the database trigger
             self.session.commit()
+
+            return activity
         except Exception as error:
             logger.error("Error while getting activity from database", exc_info=error)
 
