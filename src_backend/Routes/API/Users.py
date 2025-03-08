@@ -25,16 +25,11 @@ def getAllDiscordUsers():
 
     userDict: dict = {"user":
         [
-            {
-                "discord_id": user.discord_id,
-                "profile_picture": user.profile_picture
-            }
-            for user in users
+            user.to_dict() for user in users
         ]
     }
 
     return jsonify(userDict)
-
 
 @userBp.route('/discordUser/<discord_id>')
 @jwt_required()
@@ -61,4 +56,4 @@ def getDiscordUser(discord_id):
 
         return jsonify(message="Failed to fetch DiscordUser"), 500
 
-    return jsonify(discordUser.as_dict())
+    return jsonify(discordUser.to_dict())

@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
-from database.Domain.models import DiscordUser
+from database.Domain.models import DiscordUser, WebsiteUser, WebsiteRoleUserMapping
 from src_backend import Config, db
 from src_backend.Logging.Logger import Logger
 
@@ -66,7 +66,7 @@ def discordOAuth():
     selectQuery = (select(DiscordUser).where(DiscordUser.discord_id == user['id']))
 
     try:
-        db.session.execute(selectQuery).scalars().one()
+        discordUser = db.session.execute(selectQuery).scalars().one()
     except NoResultFound:
         logger.warning(f"{user['username'], user['id']} not found in the database!")
 
@@ -76,7 +76,12 @@ def discordOAuth():
 
         return jsonify(message=f"Something went wrong!"), 500
 
+    if not _createNecessaryThings(discordUser, user):
+        return jsonify("Failed to create WebsiteUser"), 500
+
     accessToken = create_access_token(identity=str(user['id']))
+
+    # to build a response with a header
     response = make_response(jsonify(message="Successfully authenticated!"))
 
     response.headers["Authorization"] = f"Bearer {accessToken}"
@@ -85,3 +90,51 @@ def discordOAuth():
     logger.debug(f"User {user['username'], user['id']} authenticated")
 
     return response, 200
+
+
+# TODO better name?
+def _createNecessaryThings(discordUser: DiscordUser, user: dict) -> bool:
+    """
+    Create WebsiteUser if it doesn't exist for the DiscordUser.
+
+    :param discordUser: DiscordUser object
+    :param user: Discord user dictionary
+    :return: True if WebsiteUser was created, False otherwise
+    """
+    selectQuery = (select(WebsiteUser).where(WebsiteUser.discord_id == discordUser.discord_id))
+
+    try:
+        db.session.execute(selectQuery).scalars().one()
+    except NoResultFound:
+        websiteUser = WebsiteUser(
+            discord_id=discordUser.discord_id,
+            email=user['email'],
+        )
+        # TODO default to User, but ask database for that
+        website_role_user_mapping = WebsiteRoleUserMapping(
+            discord_id=discordUser.discord_id,
+            role_id=1,
+        )
+
+        try:
+            db.session.add(websiteUser)
+            db.session.add(website_role_user_mapping)
+            db.session.commit()
+        except Exception as error:
+            logger.error(f"Failed to create WebsiteUser for {user['username'], user['id']}", exc_info=error)
+            db.session.rollback()
+
+            return False
+        else:
+            logger.debug(f"Created WebsiteUser for {user['username'], user['id']}")
+
+            return True
+    except Exception as error:
+        logger.error(f"Failed to fetch WebsiteUser for {user['username'], user['id']}", exc_info=error)
+        db.session.rollback()
+
+        return False
+    else:
+        logger.debug(f"WebsiteUser for {user['username'], user['id']} already exists")
+
+    return True

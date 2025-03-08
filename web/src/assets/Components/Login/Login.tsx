@@ -39,7 +39,7 @@ function Login() {
 			</div>
 			<div>
 				<p className="text-white text-center">
-					© 2024 <a href={copyrightUrl} className="underline text-accent">craftundfun</a>.
+					© 2025 <a href={copyrightUrl} className="underline text-accent">craftundfun</a>.
 					All rights reserved.
 				</p>
 			</div>

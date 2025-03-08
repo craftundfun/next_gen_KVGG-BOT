@@ -1,4 +1,11 @@
+import os
+import time
+
 from src_backend import createApp
+
+# set global timezone to UTC
+os.environ["TZ"] = "UTC"
+time.tzset()
 
 app = createApp()
 
@@ -9,6 +16,7 @@ def after_request(response):
     response.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
     response.headers['Access-Control-Expose-Headers'] = 'Authorization, DiscordId'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
+
     return response
 
 

@@ -16,6 +16,8 @@ from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.orm import Mapped
 # noinspection PyUnresolvedReferences
 from sqlalchemy.sql import func
+# noinspection PyUnresolvedReferences
+from sqlalchemy.inspection import inspect
 
 
 class Base(DeclarativeBase):

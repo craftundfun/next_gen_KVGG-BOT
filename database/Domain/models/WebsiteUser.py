@@ -9,6 +9,7 @@ class WebsiteUser(Base):
 
     discord_id = Column(BigInteger, ForeignKey("discord_user.discord_id"), primary_key=True)
     created_at = Column(DATETIME, server_default=func.utc_timestamp(6), nullable=False)
+    deleted_at = Column(DATETIME, nullable=True)
     email = Column(VARCHAR(255), nullable=True)
 
     discordUser: Mapped[Optional["DiscordUser"]] = relationship("DiscordUser",
@@ -16,6 +17,13 @@ class WebsiteUser(Base):
                                                                 uselist=False, )
 
     relationship("DiscordUser")
+
+    def __init__(self, discord_id: int, created_at: datetime | None = None, email: str | None = None, ):
+        super().__init__()
+
+        self.discord_id = discord_id
+        self.created_at = created_at
+        self.email = email
 
     def as_dict(self) -> dict:
         return {

@@ -1,7 +1,7 @@
 from src_backend.Routes.Auth import authBp
-from src_backend.Routes.Guilds import guildBp
-from src_backend.Routes.Users import userBp
-from src_backend.Routes.WebsiteUsers import websiteUserBp
+from src_backend.Routes.API.Guilds import guildBp
+from src_backend.Routes.API.Users import userBp
+from src_backend.Routes.API.WebsiteUsers import websiteUserBp
 
 
 def registerRoutes(app):

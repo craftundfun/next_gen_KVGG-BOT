@@ -9,11 +9,19 @@ CREATE TABLE IF NOT EXISTS website_role (
 	created_at DATETIME(6)                        NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
 	priority   INT UNSIGNED                       NOT NULL DEFAULT 0,
 
+	CHECK ( priority >= 0 ),
+	CHECK ( priority <= 100),
+
 	PRIMARY KEY (role_id)
 )
 
 	ENGINE = InnoDB
 	DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO website_role (role_name, priority)
+VALUES ('Administrator', 100),
+	('Moderator', 50),
+	('User', 0);
 
 CREATE TABLE IF NOT EXISTS website_role_user_mapping (
 	role_id    INT UNSIGNED    NOT NULL,
