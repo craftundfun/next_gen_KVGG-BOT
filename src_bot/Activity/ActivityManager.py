@@ -1,10 +1,9 @@
 from asyncio import Lock
+from datetime import datetime, timezone
 
 from discord import Member, CustomActivity, Streaming, BaseActivity
 from sqlalchemy import select, null, insert
 from sqlalchemy.orm.exc import NoResultFound
-
-from datetime import datetime, timezone, timedelta
 
 from database.Domain.models.Activity import Activity
 from database.Domain.models.ActivityHistory import ActivityHistory
@@ -136,6 +135,7 @@ class ActivityManager:
                 external_activity_id=activity.application_id if hasApplicationId else null(),
             )
 
+            # TODO activities with the same name but different application IDs are not handled correctly
             self.session.add(activity)
             # commit here to trigger the database trigger
             self.session.commit()

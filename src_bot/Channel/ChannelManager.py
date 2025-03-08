@@ -62,6 +62,8 @@ class ChannelManager:
 
             return
 
+        logger.debug(f"Fetching channels for guild {channels[0].guild.name, channels[0].guild.id}...")
+
         channelDatabaseObjects = []
 
         for channel in channels:
