@@ -15,11 +15,12 @@ CREATE TABLE IF NOT EXISTS guild (
 
 DROP TABLE IF EXISTS guild_discord_user_mapping;
 
-# maybe we don't need this table, but we will see
 CREATE TABLE IF NOT EXISTS guild_discord_user_mapping (
 	guild_id        BIGINT UNSIGNED NOT NULL,
 	discord_user_id BIGINT UNSIGNED NOT NULL,
 	display_name    VARCHAR(255)    NOT NULL,
+	profile_picture TEXT            NULL DEFAULT NULL,
+	joined_at       DATETIME(6)     NOT NULL,
 	left_at         DATETIME(6)     NULL DEFAULT (UTC_TIMESTAMP(6)),
 
 	PRIMARY KEY (guild_id, discord_user_id),
@@ -29,4 +30,5 @@ CREATE TABLE IF NOT EXISTS guild_discord_user_mapping (
 	ENGINE = InnoDB
 	CHARSET = UTF8MB4;
 
+# create index the other way around because the order is important
 CREATE INDEX idc_discord_guild_id ON guild_discord_user_mapping(discord_user_id, guild_id);

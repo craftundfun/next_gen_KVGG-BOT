@@ -1,19 +1,19 @@
 USE kvgg_next_beta;
 
-DROP TABLE IF EXISTS activity_history;
-DROP TABLE IF EXISTS activity_mapping;
-DROP TABLE IF EXISTS activity;
-
 DROP TRIGGER IF EXISTS activity_insert;
 DROP TRIGGER IF EXISTS activity_history_insert;
 DROP TRIGGER IF EXISTS activity_history_update;
+
+DROP TABLE IF EXISTS activity_history;
+DROP TABLE IF EXISTS activity_mapping;
+DROP TABLE IF EXISTS activity_statistic;
+DROP TABLE IF EXISTS activity;
 
 CREATE TABLE activity (
 	# not all activities have an id given by Discord
 	id                   BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
 	external_activity_id BIGINT UNSIGNED                NULL DEFAULT NULL,
-	# make the name unique in case we have no external id to distinguish between activities
-	name                 VARCHAR(255) UNIQUE            NOT NULL,
+	name                 VARCHAR(255)                   NOT NULL,
 
 	PRIMARY KEY (id)
 )

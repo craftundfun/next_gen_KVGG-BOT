@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from discord import Member, User, RawMemberRemoveEvent
+from discord import Member, User, RawMemberRemoveEvent, Guild
 from sqlalchemy import select, null
 from sqlalchemy.exc import NoResultFound
 
@@ -8,16 +8,20 @@ from database.Domain.models.DiscordUser import DiscordUser
 from database.Domain.models.GuildDiscordUserMapping import GuildDiscordUserMapping
 from src_bot.Client.Client import Client
 from src_bot.Database.DatabaseConnection import getSession
+from src_bot.Guild.GuildManager import GuildManager
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ClientListenerType import ClientListenerType
+from src_bot.Types.GuildListenerType import GuildListenerType
 
 logger = Logger("MemberManager")
 
 
 class MemberManager:
 
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, guildManager: GuildManager):
         self.client = client
+        self.guildManager = guildManager
+
         self.session = getSession()
 
         self.registerListener()
@@ -41,7 +45,113 @@ class MemberManager:
         self.client.addListener(self.memberUpdate, ClientListenerType.MEMBER_UPDATE)
         logger.debug("Registered member update listener")
 
-    # TODO fetch all members of a guild at the start of the bot
+        self.guildManager.addListener(self.onBotStart, GuildListenerType.START_UP)
+        logger.debug("Registered guild manager start up listener")
+
+    # TODO detect members that left the guild while the bot was offline
+    async def onBotStart(self, guild: Guild):
+        """
+        Add all (missing) members of a guild to the database when the bot starts
+
+        :param guild: Guild to add members to the database
+        """
+        with self.session:
+            selectQueryForGuildSpecific = (select(DiscordUser)
+                                           .join(GuildDiscordUserMapping)
+                                           .where(GuildDiscordUserMapping.guild_id == guild.id))
+            selectQueryForAllDiscordUsers = select(DiscordUser)
+
+            try:
+                discordUsers = self.session.execute(selectQueryForAllDiscordUsers).scalars().all()
+            except Exception as error:
+                logger.error("Failed to get all members from database", exc_info=error)
+
+                return
+
+            try:
+                discordUsersForGuild = self.session.execute(selectQueryForGuildSpecific).scalars().all()
+            except NoResultFound:
+                logger.debug(f"No members in database for guild {guild.name, guild.id}")
+
+                membersToAdd = list(guild.members)
+            except Exception as error:
+                logger.error(f"Failed to get all members from database for guild {guild.name, guild.id}",
+                             exc_info=error)
+
+                return
+            else:
+                discordUserIds: list[int] = [discordUser.discord_id for discordUser in discordUsersForGuild]
+                membersToAdd: list[Member] = [member for member in guild.members
+                                              if member.id not in discordUserIds]
+
+            if not membersToAdd:
+                logger.debug(f"No members to add to database for guild {guild.name, guild.id}")
+
+                return
+
+            newDiscordUsers: list[DiscordUser] = []
+            newGuildMappings: list[GuildDiscordUserMapping] = []
+
+            for member in membersToAdd:
+                if member.bot:
+                    logger.debug(f"Discord {member.display_name, member.id} is a bot on guild {guild.name, guild.id}")
+
+                    continue
+
+                newDiscordUserInserted = False
+                newGuildMappingInserted = False
+
+                try:
+                    # the corresponding DiscordUser may already exist in the database
+                    if member.id not in [discordUser.discord_id for discordUser in discordUsers]:
+                        newDiscordUsers.append(
+                            DiscordUser(
+                                discord_id=member.id,
+                                global_name=member.name,
+                            )
+                        )
+
+                        newDiscordUserInserted = True
+
+                    newGuildMappings.append(
+                        GuildDiscordUserMapping(
+                            guild_id=guild.id,
+                            discord_user_id=member.id,
+                            display_name=member.display_name,
+                            # TODO better profile picture handling => guild specific, global, etc.
+                            profile_picture=member.display_avatar.url if member.display_avatar else None,
+                            joined_at=member.joined_at if member.joined_at else datetime.now(),
+                        )
+                    )
+
+                    newGuildMappingInserted = True
+                except Exception as error:
+                    logger.error(f"Couldn't add DiscordUser for member {member.name, member.id} "
+                                 f"or GuildMapping for guild {guild.name, guild.id}",
+                                 exc_info=error, )
+
+                    # dont insert half of the data
+                    if newDiscordUserInserted:
+                        newDiscordUsers.pop()
+
+                    if newGuildMappingInserted:
+                        newGuildMappings.pop()
+
+                    continue
+
+            try:
+                self.session.bulk_save_objects(newDiscordUsers)
+                self.session.bulk_save_objects(newGuildMappings)
+                self.session.commit()
+            except Exception as error:
+                logger.error("Couldn't bulk add DiscordUsers and GuildMappings", exc_info=error)
+
+                self.session.rollback()
+
+                return
+
+            logger.debug(f"Added new DiscordUsers and GuildMappings to the database for guild {guild.name, guild.id}")
+
     async def memberJoinGuild(self, member: Member):
         """
         Adds a member to the database when they join a guild
@@ -52,14 +162,12 @@ class MemberManager:
         with self.session:
             # Get the member from the database
             try:
-                selectQuery = (select(DiscordUser).where(DiscordUser.discord_id == member.id))
+                selectQuery = (select(DiscordUser).where(DiscordUser.discord_id == member.id, ))
                 databaseMember = self.session.execute(selectQuery).scalars().one()
             except NoResultFound:
                 databaseMember = DiscordUser(
                     discord_id=member.id,
                     global_name=member.name,
-                    created_at=member.created_at,
-                    profile_picture=member.display_avatar.url,
                 )
 
                 self.session.add(databaseMember)
@@ -84,6 +192,8 @@ class MemberManager:
                         guild_id=member.guild.id,
                         discord_user_id=databaseMember.discord_id,
                         display_name=member.display_name,
+                        profile_picture=member.display_avatar.url if member.display_avatar else None,
+                        joined_at=member.joined_at if member.joined_at else datetime.now(),
                     )
 
                     self.session.add(guildDiscordUserMapping)
@@ -102,7 +212,10 @@ class MemberManager:
 
                 return
             else:
+                # set left_at to null if the member rejoined the guild
                 guildDiscordUserMapping.left_at = null()
+                # update joined_at to the current time
+                guildDiscordUserMapping.joined_at = member.joined_at if member.joined_at else datetime.now()
 
             try:
                 self.session.commit()
