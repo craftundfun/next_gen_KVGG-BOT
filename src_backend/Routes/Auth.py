@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from flask_jwt_extended import jwt_required
 import requests
 from flask import Blueprint, jsonify, request, make_response
 from flask_jwt_extended import create_access_token, create_refresh_token
@@ -17,11 +18,31 @@ logger = Logger(__name__)
 
 @authBp.route('/remindMeLogin')
 def remindMeLogin():
-    # print(request.cookies)
-    # print("Hallo")
+    if not request.cookies:
+        logger.debug("No cookies were provided")
 
-    return jsonify("Guten Tag", request.cookies), 200
+        return jsonify(message="No cookies were provided"), 403
 
+    selectQuery = (select(WebsiteUser).where(WebsiteUser.refresh_token == request.cookies.get("refresh_token")))
+
+    try:
+        websiteUser = database.session.execute(selectQuery).scalars().one()
+    except NoResultFound:
+        logger.debug("No WebsiteUser found with the provided refresh token")
+
+        return jsonify(message="No WebsiteUser found with the provided refresh token"), 403
+    except Exception as error:
+        logger.error("Failed to get WebsiteUser from the database", exc_info=error)
+
+        return jsonify(message="Something went wrong!"), 500
+
+    accessToken = create_access_token(identity=str(websiteUser.discord_id))
+
+    response = make_response(jsonify(message="Successfully reauthenticated!"))
+    response.headers["Authorization"] = f"Bearer {accessToken}"
+    response.headers["DiscordId"] = websiteUser.discord_id
+
+    return response, 200
 
 @authBp.route('/discord')
 def discordOAuth():
@@ -127,8 +148,8 @@ def discordOAuth():
             refreshToken,
             httponly=True,
             # TODO secure für samesite=None => HTTPS lokal
-            secure=False,
-            samesite="None",
+            secure=True,
+            samesite="Strict",
             max_age=int(timedelta(days=14).total_seconds()),
         )
 

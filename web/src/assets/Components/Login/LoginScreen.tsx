@@ -1,13 +1,21 @@
 import * as React from "react";
-import {Button} from "@ui/button";
 import {useAuth} from "@modules/AuthContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@ui/card";
 import {Avatar, AvatarFallback, AvatarImage} from "@ui/avatar";
 import {discordOAuthUrl, copyrightUrl, backendUrl} from "@modules/Constants";
 import {useEffect} from "react";
+import {DiscordUser} from "@customTypes/DiscordUser";
+import {parseWebsiteUser, WebsiteUser} from "@customTypes/WebsiteUser";
+import {useNavigate} from "react-router-dom";
+import {useDiscordUser} from "@context/DiscordUserContext";
+import {useWebsiteUser} from "@context/WebsiteUserContext";
+import {Button} from "@ui/button";
 
 function LoginScreen() {
 	const {remindMe, setRemindMe, login} = useAuth();
+	const navigate = useNavigate();
+	const {setDiscordUser} = useDiscordUser();
+	const {setWebsiteUser} = useWebsiteUser();
 
 	const handleLogin = () => {
 		console.log(remindMe);
@@ -22,11 +30,98 @@ function LoginScreen() {
 			},
 			credentials: 'include',
 		}).then((response) => {
-			if (response.ok) {
-				console.log(response);
+			if (!response.ok) {
+				return;
 			}
+
+			const authorizationHeader = response.headers.get("Authorization");
+			const discordIdHeader = response.headers.get("DiscordId");
+
+			if (authorizationHeader === null) {
+				console.log("Error: No authorization header");
+
+				return;
+			} else if (discordIdHeader === null) {
+				console.log("Error: No discord id header");
+
+				return;
+			}
+
+			const tokenType = authorizationHeader.split(" ")[0];
+			const token = authorizationHeader.split(" ")[1];
+
+			sessionStorage.setItem('tokenType', tokenType);
+			login(token);
+
+			fetch(backendUrl + `/api/discordUser/${discordIdHeader}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': tokenType + ' ' + token,
+				},
+				credentials: 'include',
+			}).then(async response => {
+				if (!response.ok) {
+					console.log("Error: Could not fetch discord user");
+
+					navigate("/error");
+
+					return;
+				}
+
+				const discordUserFromRequest: DiscordUser | null = await response.json();
+
+				if (discordUserFromRequest === null) {
+					console.log("Error: Could not parse discord user");
+
+					navigate("/error");
+
+					return;
+				}
+
+				console.log(discordUserFromRequest);
+
+				setDiscordUser(discordUserFromRequest);
+			}).catch((error) => {
+				console.log(error);
+
+				navigate("/error");
+
+				return;
+			});
+
+			fetch(backendUrl + `/api/websiteUser/${discordIdHeader}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': tokenType + ' ' + token,
+				},
+				credentials: 'include',
+			}).then(async response => {
+				if (!response.ok) {
+					console.log("Error: Could not fetch website user");
+
+					navigate("/error");
+
+					return;
+				}
+
+				const websiteUserFromRequest: WebsiteUser | null = parseWebsiteUser(await response.json());
+
+				if (websiteUserFromRequest === null) {
+					console.log("Error: Could not parse website user");
+
+					navigate("/error");
+
+					return;
+				}
+
+				setWebsiteUser(websiteUserFromRequest);
+			})
+
+			navigate("/dashboard");
 		});
-	}, [login]);
+	}, [login, navigate, setDiscordUser, setWebsiteUser]);
 
 	return (
 		<div className="flex flex-col justify-between h-screen bg-gradient-to-b from-gray-900 to-gray-800">

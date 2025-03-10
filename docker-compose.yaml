@@ -11,17 +11,19 @@ services:
                     target: /app
         volumes:
             - .:/app
-        ports:
-            - "8000:8000"
+        #ports:
+        #    - "8000:8000"
         restart: on-failure
+        networks:
+            - caddy_net
 
     frontend:
         container_name: frontend
         build:
             context: ./web
             dockerfile: Dockerfile
-        ports:
-            - "3000:3000"
+        #ports:
+        #    - "3000:3000"
         develop:
             watch:
                 -   action: sync
@@ -32,6 +34,30 @@ services:
         depends_on:
             - backend
         restart: on-failure
+        networks:
+            - caddy_net
+
+    caddy:
+        image: caddy:2
+        container_name: caddy
+        restart: always
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - ./certs:/etc/certs
+        depends_on:
+            - backend
+            - frontend
+        networks:
+            - caddy_net
+
+networks:
+    caddy_net:
+        driver:
+            bridge
+
 
     # bot:
     #     container_name: bot
