@@ -5,16 +5,24 @@ type AuthContextType = {
 	jwt: string | null;
 	login: (token: string) => void;
 	logout: () => void;
+	setRemindMe: (remindMe: boolean) => void;
 	isAuthenticated: boolean;
+	remindMe: boolean
 };
 
 const AuthContext = createContext<AuthContextType>({
 	jwt: null,
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	login: () => {
 	},
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	logout: () => {
 	},
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
+	setRemindMe: () => {
+	},
 	isAuthenticated: false,
+	remindMe: false,
 });
 
 type Props = {
@@ -27,6 +35,9 @@ export const AuthProvider = ({children}: Props) => {
 	functionality to login, logout and check if the user is authenticated.
 	 */
 	const [jwt, setJwt] = useState<string | null>(() => sessionStorage.getItem('jwt'));
+	const [remindMeBool, setRemindMeContext] = useState<boolean>(() =>
+		sessionStorage.getItem("remindMe") === "true"
+	);
 
 	// Handle login functionality
 	const login = (token: string | null) => {
@@ -43,6 +54,11 @@ export const AuthProvider = ({children}: Props) => {
 		setJwt(null);
 		sessionStorage.removeItem('jwt');
 	};
+
+	const setRemindMe = (remindMe: boolean) => {
+		setRemindMeContext(remindMe);
+		sessionStorage.setItem('remindMe', remindMe.toString());
+	}
 
 	// Handle token expiration
 	const isTokenExpired = (token: string | null): boolean => {
@@ -63,9 +79,10 @@ export const AuthProvider = ({children}: Props) => {
 
 	// Always ensure isAuthenticated is a boolean value
 	const isAuthenticated = !!jwt && !isTokenExpired(jwt);
+	const remindMe = remindMeBool;
 
 	return (
-		<AuthContext.Provider value={{jwt, login, logout, isAuthenticated}}>
+		<AuthContext.Provider value={{jwt, login, logout, setRemindMe, isAuthenticated, remindMe}}>
 			{children}
 		</AuthContext.Provider>
 	);

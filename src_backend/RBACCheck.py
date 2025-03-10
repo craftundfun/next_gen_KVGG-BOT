@@ -5,7 +5,7 @@ from flask_jwt_extended import get_jwt_identity
 from sqlalchemy import select
 
 from database.Domain.models import WebsiteRoleUserMapping, WebsiteRole
-from src_backend import db
+from src_backend import database
 from src_backend.Logging.Logger import Logger
 from src_backend.Types.Role import Role
 
@@ -36,7 +36,7 @@ def hasUserSpecificRoles(*roles: Role):
             )
 
             try:
-                websiteRoleUserMapping = db.session.execute(selectQuery).scalars().all()
+                websiteRoleUserMapping = database.session.execute(selectQuery).scalars().all()
                 websiteRoleUserMapping: [WebsiteRoleUserMapping] = list(websiteRoleUserMapping)
             except Exception as error:
                 logger.error(f"Couldn't fetch websiteRoleUserMapping for user {userId}", exc_info=error)
@@ -86,8 +86,8 @@ def hasUserMinimumRequiredRole(role: Role):
             )
 
             try:
-                websiteRoleUserMapping = db.session.execute(selectQueryRolesOfUser).scalars().one()
-                minimumRequiredRole = db.session.execute(selectQueryWebsiteRole).scalars().one()
+                websiteRoleUserMapping = database.session.execute(selectQueryRolesOfUser).scalars().one()
+                minimumRequiredRole = database.session.execute(selectQueryWebsiteRole).scalars().one()
             except Exception as error:
                 logger.error(f"Couldn't fetch websiteRoleUserMapping for user {userId}", exc_info=error)
 

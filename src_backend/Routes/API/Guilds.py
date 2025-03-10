@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import select
 
 from database.Domain.models import Guild
-from src_backend import db
+from src_backend import database
 from src_backend.Logging.Logger import Logger
 from src_backend.RBACCheck import hasUserMinimumRequiredRole
 from src_backend.Types.Role import Role
@@ -24,7 +24,7 @@ def getAllGuilds():
     selectQuery = (select(Guild))
 
     try:
-        guilds = db.session.execute(selectQuery).scalars().all()
+        guilds = database.session.execute(selectQuery).scalars().all()
     except Exception as error:
         logger.error("Failed to fetch all guilds", exc_info=error)
 

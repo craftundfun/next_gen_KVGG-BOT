@@ -33,13 +33,13 @@ services:
             - backend
         restart: on-failure
 
-    bot:
-        container_name: bot
-        build:
-            context: .
-            dockerfile: Dockerfile_Bot
-        develop:
-            watch:
-                -   action: sync
-                    path: ./src_bot
-                    target: /app
+    # bot:
+    #     container_name: bot
+    #     build:
+    #         context: .
+    #         dockerfile: Dockerfile_Bot
+    #     develop:
+    #         watch:
+    #             -   action: sync
+    #                 path: ./src_bot
+    #                 target: /app

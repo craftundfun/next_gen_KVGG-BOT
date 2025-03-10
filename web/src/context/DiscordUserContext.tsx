@@ -13,15 +13,9 @@ interface Props {
 }
 
 export const DiscordUserProvider: React.FC<Props> = ({children}) => {
-	const [discordUser, setDiscordUserState] = useState<DiscordUser | null>(() => {
-		const storedUser = sessionStorage.getItem('discordUser');
-
-		return storedUser ? JSON.parse(storedUser) : null;
-	});
+	const [discordUser, setDiscordUserState] = useState<DiscordUser | null>(null);
 
 	const setDiscordUser = (user: DiscordUser) => {
-
-		sessionStorage.setItem('discordUser', JSON.stringify(user));
 		setDiscordUserState(user);
 	};
 

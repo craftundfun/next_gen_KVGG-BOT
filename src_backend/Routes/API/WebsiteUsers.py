@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from database.Domain.models import WebsiteUser
-from src_backend import db
+from src_backend import database
 from src_backend.Logging.Logger import Logger
 from src_backend.RBACCheck import hasUserMinimumRequiredRole
 from src_backend.Types.Role import Role
@@ -26,7 +26,7 @@ def getWebsiteUser(discord_id):
     selectQuery = (select(WebsiteUser).where(WebsiteUser.discord_id == discordId))
 
     try:
-        websiteUser = db.session.execute(selectQuery).scalars().one()
+        websiteUser = database.session.execute(selectQuery).scalars().one()
     except NoResultFound:
         return jsonify(message="WebsiteUser does not exist"), 404
     except Exception as error:
@@ -36,4 +36,4 @@ def getWebsiteUser(discord_id):
     else:
         logger.debug(f"Fetched WebsiteUser with ID: {discordId}")
 
-    return jsonify(websiteUser.as_dict())
+    return jsonify(websiteUser.to_dict())

@@ -1,16 +1,26 @@
+from datetime import timedelta
+
 import requests
 from flask import Blueprint, jsonify, request, make_response
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
 from database.Domain.models import DiscordUser, WebsiteUser, WebsiteRoleUserMapping
-from src_backend import Config, db
+from src_backend import Config, database
 from src_backend.Logging.Logger import Logger
 
 authBp = Blueprint('auth', __name__)
 # TODO own .env for backend
 logger = Logger(__name__)
+
+
+@authBp.route('/remindMeLogin')
+def remindMeLogin():
+    # print(request.cookies)
+    # print("Hallo")
+
+    return jsonify("Guten Tag", request.cookies), 200
 
 
 @authBp.route('/discord')
@@ -21,11 +31,17 @@ def discordOAuth():
     :return:
     """
     code = request.args.get("code")
+    remindMe = request.args.get("remindMe")
 
     if code is None:
         logger.error("No code was provided by Discord")
 
         return jsonify(message="No code was provided by Discord"), 403
+
+    if remindMe is not None:
+        remindMe = remindMe.lower() == "true"
+    else:
+        remindMe = False
 
     # url to get the access token
     url = "https://discord.com/api/oauth2/token"
@@ -66,7 +82,7 @@ def discordOAuth():
     selectQuery = (select(DiscordUser).where(DiscordUser.discord_id == user['id']))
 
     try:
-        discordUser = db.session.execute(selectQuery).scalars().one()
+        discordUser = database.session.execute(selectQuery).scalars().one()
     except NoResultFound:
         logger.warning(f"{user['username'], user['id']} not found in the database!")
 
@@ -81,11 +97,40 @@ def discordOAuth():
 
     accessToken = create_access_token(identity=str(user['id']))
 
+    if remindMe:
+        refreshToken = create_refresh_token(identity=str(user['id']), expires_delta=timedelta(days=14))
+
+        try:
+            selectQuery = select(WebsiteUser).where(WebsiteUser.discord_id == user['id'])
+            websiteUser = database.session.execute(selectQuery).scalars().one()
+
+            websiteUser.refresh_token = refreshToken
+            database.session.commit()
+        except Exception as error:
+            logger.error(f"Failed to store refresh token for {user['username'], user['id']}", exc_info=error)
+            database.session.rollback()
+
+            return jsonify(message="Failed to store refresh token"), 500
+    else:
+        refreshToken = None
+
     # to build a response with a header
     response = make_response(jsonify(message="Successfully authenticated!"))
 
     response.headers["Authorization"] = f"Bearer {accessToken}"
     response.headers["DiscordId"] = user['id']
+
+    # set the refresh token as a cookie
+    if refreshToken:
+        response.set_cookie(
+            "refresh_token",
+            refreshToken,
+            httponly=True,
+            # TODO secure für samesite=None => HTTPS lokal
+            secure=False,
+            samesite="None",
+            max_age=int(timedelta(days=14).total_seconds()),
+        )
 
     logger.debug(f"User {user['username'], user['id']} authenticated")
 
@@ -104,7 +149,7 @@ def _createNecessaryThings(discordUser: DiscordUser, user: dict) -> bool:
     selectQuery = (select(WebsiteUser).where(WebsiteUser.discord_id == discordUser.discord_id))
 
     try:
-        db.session.execute(selectQuery).scalars().one()
+        database.session.execute(selectQuery).scalars().one()
     except NoResultFound:
         websiteUser = WebsiteUser(
             discord_id=discordUser.discord_id,
@@ -117,12 +162,12 @@ def _createNecessaryThings(discordUser: DiscordUser, user: dict) -> bool:
         )
 
         try:
-            db.session.add(websiteUser)
-            db.session.add(website_role_user_mapping)
-            db.session.commit()
+            database.session.add(websiteUser)
+            database.session.add(website_role_user_mapping)
+            database.session.commit()
         except Exception as error:
             logger.error(f"Failed to create WebsiteUser for {user['username'], user['id']}", exc_info=error)
-            db.session.rollback()
+            database.session.rollback()
 
             return False
         else:
@@ -131,7 +176,7 @@ def _createNecessaryThings(discordUser: DiscordUser, user: dict) -> bool:
             return True
     except Exception as error:
         logger.error(f"Failed to fetch WebsiteUser for {user['username'], user['id']}", exc_info=error)
-        db.session.rollback()
+        database.session.rollback()
 
         return False
     else:

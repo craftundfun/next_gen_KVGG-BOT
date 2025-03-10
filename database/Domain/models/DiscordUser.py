@@ -29,4 +29,8 @@ class DiscordUser(Base):
                 f"created_at={self.created_at})")
 
     def to_dict(self):
-        return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
+        return {
+            "discord_id": str(self.discord_id),
+            "global_name": self.global_name,
+            "created_at": self.created_at,
+        }
