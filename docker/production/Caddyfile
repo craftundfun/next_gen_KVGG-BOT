@@ -1,6 +1,6 @@
 https_port 3000
 
-kvgg.axellotl.de:3000 {
+kvgg.axellotl.de {
 	root * /app/public
 	file_server
 
