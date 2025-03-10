@@ -18,10 +18,10 @@ function LoginScreen() {
 	const {setWebsiteUser} = useWebsiteUser();
 
 	const handleLogin = () => {
-		if (process.env.NODE_ENV !== "production") {
-			window.open(discordOAuthUrlDevelopment, "_parent");
-		} else {
+		if (process.env.NODE_ENV === "development") {
 			window.open(discordOAuthUrlProduction, "_parent");
+		} else {
+			window.open(discordOAuthUrlDevelopment, "_parent");
 		}
 	};
 
