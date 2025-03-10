@@ -2,7 +2,7 @@ import * as React from "react";
 import {useAuth} from "@modules/AuthContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@ui/card";
 import {Avatar, AvatarFallback, AvatarImage} from "@ui/avatar";
-import {discordOAuthUrl, copyrightUrl, backendUrl} from "@modules/Constants";
+import {discordOAuthUrlDevelopment, copyrightUrl, backendUrl, discordOAuthUrlProduction} from "@modules/Constants";
 import {useEffect} from "react";
 import {DiscordUser} from "@customTypes/DiscordUser";
 import {parseWebsiteUser, WebsiteUser} from "@customTypes/WebsiteUser";
@@ -18,8 +18,11 @@ function LoginScreen() {
 	const {setWebsiteUser} = useWebsiteUser();
 
 	const handleLogin = () => {
-		console.log(remindMe);
-		window.open(discordOAuthUrl, "_parent");
+		if (process.env.NODE_ENV !== "production") {
+			window.open(discordOAuthUrlDevelopment, "_parent");
+		} else {
+			window.open(discordOAuthUrlProduction, "_parent");
+		}
 	};
 
 	useEffect(() => {
