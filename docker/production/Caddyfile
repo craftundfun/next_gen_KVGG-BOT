@@ -1,4 +1,8 @@
 https://kvgg.axellotl.de:3000 {
+    tls internal {
+		on_demand
+	}
+
 	root * /app/public
 	file_server
 
