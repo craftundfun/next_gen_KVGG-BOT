@@ -1,7 +1,3 @@
-{
-	auto_https on
-}
-
 kvgg.axellotl.de:3000 {
 	root * /app/public
 	file_server
