@@ -11,8 +11,6 @@
 
 	reverse_proxy /auth/* backend:8000
 	reverse_proxy /api/* backend:8000
-
-	header_up Cache-Control "no-transform"
 }
 
 :443 {
@@ -25,7 +23,15 @@
 	reverse_proxy /auth/* backend:8000
 	reverse_proxy /api/* backend:8000
 
-	header_up Cache-Control "no-transform"
+	tls /etc/certs/localhost.pem /etc/certs/localhost-key.pem
+}
+
+:3000 {
+	reverse_proxy /* frontend:3000 {
+		transport http {
+			versions h1h2
+		}
+	}
 
 	tls /etc/certs/localhost.pem /etc/certs/localhost-key.pem
 }

@@ -1,0 +1,11 @@
+{
+	auto_https on
+}
+
+kvgg.axellotl.de {
+	root * /app/web/build
+	file_server
+
+	reverse_proxy /auth/* backend:8000
+	reverse_proxy /api/* backend:8000
+}
