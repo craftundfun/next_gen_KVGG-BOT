@@ -14,3 +14,10 @@ class WebsiteRoleUserMapping(Base):
 
     website_role: Mapped[Optional["WebsiteRole"]] = relationship("WebsiteRole", uselist=False)
     website_user: Mapped[Optional["WebsiteUser"]] = relationship("WebsiteUser", uselist=False)
+
+    def __init__(self, role_id: int, discord_id: int, created_at: datetime | None = None):
+        super().__init__()
+
+        self.role_id = role_id
+        self.discord_id = discord_id
+        self.created_at = created_at

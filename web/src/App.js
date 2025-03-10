@@ -5,8 +5,8 @@ import {AuthProvider} from '@modules/AuthContext';
 import ProtectedRoute from '@modules/ProtectedRoute';
 import Forbidden from '@components/Status/Forbidden';
 import Dashboard from '@components/Dashboard/Dashboard';
-import LoginRedirect from '@components/Login/LoginRedirect';
 import Login from '@components/Login/Login';
+import LoginScreen from '@components/Login/LoginScreen';
 
 function App() {
 	return (
@@ -14,8 +14,8 @@ function App() {
 			<Router>
 				<Routes>
 					(// login page)
-					<Route path="/" element={<Login/>}/>
-					<Route path="/login" element={<LoginRedirect/>}/>
+					<Route path="/" element={<LoginScreen/>}/>
+					<Route path="/login" element={<Login/>}/>
 
 					<Route
 						path="/dashboard"

@@ -3,6 +3,7 @@ import {useEffect, useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import {backendUrl} from "@modules/Constants";
 import BaseLayout from "@ui/SiteBlueprint";
+import PersonalDashboard from "@components/Dashboard/PersonalInfo/PersonalDashboard";
 
 function Dashboard() {
 	const navigate = useNavigate();
@@ -10,9 +11,9 @@ function Dashboard() {
 	const token = sessionStorage.getItem('jwt');
 	const tokenType = sessionStorage.getItem('tokenType');
 
-	let [users, setUsers] = useState<string | null>(null);
-	let [guilds, setGuilds] = useState<string | null>(null);
-	let [loading, setLoading] = useState<boolean>(true);
+	const [users, setUsers] = useState<string | null>(null);
+	const [guilds, setGuilds] = useState<string | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
 
 	useEffect(() => {
 		// Get all users
@@ -88,6 +89,9 @@ function Dashboard() {
 						</div>
 						<div className="overflow-auto">
 							<p>{guilds}</p>
+						</div>
+						<div className="overflow-auto">
+							<PersonalDashboard/>
 						</div>
 					</div>
 				)}

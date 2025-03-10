@@ -18,7 +18,7 @@ function AvatarNameCombination({discordUser, websiteUser}: Props) {
 					<div className="text-sm">{websiteUser?.email || "NA"}</div>
 				</div>
 				<Avatar className="ml-2 mt-1 w-8 h-8">
-					<AvatarImage src={discordUser?.profile_picture || ''}/>
+					<AvatarImage src={''}/>
 				</Avatar>
 			</div>
 		) : (

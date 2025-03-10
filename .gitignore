@@ -3,3 +3,4 @@
 .env
 Logs/*
 Web
+certs/*

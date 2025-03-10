@@ -5,3 +5,4 @@ python-dotenv
 flask-cors
 requests
 flask_jwt_extended
+gunicorn

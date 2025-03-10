@@ -1,0 +1,66 @@
+services:
+    backend:
+        container_name: backend
+        build:
+            context: ../..
+            dockerfile: ./docker/development/Dockerfile_Backend
+        develop:
+            watch:
+                -   action: sync
+                    path: ../..
+                    target: /app
+        volumes:
+            - ../..:/app
+        restart: on-failure
+        networks:
+            - caddy_net
+
+    frontend:
+        container_name: frontend
+        build:
+            context: ../../web
+            dockerfile: Dockerfile
+        develop:
+            watch:
+                -   action: sync
+                    path: ../../web
+                    target: /app
+        volumes:
+            - ../../web:/app
+        depends_on:
+            - backend
+        restart: on-failure
+        networks:
+            - caddy_net
+
+    caddy:
+        image: caddy:2
+        container_name: caddy
+        restart: always
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - ../../certs:/etc/certs
+        depends_on:
+            - backend
+            - frontend
+        networks:
+            - caddy_net
+
+    bot:
+        container_name: bot
+        build:
+            context: ../..
+            dockerfile: ./docker/development/Dockerfile_Bot
+        develop:
+            watch:
+                -   action: sync
+                    path: ./src_bot
+                    target: /app
+
+networks:
+    caddy_net:
+        driver:
+            bridge

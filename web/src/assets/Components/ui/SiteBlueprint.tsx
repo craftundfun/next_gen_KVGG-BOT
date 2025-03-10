@@ -14,8 +14,7 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({children}) => {
 
 	return (
 		<div className="flex flex-col h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-			<div className="relative flex items-center justify-between p-2 bg-gray-800"
-				 style={{height: '8%', minHeight: '50px', maxHeight: '50px'}}>
+			<div className="relative flex items-center justify-between p-2 bg-gray-800" style={{height: '8%', minHeight: '50px', maxHeight: '50px'}}>
 				<div className="flex items-center">
 					<Avatar className="mt-1 w-8 h-8">
 						<AvatarImage src="/KVGG/KVGG Logo Icon.png"/>

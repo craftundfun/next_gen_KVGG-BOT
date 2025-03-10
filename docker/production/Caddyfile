@@ -1,0 +1,11 @@
+https://kvgg.axellotl.de:3000 {
+    tls internal {
+		on_demand
+	}
+
+	root * /app/public
+	file_server
+
+	reverse_proxy /auth/* backend:8000
+	reverse_proxy /api/* backend:8000
+}

@@ -28,9 +28,9 @@ class DiscordUser(Base):
         return (f"DiscordUser(discord_id={self.discord_id}, global_name={self.global_name}, "
                 f"created_at={self.created_at})")
 
-    def as_dict(self):
+    def to_dict(self):
         return {
-            "discord_id": self.discord_id,
+            "discord_id": str(self.discord_id),
             "global_name": self.global_name,
             "created_at": self.created_at,
         }

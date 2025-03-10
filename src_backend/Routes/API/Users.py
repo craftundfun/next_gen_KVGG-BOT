@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
 from database.Domain.models.DiscordUser import DiscordUser
-from src_backend import db
+from src_backend import database
 from src_backend.Logging.Logger import Logger
 from src_backend.RBACCheck import hasUserMinimumRequiredRole
 from src_backend.Types.Role import Role
@@ -21,15 +21,11 @@ def getAllDiscordUsers():
     Fetch all users from the database.
     """
     selectQuery = select(DiscordUser)
-    users = db.session.execute(selectQuery).scalars().all()
+    users = database.session.execute(selectQuery).scalars().all()
 
     userDict: dict = {"user":
         [
-            {
-                "discord_id": user.discord_id,
-                "profile_picture": user.profile_picture
-            }
-            for user in users
+            user.to_dict() for user in users
         ]
     }
 
@@ -53,7 +49,7 @@ def getDiscordUser(discord_id):
     selectQuery = select(DiscordUser).where(DiscordUser.discord_id == discord_id)
 
     try:
-        discordUser: DiscordUser = db.session.execute(selectQuery).scalars().one()
+        discordUser: DiscordUser = database.session.execute(selectQuery).scalars().one()
     except NoResultFound:
         return jsonify(message="DiscordUser does not exist"), 404
     except Exception as error:
@@ -61,4 +57,4 @@ def getDiscordUser(discord_id):
 
         return jsonify(message="Failed to fetch DiscordUser"), 500
 
-    return jsonify(discordUser.as_dict())
+    return jsonify(discordUser.to_dict()), 200

@@ -1,0 +1,36 @@
+services:
+    backend:
+        container_name: backend
+        build:
+            context: ../..
+            dockerfile: ./docker/production/Dockerfile_Backend
+        volumes:
+            - ../..:/app
+        restart: on-failure
+        networks:
+            - caddy_net
+
+    caddy:
+        image: caddy:2
+        container_name: caddy
+        restart: always
+        ports:
+            - "3000:3000"
+        volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - ../../web/build:/app/public:ro
+        depends_on:
+            - backend
+        networks:
+            - caddy_net
+
+    bot:
+        container_name: bot
+        build:
+            context: ../..
+            dockerfile: ./docker/production/Dockerfile_Bot
+
+networks:
+    caddy_net:
+        driver:
+            bridge
