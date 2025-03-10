@@ -19,6 +19,7 @@ services:
             - "443:443"
         volumes:
             - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - ../../web/build:/app/public:ro
         depends_on:
             - backend
         networks:

@@ -3,7 +3,7 @@
 }
 
 kvgg.axellotl.de {
-	root * /app/web/build
+	root * /app/public
 	file_server
 
 	reverse_proxy /auth/* backend:8000
