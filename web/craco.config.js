@@ -11,5 +11,10 @@ module.exports = {
 			'@modules': path.resolve(__dirname, 'src/modules'),
 			'@ui': path.resolve(__dirname, 'src/assets/Components/ui'),
 		},
+
+		configure: (webpackConfig) => {
+			webpackConfig.output.publicPath = './';
+			return webpackConfig;
+		},
 	}
-}
+};
