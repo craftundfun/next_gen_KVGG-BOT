@@ -6,7 +6,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
-from database.Domain.models import DiscordUser, WebsiteUser, WebsiteRoleUserMapping
+from database.Domain.models import DiscordUser, WebsiteUser, WebsiteRoleUserMapping, Guild, GuildDiscordUserMapping
 from src_backend import Config, database
 from src_backend.Logging.Logger import Logger
 
@@ -57,12 +57,16 @@ def login():
 
         return jsonify(message="Something went wrong!"), 500
 
+    if not (guild := _fetchGuild(discordUser)):
+        return jsonify("Failed to fetch guild"), 500
+
     accessToken = create_access_token(identity=str(discordUser.discord_id))
 
     response = make_response(jsonify("Successfully logged in!"))
     response.headers["Authorization"] = f"Bearer {accessToken}"
     response.headers["DiscordUser"] = discordUser.to_dict()
     response.headers["WebsiteUser"] = websiteUser.to_dict()
+    response.headers["Guild"] = guild.to_dict()
 
     return response, 200
 
@@ -130,6 +134,9 @@ def newLogin():
     if not (websiteUser := _createNecessaryThings(discordUser, user)):
         return jsonify("Failed to create WebsiteUser"), 500
 
+    if not (guild := _fetchGuild(discordUser)):
+        return jsonify("Failed to fetch guild"), 500
+
     response = make_response(jsonify("Successfully authenticated!"))
     accessToken = create_access_token(identity=str(discordUser.discord_id))
 
@@ -156,6 +163,7 @@ def newLogin():
     response.headers["Authorization"] = f"Bearer {accessToken}"
     response.headers["DiscordUser"] = discordUser.to_dict()
     response.headers["WebsiteUser"] = websiteUser.to_dict()
+    response.headers["Guild"] = guild.to_dict()
 
     return response, 200
 
@@ -235,3 +243,30 @@ def _createNecessaryThings(discordUser: DiscordUser, user: dict) -> WebsiteUser 
         logger.debug(f"WebsiteUser for {user['username'], user['id']} already exists")
 
     return websiteUser
+
+
+# TODO maybe add a favourite guild in the future
+def _fetchGuild(discordUser: DiscordUser) -> Guild | None:
+    """
+    Fetch the guild for the DiscordUser. Maybe integrate a favourite guild in the future.
+    """
+    selectQuery = (
+        select(Guild)
+        .join(GuildDiscordUserMapping)
+        .where(GuildDiscordUserMapping.discord_user_id == discordUser.discord_id, )
+    )
+
+    try:
+        guilds: list[Guild] = list(database.session.execute(selectQuery).scalars().all())
+    except NoResultFound:
+        logger.debug(f"No guilds found for {discordUser.global_name, discordUser.discord_id}")
+
+        return None
+    except Exception as error:
+        logger.error(f"Failed to fetch guilds for {discordUser.global_name, discordUser.discord_id}",
+                     exc_info=error, )
+        database.session.rollback()
+
+        return None
+
+    return guilds[0]

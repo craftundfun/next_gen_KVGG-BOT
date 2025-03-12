@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import {DiscordUserProvider} from '@context/DiscordUserContext';
 import {WebsiteUserProvider} from '@context/WebsiteUserContext';
+import {GuildProvider} from '@context/GuildContext';
 
 // eslint-disable-next-line no-undef
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -11,7 +12,9 @@ root.render(
 	<React.StrictMode>
 		<DiscordUserProvider>
 			<WebsiteUserProvider>
-				<App/>
+				<GuildProvider>
+					<App/>
+				</GuildProvider>
 			</WebsiteUserProvider>
 		</DiscordUserProvider>
 	</React.StrictMode>

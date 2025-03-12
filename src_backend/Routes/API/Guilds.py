@@ -14,7 +14,7 @@ logger = Logger(__name__)
 
 @guildBp.route('/guild/all')
 @jwt_required()
-@hasUserMinimumRequiredRole(Role.ADMINISTRATOR)
+@hasUserMinimumRequiredRole(Role.USER)
 def getAllGuilds():
     """
     Fetch all guilds from the database.
@@ -37,3 +37,28 @@ def getAllGuilds():
     logger.debug("Fetched all guilds")
 
     return jsonify({'guilds': guildList}), 200
+
+
+@guildBp.route('/guild/<guild_id>')
+@jwt_required()
+@hasUserMinimumRequiredRole(Role.USER)
+def getGuild(guild_id):
+    try:
+        guildId = int(guild_id)
+    except ValueError:
+        logger.debug(f"Invalid guild id {guild_id}")
+
+        return jsonify(message="Invalid guild id"), 400
+
+    selectQuery = (select(Guild).where(Guild.guild_id == guildId))
+
+    try:
+        guild: Guild = database.session.execute(selectQuery).scalars().one()
+    except Exception as error:
+        logger.error(f"Failed to fetch guild with id {guildId}", exc_info=error)
+
+        return jsonify(message="Failed to fetch guild"), 500
+    else:
+        logger.debug(f"Fetched guild with id {guildId}")
+
+        return jsonify(guild.to_dict()), 200

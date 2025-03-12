@@ -9,12 +9,14 @@ import {useDiscordUser} from "@context/DiscordUserContext";
 import {useWebsiteUser} from "@context/WebsiteUserContext";
 import {Button} from "@ui/button";
 import getLoginData from "@components/Login/getLoginData";
+import {useGuild} from "@context/GuildContext";
 
 function LoginScreen() {
 	const {remindMe, setRemindMe, login} = useAuth();
 	const navigate = useNavigate();
 	const {setDiscordUser} = useDiscordUser();
 	const {setWebsiteUser} = useWebsiteUser();
+	const {setGuild} = useGuild();
 
 	const handleLogin = () => {
 		// redirect to the discord oauth2 login page
@@ -47,10 +49,11 @@ function LoginScreen() {
 			setWebsiteUser(loginData[3]);
 			login(loginData[1]);
 			sessionStorage.setItem("tokenType", loginData[0]);
+			setGuild(loginData[4]);
 
 			navigate("/dashboard");
 		});
-	}, [login, navigate, setDiscordUser, setWebsiteUser]);
+	}, [login, navigate, setDiscordUser, setGuild, setWebsiteUser]);
 
 	return (
 		<div className="flex flex-col justify-between h-screen bg-gradient-to-b from-gray-900 to-gray-800">
