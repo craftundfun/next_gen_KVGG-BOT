@@ -15,7 +15,7 @@ services:
         container_name: caddy
         restart: always
         ports:
-            - "3000:3000"
+            - "127.0.0.1:3000:3000"
         volumes:
             - ./Caddyfile:/etc/caddy/Caddyfile:ro
             - ../../web/build:/app/public:ro
