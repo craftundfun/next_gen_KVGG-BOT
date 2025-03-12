@@ -1,5 +1,6 @@
 import pymysql
 from flask import Flask
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 
 from src_backend.Config import Config
@@ -15,6 +16,7 @@ def createApp():
 
     database.init_app(app)
     JWTManager(app)
+    CORS(app, supports_credentials=True)
 
     registerRoutes(app)
 
