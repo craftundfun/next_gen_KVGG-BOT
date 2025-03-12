@@ -1,11 +1,17 @@
-https://kvgg.axellotl.de:3000 {
-    tls internal {
-		on_demand
+:3000 {
+	# Leite /auth/* und /api/* an das Backend weiter
+	handle /auth/* {
+		reverse_proxy backend:8000
 	}
 
-	root * /app/public
-	file_server
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
 
-	reverse_proxy /auth/* backend:8000
-	reverse_proxy /api/* backend:8000
+	# Für alle anderen Anfragen prüfe, ob die Datei existiert oder leite auf /index.html um
+	handle {
+		root * /app/public
+		try_files {path} /index.html
+		file_server
+	}
 }

@@ -7,18 +7,21 @@ from src_backend.RBACCheck import hasUserMinimumRequiredRole
 from src_backend.Types.Role import Role
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
+from datetime import datetime
 
 statisticBp = Blueprint('statistic', __name__)
 logger = Logger(__name__)
 
 
-@statisticBp.route('/statistic/<guild_id>/<discord_id>')
+@statisticBp.route('/statistic/<guild_id>/<discord_id>/<date>')
 @jwt_required()
 @hasUserMinimumRequiredRole(Role.USER)
-def getStatisticsFromUserPerGuild(guild_id, discord_id):
+# TODO fetch with correct date etc.
+def getStatisticsFromUserPerGuildPerDate(guild_id, discord_id, date):
     try:
         guildId = int(guild_id)
         discordId = int(discord_id)
+        date = datetime.strptime(date, "%Y-%m-%d").date()
     except ValueError:
         logger.debug(f"Invalid discord {discord_id} or guild {guild_id} id")
 
@@ -28,18 +31,17 @@ def getStatisticsFromUserPerGuild(guild_id, discord_id):
         select(Statistic).where(
             Statistic.discord_id == discordId,
             Statistic.guild_id == guildId,
+            Statistic.date == date,
         )
     )
 
     try:
-        statistics: list[Statistic] = list(database.session.execute(selectQuery).scalars().all())
-    except NoResultFound:
-        logger.debug(f"No statistics found for user {discordId} in guild {guildId}")
-
-        return jsonify(message="Statistics not found"), 404
+        statistics: Statistic | None = database.session.execute(selectQuery).scalars().one_or_none()
     except Exception as error:
         logger.error(f"Failed to fetch statistics for user {discord_id} in guild {guildId}", exc_info=error)
 
         return jsonify(message="Failed to fetch statistics"), 500
+    else:
+        logger.debug(f"Fetched statistics for user {discordId} in guild {guildId}")
 
-    return jsonify(statistics[0].to_dict()), 200
+    return jsonify(statistics.to_dict() if statistics else {}), 200

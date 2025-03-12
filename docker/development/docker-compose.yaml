@@ -49,16 +49,16 @@ services:
         networks:
             - caddy_net
 
-    bot:
-        container_name: bot
-        build:
-            context: ../..
-            dockerfile: ./docker/development/Dockerfile_Bot
-        develop:
-            watch:
-                -   action: sync
-                    path: ./src_bot
-                    target: /app
+    # bot:
+    #     container_name: bot
+    #     build:
+    #         context: ../..
+    #         dockerfile: ./docker/development/Dockerfile_Bot
+    #     develop:
+    #         watch:
+    #             -   action: sync
+    #                 path: ./src_bot
+    #                 target: /app
 
 networks:
     caddy_net:
