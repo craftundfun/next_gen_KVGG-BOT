@@ -165,6 +165,8 @@ def newLogin():
     response.headers["WebsiteUser"] = websiteUser.to_dict()
     response.headers["Guild"] = guild.to_dict()
 
+    logger.debug("Successfully logged in. {")
+
     return response, 200
 
 
