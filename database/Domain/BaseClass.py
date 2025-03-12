@@ -5,6 +5,8 @@ tell the IDE to ignore the import error, otherwise the Entity classes will not h
 from datetime import datetime
 # noinspection PyUnresolvedReferences
 from typing import Optional, TYPE_CHECKING
+# noinspection PyUnresolvedReferences
+import json
 
 # noinspection PyUnresolvedReferences
 from sqlalchemy import Column, BigInteger, VARCHAR, ForeignKey, DATETIME, TEXT, Integer, TIMESTAMP, JSON, BOOLEAN, Enum
@@ -21,6 +23,4 @@ from sqlalchemy.inspection import inspect
 
 
 class Base(DeclarativeBase):
-    # noinspection PyUnresolvedReferences
-    def to_dict(self):
-        return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
+    pass

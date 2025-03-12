@@ -16,3 +16,18 @@ class Statistic(Base):
 
     discord_user = relationship("DiscordUser")
     guild = relationship("Guild")
+
+    def to_dict(self):
+        dictionary = {
+            "discord_id": str(self.discord_id),
+            "guild_id": str(self.guild_id),
+            "date": self.date.isoformat(),
+            "online_time": self.online_time,
+            "stream_time": self.stream_time,
+            "mute_time": self.mute_time,
+            "deaf_time": self.deaf_time,
+            "message_count": self.message_count,
+            "command_count": self.command_count,
+        }
+
+        return json.dumps(dictionary, default=str)

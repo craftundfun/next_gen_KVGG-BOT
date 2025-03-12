@@ -2,18 +2,13 @@ import * as React from "react";
 import {useAuth} from "@modules/AuthContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@ui/card";
 import {Avatar, AvatarFallback, AvatarImage} from "@ui/avatar";
-import {
-	copyrightUrl,
-	backendUrl,
-	discordOAuthUrl
-} from "@modules/Constants";
+import {copyrightUrl, discordOAuthUrl} from "@modules/Constants";
 import {useEffect} from "react";
-import {DiscordUser} from "@customTypes/DiscordUser";
-import {parseWebsiteUser, WebsiteUser} from "@customTypes/WebsiteUser";
 import {useNavigate} from "react-router-dom";
 import {useDiscordUser} from "@context/DiscordUserContext";
 import {useWebsiteUser} from "@context/WebsiteUserContext";
 import {Button} from "@ui/button";
+import getLoginData from "@components/Login/getLoginData";
 
 function LoginScreen() {
 	const {remindMe, setRemindMe, login} = useAuth();
@@ -22,105 +17,36 @@ function LoginScreen() {
 	const {setWebsiteUser} = useWebsiteUser();
 
 	const handleLogin = () => {
+		// redirect to the discord oauth2 login page
 		window.open(discordOAuthUrl, "_parent");
 	};
 
+	// upon loading the site, check if the user has a refresh token and log in immediately
 	useEffect(() => {
-		fetch(backendUrl + "/auth/remindMeLogin", {
+		fetch("/auth/login", {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
 			},
 			credentials: 'include',
 		}).then((response) => {
+			// if the response was not ok, the user had no refresh token or something is missing
 			if (!response.ok) {
 				return;
 			}
 
-			const authorizationHeader = response.headers.get("Authorization");
-			const discordIdHeader = response.headers.get("DiscordId");
+			const loginData = getLoginData(response);
 
-			if (authorizationHeader === null) {
-				console.log("Error: No authorization header");
-
-				return;
-			} else if (discordIdHeader === null) {
-				console.log("Error: No discord id header");
+			if (!loginData) {
+				navigate("/error");
 
 				return;
 			}
 
-			const tokenType = authorizationHeader.split(" ")[0];
-			const token = authorizationHeader.split(" ")[1];
-
-			sessionStorage.setItem('tokenType', tokenType);
-			login(token);
-
-			fetch(backendUrl + `/api/discordUser/${discordIdHeader}`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': tokenType + ' ' + token,
-				},
-				credentials: 'include',
-			}).then(async response => {
-				if (!response.ok) {
-					console.log("Error: Could not fetch discord user");
-
-					navigate("/error");
-
-					return;
-				}
-
-				const discordUserFromRequest: DiscordUser | null = await response.json();
-
-				if (discordUserFromRequest === null) {
-					console.log("Error: Could not parse discord user");
-
-					navigate("/error");
-
-					return;
-				}
-
-				console.log(discordUserFromRequest);
-
-				setDiscordUser(discordUserFromRequest);
-			}).catch((error) => {
-				console.log(error);
-
-				navigate("/error");
-
-				return;
-			});
-
-			fetch(backendUrl + `/api/websiteUser/${discordIdHeader}`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': tokenType + ' ' + token,
-				},
-				credentials: 'include',
-			}).then(async response => {
-				if (!response.ok) {
-					console.log("Error: Could not fetch website user");
-
-					navigate("/error");
-
-					return;
-				}
-
-				const websiteUserFromRequest: WebsiteUser | null = parseWebsiteUser(await response.json());
-
-				if (websiteUserFromRequest === null) {
-					console.log("Error: Could not parse website user");
-
-					navigate("/error");
-
-					return;
-				}
-
-				setWebsiteUser(websiteUserFromRequest);
-			})
+			setDiscordUser(loginData[2]);
+			setWebsiteUser(loginData[3]);
+			login(loginData[1]);
+			sessionStorage.setItem("tokenType", loginData[0]);
 
 			navigate("/dashboard");
 		});
