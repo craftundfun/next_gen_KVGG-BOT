@@ -17,4 +17,5 @@ class Config:
 
     CLIENT_ID = os.getenv("CLIENT_ID")
     CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-    FRONTEND_URL = os.getenv("FRONTEND_URL")
+    URL = os.getenv("URL")
+    DISCORD_OAUTH_URL = os.getenv("DISCORD_OAUTH_URL")

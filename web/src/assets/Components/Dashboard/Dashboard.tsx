@@ -15,80 +15,78 @@ function Dashboard() {
 	const [guilds, setGuilds] = useState<string | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
 
-	useEffect(() => {
-		// Get all users
-		fetch(backendUrl + "/api/discordUser/all", {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': tokenType + ' ' + token,
-			},
-			credentials: 'include',
-		}).then((response) => {
-			if (!response.ok) {
-				navigate("/error");
-
-				return null;
-			}
-
-			return response.json();
-		}).then((data) => {
-			if (data) {
-				setUsers(JSON.stringify(data));
-				//setLoading(false);
-			}
-		}).catch((error) => {
-			console.log(error);
-
-			navigate("/error");
-
-			return null;
-		});
-
-		fetch(backendUrl + "/api/guild/all", {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': tokenType + ' ' + token,
-			},
-			credentials: 'include',
-		}).then((response) => {
-			if (!response.ok) {
-				navigate("/error");
-
-				return null;
-			}
-
-			return response.json();
-		}).then((data) => {
-			if (data) {
-				setGuilds(JSON.stringify(data));
-				setLoading(false);
-			}
-		}).catch((error) => {
-			console.log(error);
-
-			navigate("/error");
-
-			return null;
-		});
-	}, [navigate, token, tokenType]);
+//	useEffect(() => {
+//		// Get all users
+//		fetch(backendUrl + "/api/discordUser/all", {
+//			method: 'GET',
+//			headers: {
+//				'Content-Type': 'application/json',
+//				'Authorization': tokenType + ' ' + token,
+//			},
+//			credentials: 'include',
+//		}).then((response) => {
+//			if (!response.ok) {
+//				navigate("/error");
+//
+//				return null;
+//			}
+//
+//			return response.json();
+//		}).then((data) => {
+//			if (data) {
+//				setUsers(JSON.stringify(data));
+//				//setLoading(false);
+//			}
+//		}).catch((error) => {
+//			console.log(error);
+//
+//			navigate("/error");
+//
+//			return null;
+//		});
+//
+//		fetch(backendUrl + "/api/guild/all", {
+//			method: 'GET',
+//			headers: {
+//				'Content-Type': 'application/json',
+//				'Authorization': tokenType + ' ' + token,
+//			},
+//			credentials: 'include',
+//		}).then((response) => {
+//			if (!response.ok) {
+//				navigate("/error");
+//
+//				return null;
+//			}
+//
+//			return response.json();
+//		}).then((data) => {
+//			if (data) {
+//				setGuilds(JSON.stringify(data));
+//				setLoading(false);
+//			}
+//		}).catch((error) => {
+//			console.log(error);
+//
+//			navigate("/error");
+//
+//			return null;
+//		});
+//	}, [navigate, token, tokenType]);
 
 	return (
 		<div>
 			<BaseLayout>
-				{loading ? (
-					<p>Loading...</p>
-				) : (
+				{(
 					<div className=" flex-grow grid grid-cols-2 grid-rows-2 h-full">
 						<div className="overflow-auto">
-							<p>{tokenType} {token}</p>
+							<p>Test</p>
 						</div>
 						<div className="overflow-auto">
-							<p>{users}</p>
+							<p>Test</p>
 						</div>
 						<div className="overflow-auto">
-							<p>{guilds}</p>
+							<p>Test</p>
 						</div>
 						<div className="overflow-auto">
 							<PersonalDashboard/>

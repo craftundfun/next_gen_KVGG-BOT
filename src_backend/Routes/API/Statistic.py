@@ -15,6 +15,7 @@ logger = Logger(__name__)
 @statisticBp.route('/statistic/<guild_id>/<discord_id>')
 @jwt_required()
 @hasUserMinimumRequiredRole(Role.USER)
+# TODO fetch with correct date etc.
 def getStatisticsFromUserPerGuild(guild_id, discord_id):
     try:
         guildId = int(guild_id)
@@ -41,5 +42,7 @@ def getStatisticsFromUserPerGuild(guild_id, discord_id):
         logger.error(f"Failed to fetch statistics for user {discord_id} in guild {guildId}", exc_info=error)
 
         return jsonify(message="Failed to fetch statistics"), 500
+    else:
+        logger.debug(f"Fetched statistics for user {discordId} in guild {guildId}")
 
     return jsonify(statistics[0].to_dict()), 200

@@ -18,7 +18,7 @@ function PersonalDashboard() {
 	const [loading, setLoading] = useState<boolean>(true);
 
 	useEffect(() => {
-		if (!discordUser?.discord_id) {
+		if (discordUser === null) {
 			return;
 		}
 
@@ -40,7 +40,9 @@ function PersonalDashboard() {
 			setStatistics(await response.json());
 			setLoading(false);
 		})
-	}, [discordUser?.discord_id, setStatistics, navigate, token, tokenType]);
+	}, [setStatistics, navigate, token, tokenType, discordUser, statistics?.date]);
+
+	console.log(statistics);
 
 	return (
 		<div>
@@ -54,13 +56,13 @@ function PersonalDashboard() {
 					<p>Created At: {discordUser?.created_at}</p>
 
 					<h2>Statistics</h2>
-					<p>Date: {statistics?.date.toString()}</p>
-					<p>Online Time: {statistics?.online_time}</p>
-					<p>Stream Time: {statistics?.stream_time}</p>
-					<p>Mute Time: {statistics?.mute_time}</p>
-					<p>Deaf Time: {statistics?.deaf_time}</p>
-					<p>Message Count: {statistics?.message_count}</p>
-					<p>Command Count: {statistics?.command_count}</p>
+					<p>Date: {statistics?.date ?? "N/A"}</p>
+					<p>Online Time: {statistics?.online_time ?? 0}</p>
+					<p>Stream Time: {statistics?.stream_time ?? 0}</p>
+					<p>Mute Time: {statistics?.mute_time ?? 0}</p>
+					<p>Deaf Time: {statistics?.deaf_time ?? 0}</p>
+					<p>Message Count: {statistics?.message_count ?? 0}</p>
+					<p>Command Count: {statistics?.command_count ?? 0}</p>
 				</div>
 			)}
 		</div>
