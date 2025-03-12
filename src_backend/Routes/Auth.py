@@ -254,10 +254,12 @@ def _fetchGuild(discordUser: DiscordUser) -> Guild | None:
         select(Guild)
         .join(GuildDiscordUserMapping)
         .where(GuildDiscordUserMapping.discord_user_id == discordUser.discord_id, )
+        .order_by(Guild.guild_id.asc())
+        .limit(1)
     )
 
     try:
-        guilds: list[Guild] = list(database.session.execute(selectQuery).scalars().all())
+        guild: Guild = database.session.execute(selectQuery).scalars().one()
     except NoResultFound:
         logger.debug(f"No guilds found for {discordUser.global_name, discordUser.discord_id}")
 
@@ -269,4 +271,4 @@ def _fetchGuild(discordUser: DiscordUser) -> Guild | None:
 
         return None
 
-    return guilds[0]
+    return guild

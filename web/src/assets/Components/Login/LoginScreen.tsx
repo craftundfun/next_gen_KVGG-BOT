@@ -89,7 +89,7 @@ function LoginScreen() {
 								className="w-4 h-4"
 							/>
 							<label htmlFor="remindMe" className="text-gray-400 text-sm">
-								erinnern
+								erinnern für 14 Tage?
 							</label>
 						</div>
 					</CardContent>

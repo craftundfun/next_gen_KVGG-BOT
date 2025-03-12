@@ -2,8 +2,8 @@ import {useNavigate} from "react-router-dom";
 import {useDiscordUser} from "@context/DiscordUserContext";
 import {useEffect, useState} from "react";
 import {Statistic} from "@customTypes/Statistic";
-import {backendUrl} from "@modules/Constants";
 import React from "react";
+import {useGuild} from "@context/GuildContext";
 
 function PersonalDashboard() {
 	const navigate = useNavigate();
@@ -12,13 +12,14 @@ function PersonalDashboard() {
 	const tokenType = sessionStorage.getItem('tokenType');
 
 	const {discordUser} = useDiscordUser();
+	const {guild} = useGuild();
 	// const {websiteUser} = useWebsiteUser();
 
 	const [statistics, setStatistics] = useState<Statistic | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
 
 	useEffect(() => {
-		if (discordUser === null) {
+		if (discordUser === null || guild ===null) {
 			return;
 		}
 
@@ -26,7 +27,7 @@ function PersonalDashboard() {
 		const formattedDate = today.toISOString().split('T')[0];
 
 		// TODO remove hardcoded guild id
-		fetch(backendUrl + "/api/statistic/438689788585967616/" + discordUser.discord_id + "/" + formattedDate.toString(), {
+		fetch("/api/statistic/" + guild.guild_id + "/" + discordUser.discord_id + "/" + formattedDate.toString(), {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
@@ -43,7 +44,7 @@ function PersonalDashboard() {
 			setStatistics(await response.json());
 			setLoading(false);
 		})
-	}, [setStatistics, navigate, token, tokenType, discordUser, statistics?.date]);
+	}, [setStatistics, navigate, token, tokenType, discordUser, guild]);
 
 	console.log(statistics);
 
