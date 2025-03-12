@@ -95,9 +95,8 @@ def newLogin():
         "redirect_uri": f"{Config.URL}/login"
     }
 
-    response = requests.post(url, headers=headers, data=data)
-
     try:
+        response = requests.post(url, headers=headers, data=data)
         response.raise_for_status()
     except Exception as error:
         logger.error("Failed to get access token", exc_info=error)
@@ -108,9 +107,9 @@ def newLogin():
     headers = {
         "Authorization": f"{response.json()['token_type']} {response.json()['access_token']}",
     }
-    response = requests.get("https://discord.com/api/users/@me", headers=headers)
 
     try:
+        response = requests.get("https://discord.com/api/users/@me", headers=headers)
         response.raise_for_status()
     except Exception as error:
         logger.error("Failed to get user information", exc_info=error)
@@ -132,9 +131,13 @@ def newLogin():
         return jsonify(message="Something went wrong!"), 500
 
     if not (websiteUser := _createNecessaryThings(discordUser, user)):
+        logger.error("Failed to create WebsiteUser")
+
         return jsonify("Failed to create WebsiteUser"), 500
 
     if not (guild := _fetchGuild(discordUser)):
+        logger.error("Failed to fetch guild")
+
         return jsonify("Failed to fetch guild"), 500
 
     response = make_response(jsonify("Successfully authenticated!"))
@@ -165,7 +168,7 @@ def newLogin():
     response.headers["WebsiteUser"] = websiteUser.to_dict()
     response.headers["Guild"] = guild.to_dict()
 
-    logger.debug("Successfully logged in. {")
+    logger.debug("Successfully logged in.")
 
     return response, 200
 
