@@ -96,6 +96,7 @@ def newLogin():
     }
 
     try:
+        logger.debug(f"{url, headers, data}")
         response = requests.post(url, headers=headers, data=data)
         response.raise_for_status()
     except Exception as error:
