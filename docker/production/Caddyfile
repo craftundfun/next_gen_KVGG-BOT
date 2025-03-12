@@ -1,13 +1,8 @@
 :3000 {
-	root * /app/public
-	file_server
-
 	reverse_proxy /auth/* backend:8000
 	reverse_proxy /api/* backend:8000
 
-	@notStatic {
-		not path /static/* /assets/* /favicon.ico /robots.txt
-	}
-
-	rewrite @notStatic /index.html
+	root * /app/public
+	file_server
+	try_files {path} /index.html
 }

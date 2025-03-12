@@ -24,36 +24,36 @@ function LoginScreen() {
 	};
 
 	// upon loading the site, check if the user has a refresh token and log in immediately
-	useEffect(() => {
-		fetch("/auth/login", {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			credentials: 'include',
-		}).then((response) => {
-			// if the response was not ok, the user had no refresh token or something is missing
-			if (!response.ok) {
-				return;
-			}
-
-			const loginData = getLoginData(response);
-
-			if (!loginData) {
-				navigate("/error");
-
-				return;
-			}
-
-			setDiscordUser(loginData[2]);
-			setWebsiteUser(loginData[3]);
-			login(loginData[1]);
-			sessionStorage.setItem("tokenType", loginData[0]);
-			setGuild(loginData[4]);
-
-			navigate("/dashboard");
-		});
-	}, [login, navigate, setDiscordUser, setGuild, setWebsiteUser]);
+//	useEffect(() => {
+//		fetch("/auth/login", {
+//			method: 'GET',
+//			headers: {
+//				'Content-Type': 'application/json',
+//			},
+//			credentials: 'include',
+//		}).then((response) => {
+//			// if the response was not ok, the user had no refresh token or something is missing
+//			if (!response.ok) {
+//				return;
+//			}
+//
+//			const loginData = getLoginData(response);
+//
+//			if (!loginData) {
+//				navigate("/error");
+//
+//				return;
+//			}
+//
+//			setDiscordUser(loginData[2]);
+//			setWebsiteUser(loginData[3]);
+//			login(loginData[1]);
+//			sessionStorage.setItem("tokenType", loginData[0]);
+//			setGuild(loginData[4]);
+//
+//			navigate("/dashboard");
+//		});
+//	}, [login, navigate, setDiscordUser, setGuild, setWebsiteUser]);
 
 	return (
 		<div className="flex flex-col justify-between h-screen bg-gradient-to-b from-gray-900 to-gray-800">
