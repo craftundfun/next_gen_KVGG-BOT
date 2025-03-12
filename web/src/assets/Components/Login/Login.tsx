@@ -7,15 +7,18 @@ import {useDiscordUser} from "@context/DiscordUserContext";
 import {useWebsiteUser} from "@context/WebsiteUserContext";
 import BaseLayout from "@ui/SiteBlueprint";
 import getLoginData from "@components/Login/getLoginData";
+import {useGuild} from "@context/GuildContext";
 
 
 function Login() {
 	const location = useLocation();
 	const navigate = useNavigate();
-	const {login, remindMe} = useAuth();
-	const {setDiscordUser, discordUser} = useDiscordUser();
-	const {setWebsiteUser, websiteUser} = useWebsiteUser();
 	const hasFetched = useRef(false);
+
+	const {login, remindMe} = useAuth();
+	const {setDiscordUser} = useDiscordUser();
+	const {setWebsiteUser} = useWebsiteUser();
+	const {setGuild} = useGuild();
 
 	useEffect(() => {
 		// only call the backend once here, otherwise we might reauthenticate the user, and this will fail
@@ -59,10 +62,11 @@ function Login() {
 			setWebsiteUser(loginData[3]);
 			login(loginData[1]);
 			sessionStorage.setItem("tokenType", loginData[0]);
+			setGuild(loginData[4]);
 
 			navigate("/dashboard");
 		});
-	}, [location.search, login, navigate, remindMe, setDiscordUser, setWebsiteUser]);
+	}, [location.search, login, navigate, remindMe, setDiscordUser, setGuild, setWebsiteUser]);
 
 	return (
 		<BaseLayout>
