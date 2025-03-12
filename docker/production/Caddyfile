@@ -1,4 +1,4 @@
-https://kvgg.axellotl.de:3000 {
+:3000 {
 	root * /app/public
 	file_server
 
