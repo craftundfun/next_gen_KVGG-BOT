@@ -22,8 +22,11 @@ function PersonalDashboard() {
 			return;
 		}
 
+		const today = new Date();
+		const formattedDate = today.toISOString().split('T')[0];
+
 		// TODO remove hardcoded guild id
-		fetch(backendUrl + "/api/statistic/438689788585967616/" + discordUser.discord_id, {
+		fetch(backendUrl + "/api/statistic/438689788585967616/" + discordUser.discord_id + "/" + formattedDate.toString(), {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
