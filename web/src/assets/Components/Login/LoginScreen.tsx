@@ -40,8 +40,6 @@ function LoginScreen() {
 			const loginData = getLoginData(response);
 
 			if (!loginData) {
-				navigate("/error");
-
 				return;
 			}
 
