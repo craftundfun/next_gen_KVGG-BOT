@@ -1,6 +1,5 @@
 import {useLocation, useNavigate} from "react-router-dom";
 import React, {useEffect, useRef} from "react";
-import {backendUrl} from "@modules/Constants";
 import {useAuth} from "@context/AuthContext";
 import {Spinner} from "@ui/spinner";
 import {useDiscordUser} from "@context/DiscordUserContext";
@@ -37,7 +36,7 @@ function Login() {
 			return;
 		}
 
-		fetch(backendUrl + "/auth/newLogin?code=" + code + "&remindMe=" + remindMe.toString(), {
+		fetch("/auth/newLogin?code=" + code + "&remindMe=" + remindMe.toString(), {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
