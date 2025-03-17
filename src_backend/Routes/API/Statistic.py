@@ -84,3 +84,43 @@ def getAllDatesFromUserPerGuild(guild_id, discord_id):
         logger.debug(f"Fetched statistics for user {discordId} in guild {guildId}")
 
     return jsonify([statistic.isoformat() for statistic in statistics]), 200
+
+
+@statisticBp.route('/statistic/<guild_id>/<discord_id>/<start_date>/<end_date>')
+@jwt_required()
+@hasUserMinimumRequiredRole(Role.USER)
+def fetchStatisticsFromUserPerGuildForPeriod(guild_id, discord_id, start_date, end_date):
+    try:
+        guildId = int(guild_id)
+        discordId = int(discord_id)
+        startDate = datetime.strptime(start_date, "%Y-%m-%d").date()
+        endDate = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except ValueError:
+        logger.debug(f"Invalid parameters given")
+
+        return jsonify(message="Invalid parameters given"), 400
+
+    selectQuery = (
+        select(Statistic).where(
+            Statistic.discord_id == discordId,
+            Statistic.guild_id == guildId,
+            Statistic.date.between(startDate, endDate),
+        )
+    )
+
+    try:
+        statistics: list[Statistic] = database.session.execute(selectQuery).scalars().all()
+    except NoResultFound:
+        logger.debug(f"No statistics found for user {discord_id} in guild {guildId} "
+                     f"for period {start_date} to {end_date}")
+
+        return jsonify(message="No statistics available"), 204
+    except Exception as error:
+        logger.error(f"Failed to fetch statistics for user {discord_id} in guild {guildId}", exc_info=error)
+
+        return jsonify(message="Failed to fetch statistics"), 500
+    else:
+        logger.debug(f"Fetched statistics for user {discordId} in guild {guildId} "
+                     f"for period {start_date} to {end_date}")
+
+    return jsonify([statistic.to_dict() for statistic in statistics]), 200

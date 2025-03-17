@@ -1,6 +1,7 @@
 import React from 'react';
 import BaseLayout from "@ui/SiteBlueprint";
 import Statistics from "@components/Dashboard/PersonalInfo/Statistics";
+import StatisticGraph from "@components/Dashboard/PersonalInfo/StatisticGraph";
 
 function Dashboard() {
 
@@ -16,7 +17,7 @@ function Dashboard() {
 							<p>Test</p>
 						</div>
 						<div className="overflow-auto">
-							<p>Test</p>
+							<StatisticGraph/>
 						</div>
 						<div className="overflow-auto">
 							<Statistics/>
