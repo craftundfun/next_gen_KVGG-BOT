@@ -92,18 +92,23 @@ function Statistics() {
 			}
 
 			let datesFromApi = await response.json();
+
 			const today = new Date();
 			datesFromApi = datesFromApi.map((date: string) => new Date(date));
 			const minDate = new Date(Math.min(...datesFromApi.map((date: Date) => date.getTime())));
+			const datesSet = new Set(datesFromApi.map((date: { getTime: () => never; }) => date.getTime()));
+			const current = new Date(minDate);
 
-			for (let i = 0; i < (today.getTime() - minDate.getTime() * 24 * 60 * 60 * 1000); i += 1) {
-				const date = new Date(minDate.getTime() + i * 24 * 60 * 60 * 1000);
-				if (!datesFromApi.some((d: Date) => d.getTime() === date.getTime())) {
-					datesFromApi.push(date);
+			// insert all missing dates between the first date and today
+			while (current <= today) {
+				if (!datesSet.has(current.getTime())) {
+					datesFromApi.push(new Date(current));
+					datesSet.add(current.getTime());
 				}
+
+				current.setDate(current.getDate() + 1);
 			}
 
-			datesFromApi.push(today);
 			setDates(datesFromApi.sort((a: Date, b: Date) => b.getTime() - a.getTime()));
 			setLoadingDates(false);
 		})
