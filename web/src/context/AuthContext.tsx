@@ -67,9 +67,13 @@ export const AuthProvider = ({children}: Props) => {
 		}
 
 		try {
-			const decoded: any = jwtDecode(token);
+			const decoded= jwtDecode(token);
 			// current time in seconds
 			const currentTime = Date.now() / 1000;
+
+			if (!decoded.exp) {
+				return false;
+			}
 
 			return decoded.exp < currentTime;
 		} catch (error) {

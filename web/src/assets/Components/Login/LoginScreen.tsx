@@ -1,5 +1,5 @@
 import * as React from "react";
-import {useAuth} from "@modules/AuthContext";
+import {useAuth} from "@context/AuthContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@ui/card";
 import {Avatar, AvatarFallback, AvatarImage} from "@ui/avatar";
 import {copyrightUrl, discordOAuthUrl} from "@modules/Constants";
