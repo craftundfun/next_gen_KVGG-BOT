@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
@@ -90,6 +90,15 @@ def getAllDatesFromUserPerGuild(guild_id, discord_id):
 @jwt_required()
 @hasUserMinimumRequiredRole(Role.USER)
 def fetchStatisticsFromUserPerGuildForPeriod(guild_id, discord_id, start_date, end_date):
+    """
+    Fetches all statistics from a user in a guild for a given period.
+    Empty days are included in the response.
+
+    :param guild_id: The ID of the guild
+    :param discord_id: The ID of the user
+    :param start_date: The start date of the period (YYYY-MM-DD)
+    :param end_date: The end date of the period (YYYY-MM-DD)
+    """
     try:
         guildId = int(guild_id)
         discordId = int(discord_id)
@@ -123,4 +132,21 @@ def fetchStatisticsFromUserPerGuildForPeriod(guild_id, discord_id, start_date, e
         logger.debug(f"Fetched statistics for user {discordId} in guild {guildId} "
                      f"for period {start_date} to {end_date}")
 
+    earliestDate = min(statistic.date for statistic in statistics)
+    latestDate = max(statistic.date for statistic in statistics)
+
+    # include day with no data to have a consecutive list
+    for i in range(1, (latestDate - earliestDate).days):
+        if (earliestDate + timedelta(days=i)) in list(statistic.date for statistic in statistics):
+            continue
+
+        statistics.append(
+            Statistic(
+                discord_id=discordId,
+                guild_id=guildId,
+                date=earliestDate + timedelta(days=i),
+            )
+        )
+
+    statistics.sort(key=lambda statistic: statistic.date)
     return jsonify([statistic.to_dict() for statistic in statistics]), 200

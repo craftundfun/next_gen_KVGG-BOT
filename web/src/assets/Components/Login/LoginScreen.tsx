@@ -37,6 +37,11 @@ function LoginScreen() {
 				return;
 			}
 
+			if (response.status === 204) {
+				// no cookies, user is not logged in
+				return;
+			}
+
 			const loginData = getLoginData(response);
 
 			if (!loginData) {

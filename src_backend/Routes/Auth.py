@@ -22,14 +22,14 @@ def login():
     If the user has a refresh token, he gets an access token and the necessary information is returned.
     """
     if not request.cookies:
-        logger.debug("No cookies were provided, redirecting to Discord OAuth")
+        logger.debug("No cookies were provided")
 
-        return jsonify("No cookies were provided"), 400
+        return jsonify("No cookies were provided"), 204
 
     if not (refreshToken := request.cookies.get("refresh_token")):
-        logger.debug("No refresh token was provided, redirecting to Discord OAuth")
+        logger.debug("No refresh token was provided")
 
-        return jsonify("No refresh token was provided"), 400
+        return jsonify("No refresh token was provided"), 204
 
     selectQueryWebsiteUser = (select(WebsiteUser).where(WebsiteUser.refresh_token == refreshToken))
 
