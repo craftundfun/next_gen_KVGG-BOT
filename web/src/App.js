@@ -1,7 +1,7 @@
 import React from 'react';
 import {BrowserRouter as Router, Route, Routes,} from "react-router-dom";
 import Error from '@components/Status/Error';
-import {AuthProvider} from '@modules/AuthContext';
+import {AuthProvider} from '@context/AuthContext';
 import ProtectedRoute from '@modules/ProtectedRoute';
 import Forbidden from '@components/Status/Forbidden';
 import Dashboard from '@components/Dashboard/Dashboard';

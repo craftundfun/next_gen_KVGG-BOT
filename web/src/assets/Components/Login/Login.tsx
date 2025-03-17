@@ -1,7 +1,7 @@
 import {useLocation, useNavigate} from "react-router-dom";
 import React, {useEffect, useRef} from "react";
 import {backendUrl} from "@modules/Constants";
-import {useAuth} from "@modules/AuthContext";
+import {useAuth} from "@context/AuthContext";
 import {Spinner} from "@ui/spinner";
 import {useDiscordUser} from "@context/DiscordUserContext";
 import {useWebsiteUser} from "@context/WebsiteUserContext";

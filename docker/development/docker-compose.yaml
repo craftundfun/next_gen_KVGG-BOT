@@ -18,8 +18,8 @@ services:
     frontend:
         container_name: frontend
         build:
-            context: ../../web
-            dockerfile: Dockerfile
+            context: ../..
+            dockerfile: ./docker/development/Dockerfile
         develop:
             watch:
                 -   action: sync
@@ -40,6 +40,7 @@ services:
         ports:
             - "80:80"
             - "443:443"
+            - "3000:3000"
         volumes:
             - ./Caddyfile:/etc/caddy/Caddyfile:ro
             - ../../certs:/etc/certs

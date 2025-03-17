@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS activity;
 CREATE TABLE activity (
 	# not all activities have an id given by Discord
 	id                   BIGINT UNSIGNED AUTO_INCREMENT NOT NULL,
-	external_activity_id BIGINT UNSIGNED                NULL DEFAULT NULL,
+	external_activity_id BIGINT UNSIGNED UNIQUE         NULL DEFAULT NULL,
 	name                 VARCHAR(255)                   NOT NULL,
 
 	PRIMARY KEY (id)
