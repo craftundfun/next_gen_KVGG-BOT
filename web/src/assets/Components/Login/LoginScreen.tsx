@@ -2,61 +2,36 @@ import * as React from "react";
 import {useAuth} from "@context/AuthContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@ui/card";
 import {Avatar, AvatarFallback, AvatarImage} from "@ui/avatar";
-import {copyrightUrl, discordOAuthUrl} from "@modules/Constants";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
-import {useDiscordUser} from "@context/DiscordUserContext";
-import {useWebsiteUser} from "@context/WebsiteUserContext";
 import {Button} from "@ui/button";
-import getLoginData from "@components/Login/getLoginData";
-import {useGuild} from "@context/GuildContext";
 
 function LoginScreen() {
-	const {remindMe, setRemindMe, login} = useAuth();
+	const {login} = useAuth();
 	const navigate = useNavigate();
-	const {setDiscordUser} = useDiscordUser();
-	const {setWebsiteUser} = useWebsiteUser();
-	const {setGuild} = useGuild();
+	const [remindMe, setRemindMe] = useState<boolean>(false);
 
 	const handleLogin = () => {
-		// redirect to the discord oauth2 login page
-		window.open(discordOAuthUrl, "_parent");
+		const redirectUri = process.env.REACT_APP_DISCORD_OAUTH_URL;
+
+		window.open(redirectUri + "&state=remindMe=" + remindMe.toString().toLowerCase(), "_parent");
 	};
 
 	// upon loading the site, check if the user has a refresh token and log in immediately
 	useEffect(() => {
 		fetch("/auth/login", {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			credentials: 'include',
-		}).then((response) => {
-			// if the response was not ok, the user had no refresh token or something is missing
-			if (!response.ok) {
+			method: "GET",
+			credentials: "include"
+		}).then(response => {
+			if (response.status !== 200) {
 				return;
 			}
 
-			if (response.status === 204) {
-				// no cookies, user is not logged in
-				return;
-			}
-
-			const loginData = getLoginData(response);
-
-			if (!loginData) {
-				return;
-			}
-
-			setDiscordUser(loginData[2]);
-			setWebsiteUser(loginData[3]);
-			login(loginData[1]);
-			sessionStorage.setItem("tokenType", loginData[0]);
-			setGuild(loginData[4]);
-
+			login();
 			navigate("/dashboard");
 		});
-	}, [login, navigate, setDiscordUser, setGuild, setWebsiteUser]);
+	});
+
 
 	return (
 		<div className="flex flex-col justify-between h-screen bg-gradient-to-b from-gray-900 to-gray-800">
@@ -100,7 +75,7 @@ function LoginScreen() {
 			</div>
 			<div>
 				<p className="text-white text-center">
-					© 2025 <a href={copyrightUrl} className="underline text-accent">craftundfun</a>.
+					© 2025 <a href='https://github.com/craftundfun' className="underline text-accent">craftundfun</a>.
 					All rights reserved.
 				</p>
 			</div>

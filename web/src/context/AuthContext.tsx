@@ -1,104 +1,41 @@
 import React, {createContext, ReactNode, useContext, useState} from 'react';
-import {jwtDecode} from "jwt-decode";
+import Forbidden from "@components/Status/Forbidden";
 
 type AuthContextType = {
-	jwt: string | null;
-	login: (token: string) => void;
+	login: () => void;
 	logout: () => void;
-	setRemindMe: (remindMe: boolean) => void;
 	isAuthenticated: boolean;
-	remindMe: boolean
 };
 
-const AuthContext = createContext<AuthContextType>({
-	jwt: null,
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	login: () => {
-	},
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	logout: () => {
-	},
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	setRemindMe: () => {
-	},
-	isAuthenticated: false,
-	remindMe: false,
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 type Props = {
 	children: ReactNode;
 };
 
 export const AuthProvider = ({children}: Props) => {
-	/*
-	AuthProvider is a wrapper component that provides the AuthContext to all children components. It also provides
-	functionality to login, logout and check if the user is authenticated.
-	 */
-	const [jwt, setJwt] = useState<string | null>(() => sessionStorage.getItem('jwt'));
-	const [remindMeBool, setRemindMeContext] = useState<boolean>(() =>
-		sessionStorage.getItem("remindMe") === "true"
-	);
+	const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-	// Handle login functionality
-	const login = (token: string | null) => {
-		if (token === null) {
-			return;
-		}
-
-		setJwt(token);
-		sessionStorage.setItem('jwt', token);
+	const login = () => {
+		setIsAuthenticated(true);
 	};
 
-	// Handle logout functionality
 	const logout = () => {
-		setJwt(null);
-		sessionStorage.removeItem('jwt');
+		setIsAuthenticated(false);
 	};
 
-	const setRemindMe = (remindMe: boolean) => {
-		setRemindMeContext(remindMe);
-		sessionStorage.setItem('remindMe', remindMe.toString());
-	}
-
-	// Handle token expiration
-	const isTokenExpired = (token: string | null): boolean => {
-		if (token === null) {
-			return true;
-		}
-
-		try {
-			const decoded= jwtDecode(token);
-			// current time in seconds
-			const currentTime = Date.now() / 1000;
-
-			if (!decoded.exp) {
-				return false;
-			}
-
-			return decoded.exp < currentTime;
-		} catch (error) {
-			return true;
-		}
-	};
-
-	// Always ensure isAuthenticated is a boolean value
-	const isAuthenticated = !!jwt && !isTokenExpired(jwt);
-	const remindMe = remindMeBool;
+	// if (!isAuthenticated) {
+	// 	return <Forbidden/>;
+	// }
 
 	return (
-		<AuthContext.Provider value={{jwt, login, logout, setRemindMe, isAuthenticated, remindMe}}>
+		<AuthContext.Provider value={{login, logout, isAuthenticated}}>
 			{children}
 		</AuthContext.Provider>
 	);
 };
 
-
 export const useAuth = () => {
-	/*
-	useAuth is a custom hook that returns the AuthContext.
-	It is used to access the login, logout and isAuthenticated.
-	It also throws an error if the hook is used outside the AuthProvider.
-	 */
 	const context = useContext(AuthContext);
 
 	if (!context) {

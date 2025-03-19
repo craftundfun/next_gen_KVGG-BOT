@@ -1,4 +1,5 @@
 from datetime import timedelta
+from urllib.parse import parse_qs
 
 import requests
 from flask import Blueprint, jsonify, request, make_response, redirect
@@ -44,63 +45,54 @@ def login():
 
         return jsonify(message="Something went wrong!"), 500
 
-    selectQueryDiscordUser = (select(DiscordUser).where(DiscordUser.discord_id == websiteUser.discord_id))
+    accessToken = create_access_token(identity=str(websiteUser.discord_id))
+    response = make_response(jsonify("Successfully authenticated with refresh token."))
 
-    try:
-        discordUser: DiscordUser = database.session.execute(selectQueryDiscordUser).scalars().one()
-    except NoResultFound:
-        logger.debug("No DiscordUser found with the provided discord id")
-
-        return jsonify(message="No DiscordUser found with the provided discord id"), 400
-    except Exception as error:
-        logger.error("Failed to get DiscordUser from the database", exc_info=error)
-
-        return jsonify(message="Something went wrong!"), 500
-
-    if not (guild := _fetchGuild(discordUser)):
-        return jsonify("Failed to fetch guild"), 500
-
-    accessToken = create_access_token(identity=str(discordUser.discord_id))
-
-    response = make_response(jsonify("Successfully logged in!"))
-    response.headers["Authorization"] = f"Bearer {accessToken}"
-    response.headers["DiscordUser"] = discordUser.to_dict()
-    response.headers["WebsiteUser"] = websiteUser.to_dict()
-    response.headers["Guild"] = guild.to_dict()
+    response.set_cookie(
+        "access_token",
+        accessToken,
+        httponly=True,
+        secure=True,
+        samesite="Strict",
+    )
 
     return response, 200
 
 
-@authBp.route('/newLogin')
-def newLogin():
+@authBp.route('/loginCallback')
+def loginCallback():
     code = request.args.get("code")
+    state = request.args.get("state")
+    params = parse_qs(state)
+    remindMe = params.get("remindMe", ["false"])[0] == "true"
 
     if code is None:
-        logger.error("No code was provided by Discord")
+        logger.error("Discord OAuth code was not provided")
 
-        return jsonify(message="No code was provided by Discord"), 500
+        return jsonify("Discord OAuth code was not provided"), 500
 
-    refreshToken = request.args.get("remindMe", None)
-
-    # url to get the access token
     url = "https://discord.com/api/oauth2/token"
     headers = {
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Type": "application/x-www-form-urlencoded",
     }
     data = {
         "client_id": Config.CLIENT_ID,
         "client_secret": Config.CLIENT_SECRET,
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": f"{Config.URL}/login"
+        "redirect_uri": f"{Config.URL}/auth/loginCallback",
     }
 
     try:
-        logger.debug(f"{url, headers, data}")
         response = requests.post(url, headers=headers, data=data)
         response.raise_for_status()
     except Exception as error:
-        logger.error("Failed to get access token", exc_info=error)
+        logger.error("Failed to get access token from Discord", exc_info=error)
+
+        return jsonify(message="Something went wrong!"), 500
+
+    if response.status_code != 200:
+        logger.error("Something went wrong with the Discord OAuth process", exc_info=response.json())
 
         return jsonify(message="Something went wrong!"), 500
 
@@ -117,90 +109,84 @@ def newLogin():
 
         return jsonify(message="Something went wrong!"), 500
 
-    user: dict = response.json()
-    selectQueryDiscordUser = (select(DiscordUser).where(DiscordUser.discord_id == user['id']))
-
-    try:
-        discordUser = database.session.execute(selectQueryDiscordUser).scalars().one()
-    except NoResultFound:
-        logger.warning(f"{user['username'], user['id']} not found in the database!")
-
-        return jsonify(message="User not found in the database!"), 403
-    except Exception as error:
-        logger.error(f"Failed to get user {user['username'], user['id']} from the database", exc_info=error)
+    if response.status_code != 200:
+        logger.error("Something went wrong with the data request from Discord", exc_info=response.json())
 
         return jsonify(message="Something went wrong!"), 500
 
-    if not (websiteUser := _createNecessaryThings(discordUser, user)):
-        logger.error("Failed to create WebsiteUser")
+    user: dict = response.json()
+    logger.debug(f"User information received from Discord: {user}")
 
-        return jsonify("Failed to create WebsiteUser"), 500
+    if not (websiteUser := doesUserExist(user)):
+        return redirect(Config.URL + "/forbidden", code=302)
 
-    if not (guild := _fetchGuild(discordUser)):
-        logger.error("Failed to fetch guild")
+    response = redirect(Config.URL + "/dashboard", code=302)
 
-        return jsonify("Failed to fetch guild"), 500
+    if remindMe:
+        # TODO save in database
+        refreshToken = create_refresh_token(identity=str(user['id']), expires_delta=timedelta(days=14))
+        response.set_cookie(
+            "refresh_token",
+            refreshToken,
+            httponly=True,
+            secure=True,
+            samesite="Strict",
+            max_age=int(timedelta(days=14).total_seconds()),
+        )
 
-    response = make_response(jsonify("Successfully authenticated!"))
-    accessToken = create_access_token(identity=str(discordUser.discord_id))
-
-    if refreshToken:
-        refreshToken = create_refresh_token(identity=str(discordUser.discord_id), expires_delta=timedelta(days=14))
+        websiteUser.refresh_token = refreshToken
 
         try:
-            websiteUser.refresh_token = refreshToken
             database.session.commit()
         except Exception as error:
-            # if this fails, just ignore it
-            logger.error(f"Failed to store refresh token for {user['username'], user['id']}", exc_info=error)
+            logger.error(f"Failed to save refresh token for {user['username'], user['id']}", exc_info=error)
             database.session.rollback()
-        else:
-            response.set_cookie(
-                "refresh_token",
-                refreshToken,
-                httponly=True,
-                secure=True,
-                samesite="Strict",
-                max_age=int(timedelta(days=14).total_seconds()),
-            )
 
-    response.headers["Authorization"] = f"Bearer {accessToken}"
-    response.headers["DiscordUser"] = discordUser.to_dict()
-    response.headers["WebsiteUser"] = websiteUser.to_dict()
-    response.headers["Guild"] = guild.to_dict()
+    accessToken = create_access_token(identity=str(user['id']))
+    response.set_cookie(
+        "access_token",
+        accessToken,
+        httponly=True,
+        secure=True,
+        samesite="Strict",
+    )
 
-    logger.debug("Successfully logged in.")
-
-    return response, 200
+    return response
 
 
-@authBp.route('/remindMeLogin')
-def remindMeLogin():
+@authBp.route('/loggedIn')
+def isUserLoggedIn():
     if not request.cookies:
         logger.debug("No cookies were provided")
 
-        return jsonify(message="No cookies were provided"), 403
+        return jsonify("No cookies were provided"), 403
 
-    selectQuery = (select(WebsiteUser).where(WebsiteUser.refresh_token == request.cookies.get("refresh_token")))
+    if not request.cookies.get("access_token"):
+        logger.debug("No access token was provided")
+
+        return jsonify("No access token was provided"), 403
+
+    return jsonify("User is logged in"), 200
+
+
+def doesUserExist(user: dict) -> WebsiteUser | None:
+    selectQuery = (select(DiscordUser).where(DiscordUser.discord_id == user['id']))
 
     try:
-        websiteUser = database.session.execute(selectQuery).scalars().one()
+        discordUser = database.session.execute(selectQuery).scalars().one()
     except NoResultFound:
-        logger.debug("No WebsiteUser found with the provided refresh token")
+        logger.warning(f"DiscordUser for {user['username'], user['id']} who tried to log in does not exist")
 
-        return jsonify(message="No WebsiteUser found with the provided refresh token"), 403
+        return None
     except Exception as error:
-        logger.error("Failed to get WebsiteUser from the database", exc_info=error)
+        logger.error(f"Failed to fetch DiscordUser for {user['username'], user['id']}", exc_info=error)
+        database.session.rollback()
 
-        return jsonify(message="Something went wrong!"), 500
+        return None
 
-    accessToken = create_access_token(identity=str(websiteUser.discord_id))
+    logger.debug(f"DiscordUser for {user['username'], user['id']} does exist")
 
-    response = make_response(jsonify(message="Successfully reauthenticated!"))
-    response.headers["Authorization"] = f"Bearer {accessToken}"
-    response.headers["DiscordId"] = websiteUser.discord_id
-
-    return response, 200
+    return _createNecessaryThings(discordUser, user)
 
 
 # TODO better name?
@@ -217,6 +203,8 @@ def _createNecessaryThings(discordUser: DiscordUser, user: dict) -> WebsiteUser 
     try:
         websiteUser = database.session.execute(selectQuery).scalars().one()
     except NoResultFound:
+        logger.debug(f"WebsiteUser for {user['username'], user['id']} does not exist, creating it")
+
         websiteUser = WebsiteUser(
             discord_id=discordUser.discord_id,
             email=user['email'],
@@ -248,33 +236,4 @@ def _createNecessaryThings(discordUser: DiscordUser, user: dict) -> WebsiteUser 
     else:
         logger.debug(f"WebsiteUser for {user['username'], user['id']} already exists")
 
-    return websiteUser
-
-
-# TODO maybe add a favourite guild in the future
-def _fetchGuild(discordUser: DiscordUser) -> Guild | None:
-    """
-    Fetch the guild for the DiscordUser. Maybe integrate a favourite guild in the future.
-    """
-    selectQuery = (
-        select(Guild)
-        .join(GuildDiscordUserMapping)
-        .where(GuildDiscordUserMapping.discord_user_id == discordUser.discord_id, )
-        .order_by(Guild.guild_id.asc())
-        .limit(1)
-    )
-
-    try:
-        guild: Guild = database.session.execute(selectQuery).scalars().one()
-    except NoResultFound:
-        logger.debug(f"No guilds found for {discordUser.global_name, discordUser.discord_id}")
-
-        return None
-    except Exception as error:
-        logger.error(f"Failed to fetch guilds for {discordUser.global_name, discordUser.discord_id}",
-                     exc_info=error, )
-        database.session.rollback()
-
-        return None
-
-    return guild
+        return websiteUser
