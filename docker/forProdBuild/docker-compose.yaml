@@ -1,0 +1,69 @@
+services:
+    backend:
+        container_name: backend
+        build:
+            context: ../..
+            dockerfile: ./docker/development/Dockerfile_Backend
+        develop:
+            watch:
+                -   action: sync
+                    path: ../..
+                    target: /app
+        volumes:
+            - ../..:/app
+        restart: on-failure
+        networks:
+            - caddy_net
+
+    frontend:
+        container_name: frontend
+        build:
+            context: ../..
+            dockerfile: ./docker/development/Dockerfile_Frontend
+        environment:
+            - REACT_APP_DISCORD_OAUTH_URL=https://discord.com/oauth2/authorize?client_id=1076510738576855051&response_type=code&redirect_uri=https%3A%2F%2Fkvgg.axellotl.de%2Fauth%2FloginCallback&scope=identify+email
+        develop:
+            watch:
+                -   action: sync
+                    path: ../../web
+                    target: /app
+        volumes:
+            - ../../web:/app
+        depends_on:
+            - backend
+        restart: on-failure
+        networks:
+            - caddy_net
+
+    caddy:
+        image: caddy:2
+        container_name: caddy
+        restart: always
+        ports:
+            - "80:80"
+            - "443:443"
+            - "3000:3000"
+        volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - ../../certs:/etc/certs
+        depends_on:
+            - backend
+            - frontend
+        networks:
+            - caddy_net
+
+    # bot:
+    #     container_name: bot
+    #     build:
+    #         context: ../..
+    #         dockerfile: ./docker/development/Dockerfile_Bot
+    #     develop:
+    #         watch:
+    #             -   action: sync
+    #                 path: ./src_bot
+    #                 target: /app
+
+networks:
+    caddy_net:
+        driver:
+            bridge
