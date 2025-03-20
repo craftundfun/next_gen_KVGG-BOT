@@ -1,5 +1,5 @@
-import React, {createContext, ReactNode, useContext, useState} from 'react';
-import Forbidden from "@components/Status/Forbidden";
+import React, {createContext, ReactNode, useContext, useEffect, useState} from 'react';
+import {useLocation} from "react-router-dom";
 
 type AuthContextType = {
 	login: () => void;
@@ -15,6 +15,7 @@ type Props = {
 
 export const AuthProvider = ({children}: Props) => {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+	const location = useLocation();
 
 	const login = () => {
 		setIsAuthenticated(true);
@@ -24,9 +25,25 @@ export const AuthProvider = ({children}: Props) => {
 		setIsAuthenticated(false);
 	};
 
-	// if (!isAuthenticated) {
-	// 	return <Forbidden/>;
-	// }
+	useEffect(() => {
+		fetch("auth/loggedIn", {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			credentials: "include",
+		})
+			.then((response) => {
+				if (response.status !== 200) {
+					logout();
+				}
+
+				login();
+			})
+			.catch((error) => {
+				console.error("Error checking authentication:", error);
+			});
+	}, [location]);
 
 	return (
 		<AuthContext.Provider value={{login, logout, isAuthenticated}}>

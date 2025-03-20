@@ -10,6 +10,9 @@ type Props = {
 };
 
 function AvatarNameCombination({discordUser, websiteUser}: Props) {
+	console.log("Website User", websiteUser);
+	console.log("Discord User", discordUser);
+
 	return (
 		discordUser && websiteUser ? (
 			<div className="flex items-center">

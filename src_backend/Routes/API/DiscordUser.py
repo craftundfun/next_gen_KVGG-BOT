@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
@@ -9,11 +9,11 @@ from src_backend.Logging.Logger import Logger
 from src_backend.RBACCheck import hasUserMinimumRequiredRole
 from src_backend.Types.Role import Role
 
-userBp = Blueprint('user', __name__)
+discordUserBp = Blueprint('discordUser', __name__)
 logger = Logger(__name__)
 
 
-@userBp.route('/discordUser/all')
+@discordUserBp.route("/all")
 @jwt_required()
 @hasUserMinimumRequiredRole(Role.ADMINISTRATOR)
 def getAllDiscordUsers():
@@ -32,9 +32,9 @@ def getAllDiscordUsers():
     return jsonify(userDict)
 
 
-@userBp.route('/discordUser/<discord_id>')
+@discordUserBp.route('/<discord_id>')
 @jwt_required()
-@hasUserMinimumRequiredRole(Role.ADMINISTRATOR)
+@hasUserMinimumRequiredRole(Role.USER)
 def getDiscordUser(discord_id):
     """
     Fetches a specific DiscordUser by its discord_id from the database.
@@ -56,5 +56,30 @@ def getDiscordUser(discord_id):
         logger.error(f"Failed to fetch DiscordUser with ID: {discord_id}", exc_info=error)
 
         return jsonify(message="Failed to fetch DiscordUser"), 500
+
+    return jsonify(discordUser.to_dict()), 200
+
+
+@discordUserBp.route("/me")
+@jwt_required()
+@hasUserMinimumRequiredRole(Role.USER)
+def getMe():
+    userId = get_jwt_identity()
+
+    if not userId:
+        return jsonify("UserId from token not present"), 500
+
+    selectQuery = select(DiscordUser).where(DiscordUser.discord_id == int(userId))
+
+    try:
+        discordUser: DiscordUser = database.session.execute(selectQuery).scalars().one()
+    except NoResultFound:
+        logger.warning(f"No DiscordUser found with the provided discord_id: {userId}")
+
+        return jsonify(message="DiscordUser does not exist"), 404
+    except Exception as error:
+        logger.error(f"Failed to get DiscordUser from the database for discord_id: {userId}", exc_info=error)
+
+        return jsonify(message="Something went wrong!"), 500
 
     return jsonify(discordUser.to_dict()), 200

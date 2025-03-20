@@ -13,6 +13,8 @@ pymysql.install_as_MySQLdb()
 def createApp():
     app = Flask(__name__)
     app.config.from_object(Config)
+    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+    app.config["JWT_COOKIE_SECURE"] = True
 
     # Initialisiere die Datenbank und JWT
     database.init_app(app)

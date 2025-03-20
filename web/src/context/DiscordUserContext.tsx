@@ -1,5 +1,6 @@
-import React, {createContext, useContext, useState, ReactNode} from 'react';
+import React, {createContext, useContext, useState, ReactNode, useEffect} from 'react';
 import {DiscordUser} from "@customTypes/DiscordUser";
+import {useWebsiteUser} from "@context/WebsiteUserContext";
 
 interface DiscordUserContextType {
 	discordUser: DiscordUser | null;
@@ -13,6 +14,8 @@ interface Props {
 }
 
 export const DiscordUserProvider: React.FC<Props> = ({children}) => {
+	const {websiteUser} = useWebsiteUser();
+
 	const [discordUser, setDiscordUserState] = useState<DiscordUser | null>(() => {
 		const storedUser = sessionStorage.getItem('discordUser');
 
@@ -24,6 +27,26 @@ export const DiscordUserProvider: React.FC<Props> = ({children}) => {
 
 		setDiscordUserState(user);
 	};
+
+	useEffect(() => {
+		fetch("/api/discordUser/me", {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			credentials: "include",
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				if (data) {
+					setDiscordUser(data);
+				}
+			})
+			.catch((error) => {
+				console.error("Error fetching Discord user:", error);
+			});
+	}, [websiteUser]);
+
 
 	return (
 		<DiscordUserContext.Provider value={{discordUser, setDiscordUser}}>

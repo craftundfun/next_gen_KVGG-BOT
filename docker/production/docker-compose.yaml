@@ -16,6 +16,8 @@ services:
         restart: always
         ports:
             - "127.0.0.1:3000:3000"
+        environment:
+            - REACT_APP_DISCORD_OAUTH_URL=https://discord.com/oauth2/authorize?client_id=1076510738576855051&response_type=code&redirect_uri=https%3A%2F%2Fkvgg.axellotl.de%2Fauth%2FloginCallback&scope=identify+email
         volumes:
             - ./Caddyfile:/etc/caddy/Caddyfile:ro
             - ../../web/build:/app/public:ro

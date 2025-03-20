@@ -5,29 +5,65 @@ import {AuthProvider} from '@context/AuthContext';
 import Forbidden from '@components/Status/Forbidden';
 import Dashboard from '@components/Dashboard/Dashboard';
 import LoginScreen from '@components/Login/LoginScreen';
+import {WebsiteUserProvider} from '@context/WebsiteUserContext';
+import {DiscordUserProvider} from '@context/DiscordUserContext';
+import {GuildProvider} from '@context/GuildContext';
+import ProtectedRoute from '@modules/ProtectedRoute';
 
 function App() {
 	return (
-		<AuthProvider>
-			<Router>
-				<Routes>
-					(// login page)
-					<Route path="/" element={<LoginScreen/>}/>
+		<Router>
+			<AuthProvider>
+				<WebsiteUserProvider>
+					<DiscordUserProvider>
+						<GuildProvider>
+							<Routes>
+								(// login page)
+								<Route
+									path="/"
+									element={
+										<LoginScreen/>
+									}
+								/>
+								<Route
+									path="/dashboard"
+									element={
+										<ProtectedRoute>
+											<Dashboard/>
+										</ProtectedRoute>
+									}>
+								</Route>
+								<Route
+									path="*"
+									element={
+										<ProtectedRoute>
+											<div>Page Not Found</div>
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/forbidden"
+									element={
+										<ProtectedRoute>
+											<Forbidden/>
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/error"
+									element={
+										<ProtectedRoute>
+											<Error/>
+										</ProtectedRoute>
+									}
+								/>
+							</Routes>
+						</GuildProvider>
+					</DiscordUserProvider>
+				</WebsiteUserProvider>
+			</AuthProvider>
+		</Router>
 
-					<Route
-						path="/dashboard"
-						element={
-							<Dashboard/>
-						}>
-					</Route>
-
-
-					<Route path="*" element={<div>Page Not Found</div>}/>
-					<Route path="/forbidden" element={<Forbidden/>}/>
-					<Route path="/error" element={<Error/>}/>
-				</Routes>
-			</Router>
-		</AuthProvider>
 	);
 }
 

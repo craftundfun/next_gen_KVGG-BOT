@@ -10,6 +10,7 @@ from sqlalchemy.exc import NoResultFound
 from database.Domain.models import DiscordUser, WebsiteUser, WebsiteRoleUserMapping, Guild, GuildDiscordUserMapping
 from src_backend import Config, database
 from src_backend.Logging.Logger import Logger
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 authBp = Blueprint('auth', __name__)
 # TODO own .env for backend
@@ -49,7 +50,7 @@ def login():
     response = make_response(jsonify("Successfully authenticated with refresh token."))
 
     response.set_cookie(
-        "access_token",
+        "access_token_cookie",
         accessToken,
         httponly=True,
         secure=True,
@@ -61,6 +62,9 @@ def login():
 
 @authBp.route('/loginCallback')
 def loginCallback():
+    """
+    Discord OAuth callback.
+    """
     code = request.args.get("code")
     state = request.args.get("state")
     params = parse_qs(state)
@@ -123,7 +127,6 @@ def loginCallback():
     response = redirect(Config.URL + "/dashboard", code=302)
 
     if remindMe:
-        # TODO save in database
         refreshToken = create_refresh_token(identity=str(user['id']), expires_delta=timedelta(days=14))
         response.set_cookie(
             "refresh_token",
@@ -144,27 +147,30 @@ def loginCallback():
 
     accessToken = create_access_token(identity=str(user['id']))
     response.set_cookie(
-        "access_token",
+        "access_token_cookie",
         accessToken,
         httponly=True,
         secure=True,
         samesite="Strict",
     )
 
+    # no code because we are redirecting, otherwise it will not work
     return response
 
 
 @authBp.route('/loggedIn')
+@jwt_required()
 def isUserLoggedIn():
-    if not request.cookies:
-        logger.debug("No cookies were provided")
+    """
+    Check if the user is logged in by checking if the cookies are set.
+    """
+    # we don't need checks here, flask_jwt_extended will do that for us because of the @jwt_required() decorator
+    userId = get_jwt_identity()
 
-        return jsonify("No cookies were provided"), 403
+    if not userId:
+        logger.debug("No user ID was provided")
 
-    if not request.cookies.get("access_token"):
-        logger.debug("No access token was provided")
-
-        return jsonify("No access token was provided"), 403
+        return jsonify("No user ID was provided"), 404
 
     return jsonify("User is logged in"), 200
 

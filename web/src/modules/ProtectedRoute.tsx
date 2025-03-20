@@ -16,14 +16,9 @@ const ProtectedRoute = ({children}: Props) => {
 
 	useEffect(() => {
 		if (!isAuthenticated) {
-			navigate("/forbidden");
+			navigate("/");
 		}
 	}, [isAuthenticated, navigate]);
-
-	// If the user is authenticated, render the protected children
-	if (!isAuthenticated) {
-		return null;
-	}
 
 	return <>{children}</>;
 };
