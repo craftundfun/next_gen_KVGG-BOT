@@ -1,4 +1,5 @@
 from database.Domain.BaseClass import *
+from datetime import date
 
 
 class Statistic(Base):
@@ -17,17 +18,39 @@ class Statistic(Base):
     discord_user = relationship("DiscordUser")
     guild = relationship("Guild")
 
+    def __init__(self,
+                 discord_id: int,
+                 guild_id: int,
+                 date: date,
+                 online_time: int = 0,
+                 stream_time: int = 0,
+                 mute_time: int = 0,
+                 deaf_time: int = 0,
+                 message_count: int = 0,
+                 command_count: int = 0, ):
+        super().__init__()
+
+        self.discord_id = discord_id
+        self.guild_id = guild_id
+        self.date = date
+        self.online_time = online_time
+        self.stream_time = stream_time
+        self.mute_time = mute_time
+        self.deaf_time = deaf_time
+        self.message_count = message_count
+        self.command_count = command_count
+
     def to_dict(self):
         dictionary = {
             "discord_id": str(self.discord_id),
             "guild_id": str(self.guild_id),
             "date": self.date.isoformat(),
-            "online_time": str(self.online_time),
-            "stream_time": str(self.stream_time),
-            "mute_time": str(self.mute_time),
-            "deaf_time": str(self.deaf_time),
-            "message_count": str(self.message_count),
-            "command_count": str(self.command_count),
+            "online_time": int(self.online_time),
+            "stream_time": int(self.stream_time),
+            "mute_time": int(self.mute_time),
+            "deaf_time": int(self.deaf_time),
+            "message_count": int(self.message_count),
+            "command_count": int(self.command_count),
         }
 
         return dictionary

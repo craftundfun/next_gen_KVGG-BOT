@@ -33,11 +33,9 @@ class WebsiteUser(Base):
 
     # noinspection PyUnresolvedReferences
     def to_dict(self):
-        dictionary = {
+        return {
             "discord_id": str(self.discord_id),
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "email": self.email,
             "refresh_token": self.refresh_token,
         }
-
-        return json.dumps(dictionary, default=str)

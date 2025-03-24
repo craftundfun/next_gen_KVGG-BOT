@@ -13,11 +13,23 @@ pymysql.install_as_MySQLdb()
 def createApp():
     app = Flask(__name__)
     app.config.from_object(Config)
+    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+    app.config["JWT_COOKIE_SECURE"] = True
 
+    # Initialisiere die Datenbank und JWT
     database.init_app(app)
     JWTManager(app)
-    CORS(app, supports_credentials=True)
 
+    # CORS anpassen
+    cors_options = {
+        "origins": "http://localhost:3000",  # Erlaubt nur das Frontend von localhost:3000
+        "methods": ["GET", "POST", "PUT", "DELETE"],  # Erlaubte HTTP-Methoden
+        "allow_headers": ["Content-Type", "Authorization"],  # Erlaubte Header
+        "supports_credentials": True,  # Unterstützung für Cookies und Anmeldeinformationen
+    }
+    CORS(app, **cors_options)
+
+    # Registriere die Routen
     registerRoutes(app)
 
     return app

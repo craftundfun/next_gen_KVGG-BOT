@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
@@ -84,3 +84,69 @@ def getAllDatesFromUserPerGuild(guild_id, discord_id):
         logger.debug(f"Fetched statistics for user {discordId} in guild {guildId}")
 
     return jsonify([statistic.isoformat() for statistic in statistics]), 200
+
+
+@statisticBp.route('/statistic/<guild_id>/<discord_id>/<start_date>/<end_date>')
+@jwt_required()
+@hasUserMinimumRequiredRole(Role.USER)
+def fetchStatisticsFromUserPerGuildForPeriod(guild_id, discord_id, start_date, end_date):
+    """
+    Fetches all statistics from a user in a guild for a given period.
+    Empty days are included in the response.
+
+    :param guild_id: The ID of the guild
+    :param discord_id: The ID of the user
+    :param start_date: The start date of the period (YYYY-MM-DD)
+    :param end_date: The end date of the period (YYYY-MM-DD)
+    """
+    try:
+        guildId = int(guild_id)
+        discordId = int(discord_id)
+        startDate = datetime.strptime(start_date, "%Y-%m-%d").date()
+        endDate = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except ValueError:
+        logger.debug(f"Invalid parameters given")
+
+        return jsonify(message="Invalid parameters given"), 400
+
+    selectQuery = (
+        select(Statistic).where(
+            Statistic.discord_id == discordId,
+            Statistic.guild_id == guildId,
+            Statistic.date.between(startDate, endDate),
+        )
+    )
+
+    try:
+        statistics: list[Statistic] = database.session.execute(selectQuery).scalars().all()
+    except NoResultFound:
+        logger.debug(f"No statistics found for user {discord_id} in guild {guildId} "
+                     f"for period {start_date} to {end_date}")
+
+        return jsonify(message="No statistics available"), 204
+    except Exception as error:
+        logger.error(f"Failed to fetch statistics for user {discord_id} in guild {guildId}", exc_info=error)
+
+        return jsonify(message="Failed to fetch statistics"), 500
+    else:
+        logger.debug(f"Fetched statistics for user {discordId} in guild {guildId} "
+                     f"for period {start_date} to {end_date}")
+
+    earliestDate = min(statistic.date for statistic in statistics)
+    latestDate = max(statistic.date for statistic in statistics)
+
+    # include day with no data to have a consecutive list
+    for i in range(1, (latestDate - earliestDate).days):
+        if (earliestDate + timedelta(days=i)) in list(statistic.date for statistic in statistics):
+            continue
+
+        statistics.append(
+            Statistic(
+                discord_id=discordId,
+                guild_id=guildId,
+                date=earliestDate + timedelta(days=i),
+            )
+        )
+
+    statistics.sort(key=lambda statistic: statistic.date)
+    return jsonify([statistic.to_dict() for statistic in statistics]), 200

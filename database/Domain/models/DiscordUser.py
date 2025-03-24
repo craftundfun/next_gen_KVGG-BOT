@@ -29,11 +29,9 @@ class DiscordUser(Base):
                 f"created_at={self.created_at})")
 
     def to_dict(self):
-        dictionary = {
+        return {
             # str because JavaScript can't handle BigInteger
             "discord_id": str(self.discord_id),
             "global_name": self.global_name,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
-
-        return json.dumps(dictionary, default=str)

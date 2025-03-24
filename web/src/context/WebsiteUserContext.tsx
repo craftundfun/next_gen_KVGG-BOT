@@ -1,5 +1,6 @@
-import React, {createContext, useContext, useState, ReactNode} from 'react';
+import React, {createContext, useContext, useState, ReactNode, useEffect} from 'react';
 import {WebsiteUser} from "@customTypes/WebsiteUser";
+import {useLocation} from "react-router-dom";
 
 interface WebsiteUserContextType {
 	websiteUser: WebsiteUser | null;
@@ -13,6 +14,8 @@ interface Props {
 }
 
 export const WebsiteUserProvider: React.FC<Props> = ({children}) => {
+	const location = useLocation();
+
 	const [websiteUser, setWebsiteUserState] = useState<WebsiteUser | null>(() => {
 		const storedUser = sessionStorage.getItem('websiteUser');
 
@@ -24,6 +27,28 @@ export const WebsiteUserProvider: React.FC<Props> = ({children}) => {
 
 		setWebsiteUserState(user);
 	};
+
+	// Fetch the website user when the component mounts or when the location changes
+	useEffect(() => {
+		if (location.pathname === "/dashboard") {
+			fetch("/api/websiteUser/me", {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				credentials: "include",
+			})
+				.then((response) => response.json())
+				.then((data) => {
+					if (data) {
+						setWebsiteUser(data);
+					}
+				})
+				.catch((error) => {
+					console.error("Error fetching website user:", error);
+				});
+		}
+	}, [location.pathname]);
 
 	return (
 		<WebsiteUserContext.Provider value={{websiteUser, setWebsiteUser}}>

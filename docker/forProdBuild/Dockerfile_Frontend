@@ -1,0 +1,10 @@
+FROM node
+
+WORKDIR /app
+
+COPY ../../web .
+COPY ../../.env .
+
+RUN npm install
+
+CMD ["npm", "start"]

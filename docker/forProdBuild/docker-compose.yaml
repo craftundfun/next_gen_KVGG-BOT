@@ -26,7 +26,7 @@ services:
             context: ../..
             dockerfile: ./docker/development/Dockerfile_Frontend
         environment:
-            - REACT_APP_DISCORD_OAUTH_URL=https://discord.com/oauth2/authorize?client_id=1076510738576855051&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%2Fauth%2FloginCallback&scope=identify+email
+            - REACT_APP_DISCORD_OAUTH_URL=https://discord.com/oauth2/authorize?client_id=1076510738576855051&response_type=code&redirect_uri=https%3A%2F%2Fkvgg.axellotl.de%2Fauth%2FloginCallback&scope=identify+email
         develop:
             watch:
                 -   action: sync
