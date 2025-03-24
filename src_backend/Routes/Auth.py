@@ -4,13 +4,13 @@ from urllib.parse import parse_qs
 import requests
 from flask import Blueprint, jsonify, request, make_response, redirect
 from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
-from database.Domain.models import DiscordUser, WebsiteUser, WebsiteRoleUserMapping, Guild, GuildDiscordUserMapping
+from database.Domain.models import DiscordUser, WebsiteUser, WebsiteRoleUserMapping
 from src_backend import Config, database
 from src_backend.Logging.Logger import Logger
-from flask_jwt_extended import get_jwt_identity, jwt_required
 
 authBp = Blueprint('auth', __name__)
 # TODO own .env for backend

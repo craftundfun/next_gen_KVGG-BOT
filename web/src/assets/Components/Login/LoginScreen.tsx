@@ -1,5 +1,4 @@
 import * as React from "react";
-import {useAuth} from "@context/AuthContext";
 import {Card, CardContent, CardHeader, CardTitle} from "@ui/card";
 import {Avatar, AvatarFallback, AvatarImage} from "@ui/avatar";
 import {useEffect, useState} from "react";
@@ -7,7 +6,6 @@ import {useNavigate} from "react-router-dom";
 import {Button} from "@ui/button";
 
 function LoginScreen() {
-	const {login} = useAuth();
 	const navigate = useNavigate();
 	const [remindMe, setRemindMe] = useState<boolean>(false);
 
@@ -27,7 +25,6 @@ function LoginScreen() {
 				return;
 			}
 
-			login();
 			navigate("/dashboard");
 		});
 	});
