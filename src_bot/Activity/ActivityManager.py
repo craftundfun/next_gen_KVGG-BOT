@@ -90,8 +90,11 @@ class ActivityManager:
             return select(Activity).where(Activity.name == activity.name), False
 
     # noinspection PyMethodMayBeStatic
-    def _getActivityHistoryInsertQuery(self, member: Member, activity: Activity, eventId: int,
-                                       endtime: datetime) -> insert:
+    def _getActivityHistoryInsertQuery(self,
+                                       member: Member,
+                                       activity: Activity,
+                                       eventId: int,
+                                       endtime: datetime, ) -> insert:
         """
         Get the insert query for the activity history.
 
