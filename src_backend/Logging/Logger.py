@@ -12,7 +12,7 @@ class Logger(BaseLogger):
     def __init__(self, name: str):
         super().__init__(name)
 
-        filePath = os.getenv("LOG_FILE", "Logs/log.txt")
+        filePath = os.getenv("LOG_FILE_BACKEND", "Logs/Backend/log.txt")
         directory = os.path.dirname(filePath)
 
         if not os.path.exists(directory):

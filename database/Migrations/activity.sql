@@ -83,6 +83,7 @@ BEGIN
 	END IF;
 end;
 
+# same for history update
 CREATE TRIGGER activity_history_update
 	BEFORE UPDATE
 	ON activity_history
