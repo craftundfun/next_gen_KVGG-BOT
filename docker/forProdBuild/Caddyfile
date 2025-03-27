@@ -23,7 +23,7 @@
 	reverse_proxy /auth/* backend:8000
 	reverse_proxy /api/* backend:8000
 
-	tls /etc/certs/localhost.pem /etc/certs/localhost-key.pem
+	tls /etc/certs/cert.pem /etc/certs/key.pem
 }
 
 :3000 {
@@ -33,5 +33,5 @@
 		}
 	}
 
-	tls /etc/certs/localhost.pem /etc/certs/localhost-key.pem
+	tls /etc/certs/cert.pem /etc/certs/key.pem
 }
