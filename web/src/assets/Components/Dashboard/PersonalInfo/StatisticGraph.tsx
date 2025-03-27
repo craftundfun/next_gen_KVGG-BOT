@@ -7,8 +7,6 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 function StatisticGraph() {
 	const navigate = useNavigate();
-	const token = sessionStorage.getItem("jwt");
-	const tokenType = sessionStorage.getItem("tokenType");
 	const { discordUser } = useDiscordUser();
 	const { guild } = useGuild();
 
@@ -29,7 +27,6 @@ function StatisticGraph() {
 				method: "GET",
 				headers: {
 					"Content-Type": "application/json",
-					Authorization: `${tokenType} ${token}`,
 				},
 				credentials: "include",
 			}
@@ -56,7 +53,7 @@ function StatisticGraph() {
 			data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 			setStatistics(data);
 		});
-	}, [discordUser, guild, navigate, token, tokenType, startDate, endDate]);
+	}, [discordUser, guild, navigate, startDate, endDate]);
 
 	function formatTimeFromMicroseconds(microseconds: number): string {
 		const totalSeconds = Math.floor(microseconds / 1_000_000);
