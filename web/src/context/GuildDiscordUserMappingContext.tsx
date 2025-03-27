@@ -1,6 +1,7 @@
 import React, {createContext, useContext, useState, ReactNode, useEffect} from 'react';
 import {useGuild} from "@context/GuildContext";
 import {useDiscordUser} from "@context/DiscordUserContext";
+import {GuildDiscordUserMapping} from "@customTypes/GuildDiscordUserMapping";
 
 interface GuildDiscordUserMappingContextType {
 	guildDiscordUserMapping: GuildDiscordUserMapping | null;
