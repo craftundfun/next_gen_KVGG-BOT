@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { Statistic } from "@customTypes/Statistic";
-import { useNavigate } from "react-router-dom";
-import { useDiscordUser } from "@context/DiscordUserContext";
-import { useGuild } from "@context/GuildContext";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import React, {useEffect, useState} from "react";
+import {Statistic} from "@customTypes/Statistic";
+import {useNavigate} from "react-router-dom";
+import {useDiscordUser} from "@context/DiscordUserContext";
+import {useGuild} from "@context/GuildContext";
+import {AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend} from "recharts";
 
 function StatisticGraph() {
 	const navigate = useNavigate();
-	const { discordUser } = useDiscordUser();
-	const { guild } = useGuild();
+	const {discordUser} = useDiscordUser();
+	const {guild} = useGuild();
 
 	const [statistics, setStatistics] = useState<Statistic[] | null>(null);
 	const [endDate, setEndDate] = useState<Date>(new Date());
@@ -20,6 +20,7 @@ function StatisticGraph() {
 
 	useEffect(() => {
 		if (!discordUser || !guild) return;
+		if (!discordUser.discord_id || !guild.guild_id) return;
 
 		fetch(
 			`/api/statistic/${guild.guild_id}/${discordUser.discord_id}/${startDate.toISOString().split("T")[0]}/${endDate.toISOString().split("T")[0]}`,
@@ -79,16 +80,16 @@ function StatisticGraph() {
 		<div>
 			{statistics && statistics.length > 0 ? (
 				<ResponsiveContainer width="100%" height={400}>
-					<AreaChart data={statistics} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-						<CartesianGrid strokeDasharray="3 3" />
-						<XAxis dataKey="date" tickFormatter={(tick) => new Date(tick).toLocaleDateString()} />
-						<YAxis tickFormatter={(tick) => formatSecondsToTime(Number(tick))} />
-						<Tooltip formatter={(value) => formatSecondsToTime(Number(value))} />
-						<Legend />
-						<Area type="monotone" dataKey="online_time" stroke="#8884d8" fill="#8884d8" name="Online Time" />
-						<Area type="monotone" dataKey="stream_time" stroke="#82ca9d" fill="#82ca9d" name="Stream Time" />
-						<Area type="monotone" dataKey="mute_time" stroke="#ffc658" fill="#ffc658" name="Mute Time" />
-						<Area type="monotone" dataKey="deaf_time" stroke="#ff8042" fill="#ff8042" name="Deaf Time" />
+					<AreaChart data={statistics} margin={{top: 10, right: 30, left: 0, bottom: 0}}>
+						<CartesianGrid strokeDasharray="3 3"/>
+						<XAxis dataKey="date" tickFormatter={(tick) => new Date(tick).toLocaleDateString()}/>
+						<YAxis tickFormatter={(tick) => formatSecondsToTime(Number(tick))}/>
+						<Tooltip formatter={(value) => formatSecondsToTime(Number(value))}/>
+						<Legend/>
+						<Area type="monotone" dataKey="online_time" stroke="#8884d8" fill="#8884d8" name="Online Time"/>
+						<Area type="monotone" dataKey="stream_time" stroke="#82ca9d" fill="#82ca9d" name="Stream Time"/>
+						<Area type="monotone" dataKey="mute_time" stroke="#ffc658" fill="#ffc658" name="Mute Time"/>
+						<Area type="monotone" dataKey="deaf_time" stroke="#ff8042" fill="#ff8042" name="Deaf Time"/>
 					</AreaChart>
 				</ResponsiveContainer>
 			) : (
