@@ -15,8 +15,6 @@ import {
 
 function Statistics() {
 	const navigate = useNavigate();
-	const token = sessionStorage.getItem('jwt');
-	const tokenType = sessionStorage.getItem('tokenType');
 	const {discordUser} = useDiscordUser();
 	const {guild} = useGuild();
 
@@ -44,7 +42,6 @@ function Statistics() {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
-				Authorization: `${tokenType} ${token}`,
 			},
 			credentials: "include",
 		}).then(async response => {
@@ -64,7 +61,7 @@ function Statistics() {
 			setStatistics(await response.json());
 			setLoadingStatistics(false);
 		})
-	}, [navigate, token, tokenType, discordUser, guild, currentDate]);
+	}, [navigate, discordUser, guild, currentDate]);
 
 	// fetch all available dates for the user
 	useEffect(() => {
@@ -76,7 +73,6 @@ function Statistics() {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
-				Authorization: `${tokenType} ${token}`,
 			},
 			credentials: "include",
 		}).then(async response => {
@@ -114,7 +110,7 @@ function Statistics() {
 			setDates(datesFromApi.sort((a: Date, b: Date) => b.getTime() - a.getTime()));
 			setLoadingDates(false);
 		})
-	}, [discordUser, guild, navigate, token, tokenType]);
+	}, [discordUser, guild, navigate]);
 
 	return (
 		<div

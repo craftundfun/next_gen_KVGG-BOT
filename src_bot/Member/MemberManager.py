@@ -116,7 +116,7 @@ class MemberManager:
                     newGuildMappings.append(
                         GuildDiscordUserMapping(
                             guild_id=guild.id,
-                            discord_user_id=member.id,
+                            discord_id=member.id,
                             display_name=member.display_name,
                             # TODO better profile picture handling => guild specific, global, etc.
                             profile_picture=member.display_avatar.url if member.display_avatar else None,
@@ -184,13 +184,13 @@ class MemberManager:
             try:
                 selectQuery = (select(GuildDiscordUserMapping)
                                .where(GuildDiscordUserMapping.guild_id == member.guild.id,
-                                      GuildDiscordUserMapping.discord_user_id == member.id, ))
+                                      GuildDiscordUserMapping.discord_id == member.id, ))
                 guildDiscordUserMapping = self.session.execute(selectQuery).scalars().one()
             except NoResultFound:
                 try:
                     guildDiscordUserMapping = GuildDiscordUserMapping(
                         guild_id=member.guild.id,
-                        discord_user_id=databaseMember.discord_id,
+                        discord_id=databaseMember.discord_id,
                         display_name=member.display_name,
                         profile_picture=member.display_avatar.url if member.display_avatar else None,
                         joined_at=member.joined_at if member.joined_at else datetime.now(),
@@ -240,7 +240,7 @@ class MemberManager:
             try:
                 selectQuery = (select(GuildDiscordUserMapping)
                                .where(GuildDiscordUserMapping.guild_id == member.guild.id,
-                                      GuildDiscordUserMapping.discord_user_id == member.id))
+                                      GuildDiscordUserMapping.discord_id == member.id))
                 guildDiscordUserMapping = self.session.execute(selectQuery).scalars().one()
                 guildDiscordUserMapping.left_at = datetime.now()
 
@@ -266,9 +266,13 @@ class MemberManager:
 
         with self.session:
             try:
-                selectQuery = (select(GuildDiscordUserMapping)
-                               .where(GuildDiscordUserMapping.guild_id == guildId,
-                                      GuildDiscordUserMapping.discord_user_id == user.id))
+                selectQuery = (
+                    select(GuildDiscordUserMapping)
+                    .where(
+                        GuildDiscordUserMapping.guild_id == guildId,
+                        GuildDiscordUserMapping.discord_id == user.id,
+                    )
+                )
                 guildDiscordUserMapping = self.session.execute(selectQuery).scalars().one()
                 guildDiscordUserMapping.left_at = datetime.now()
 

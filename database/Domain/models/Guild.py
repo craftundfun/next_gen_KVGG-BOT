@@ -11,14 +11,12 @@ class Guild(Base):
     icon = Column(TEXT, nullable=True)
 
     def to_dict(self):
-        dictionary = {
+        return {
             "guild_id": str(self.guild_id),
             "name": self.name,
             "joined_at": self.joined_at.isoformat() if self.joined_at else None,
             "icon": self.icon,
         }
-
-        return json.dumps(dictionary, default=str)
 
     def __repr__(self):
         return f"Guild(guild_id={self.guild_id}, name={self.name}, joined_at={self.joined_at})"
