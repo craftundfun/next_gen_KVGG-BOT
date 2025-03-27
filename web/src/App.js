@@ -7,13 +7,15 @@ import LoginScreen from '@components/Login/LoginScreen';
 import {WebsiteUserProvider} from '@context/WebsiteUserContext';
 import {DiscordUserProvider} from '@context/DiscordUserContext';
 import {GuildProvider} from '@context/GuildContext';
+import {GuildDiscordUserMappingProvider} from '@context/GuildDiscordUserMappingContext';
 
 function App() {
 	return (
 		<Router>
-				<WebsiteUserProvider>
-					<DiscordUserProvider>
-						<GuildProvider>
+			<WebsiteUserProvider>
+				<DiscordUserProvider>
+					<GuildProvider>
+						<GuildDiscordUserMappingProvider>
 							<Routes>
 								(// login page)
 								<Route
@@ -47,9 +49,10 @@ function App() {
 									}
 								/>
 							</Routes>
-						</GuildProvider>
-					</DiscordUserProvider>
-				</WebsiteUserProvider>
+						</GuildDiscordUserMappingProvider>
+					</GuildProvider>
+				</DiscordUserProvider>
+			</WebsiteUserProvider>
 		</Router>
 	);
 }

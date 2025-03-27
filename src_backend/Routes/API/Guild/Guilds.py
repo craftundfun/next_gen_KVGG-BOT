@@ -12,7 +12,7 @@ guildBp = Blueprint('guild', __name__)
 logger = Logger(__name__)
 
 
-@guildBp.route('/guild/all')
+@guildBp.route('/all')
 @jwt_required()
 @hasUserMinimumRequiredRole(Role.USER)
 def getAllGuilds():
@@ -39,7 +39,7 @@ def getAllGuilds():
     return jsonify({'guilds': guildList}), 200
 
 
-@guildBp.route('/guild/<guild_id>')
+@guildBp.route('/<guild_id>')
 @jwt_required()
 @hasUserMinimumRequiredRole(Role.USER)
 def getGuild(guild_id):
@@ -60,5 +60,28 @@ def getGuild(guild_id):
         return jsonify(message="Failed to fetch guild"), 500
     else:
         logger.debug(f"Fetched guild with id {guildId}")
+
+        return jsonify(guild.to_dict()), 200
+
+
+@guildBp.route('/mine')
+@jwt_required()
+@hasUserMinimumRequiredRole(Role.USER)
+def getMyFavouriteGuild():
+    userId = get_jwt_identity()
+
+    if not userId:
+        return jsonify("UserId from token not present"), 500
+
+    selectQuery = (select(Guild).order_by(Guild.guild_id.asc()).limit(1))
+
+    try:
+        guild: Guild = database.session.execute(selectQuery).scalars().one()
+    except Exception as error:
+        logger.error(f"Failed to fetch guild", exc_info=error)
+
+        return jsonify(message="Failed to fetch guild"), 500
+    else:
+        logger.debug(f"Fetched guild with id {guild.guild_id}")
 
         return jsonify(guild.to_dict()), 200

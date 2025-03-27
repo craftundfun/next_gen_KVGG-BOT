@@ -7,12 +7,10 @@ import {Avatar, AvatarImage} from "@ui/avatar";
 type Props = {
 	discordUser: DiscordUser | null;
 	websiteUser: WebsiteUser | null;
+	guildDiscordUserMapping: GuildDiscordUserMapping | null;
 };
 
-function AvatarNameCombination({discordUser, websiteUser}: Props) {
-	console.log("Website User", websiteUser);
-	console.log("Discord User", discordUser);
-
+function AvatarNameCombination({discordUser, websiteUser, guildDiscordUserMapping}: Props) {
 	return (
 		discordUser && websiteUser ? (
 			<div className="flex items-center">
@@ -21,7 +19,7 @@ function AvatarNameCombination({discordUser, websiteUser}: Props) {
 					<div className="text-sm">{websiteUser?.email || "NA"}</div>
 				</div>
 				<Avatar className="ml-2 mt-1 w-8 h-8">
-					<AvatarImage src={''}/>
+					<AvatarImage src={guildDiscordUserMapping?.profile_picture ?? ''}/>
 				</Avatar>
 			</div>
 		) : (

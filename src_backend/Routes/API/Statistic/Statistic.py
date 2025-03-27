@@ -15,7 +15,7 @@ statisticBp = Blueprint('statistic', __name__)
 logger = Logger(__name__)
 
 
-@statisticBp.route('/statistic/<guild_id>/<discord_id>/<date>')
+@statisticBp.route('/<guild_id>/<discord_id>/<date>')
 @jwt_required()
 @hasUserMinimumRequiredRole(Role.USER)
 def getStatisticsFromUserPerGuildPerDate(guild_id, discord_id, date):
@@ -51,7 +51,7 @@ def getStatisticsFromUserPerGuildPerDate(guild_id, discord_id, date):
         return jsonify(message="No statistics available"), 204
 
 
-@statisticBp.route('/statistic/<guild_id>/<discord_id>/dates')
+@statisticBp.route('/<guild_id>/<discord_id>/dates')
 @jwt_required()
 @hasUserMinimumRequiredRole(Role.USER)
 def getAllDatesFromUserPerGuild(guild_id, discord_id):
@@ -86,7 +86,7 @@ def getAllDatesFromUserPerGuild(guild_id, discord_id):
     return jsonify([statistic.isoformat() for statistic in statistics]), 200
 
 
-@statisticBp.route('/statistic/<guild_id>/<discord_id>/<start_date>/<end_date>')
+@statisticBp.route('/<guild_id>/<discord_id>/<start_date>/<end_date>')
 @jwt_required()
 @hasUserMinimumRequiredRole(Role.USER)
 def fetchStatisticsFromUserPerGuildForPeriod(guild_id, discord_id, start_date, end_date):
