@@ -28,6 +28,12 @@ def login():
 
         return jsonify("No cookies were provided"), 204
 
+    # if the user comes back within the same session
+    if request.cookies.get("access_token_cookie"):
+        logger.debug("Access token cookie already exists")
+
+        return jsonify("Access token cookie already exists"), 200
+
     if not (refreshToken := request.cookies.get("refresh_token")):
         logger.debug("No refresh token was provided")
 

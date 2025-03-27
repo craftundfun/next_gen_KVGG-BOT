@@ -20,7 +20,6 @@ function StatisticGraph() {
 
 	useEffect(() => {
 		if (!discordUser || !guild) return;
-		if (!discordUser.discord_id || !guild.guild_id) return;
 
 		fetch(
 			`/api/statistic/${guild.guild_id}/${discordUser.discord_id}/${startDate.toISOString().split("T")[0]}/${endDate.toISOString().split("T")[0]}`,
