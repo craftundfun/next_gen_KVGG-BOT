@@ -19,7 +19,17 @@ export const GuildProvider: React.FC<Props> = ({children}) => {
 		const [guild, setGuildState] = useState<Guild | null>(() => {
 			const storedGuild = sessionStorage.getItem('guild');
 
-			return storedGuild ? JSON.parse(storedGuild) : null;
+			if (storedGuild === null) {
+				return null;
+			}
+
+			const guild: Guild = JSON.parse(storedGuild);
+
+			if (guild.guild_id === null || guild.guild_id === undefined) {
+				return null;
+			}
+
+			return guild;
 		});
 
 		const setGuild = (guild: Guild) => {
@@ -29,6 +39,8 @@ export const GuildProvider: React.FC<Props> = ({children}) => {
 		};
 
 		useEffect(() => {
+				if (!discordUser) return;
+
 				fetch("api/guild/mine", {
 					method: "GET",
 					headers: {
@@ -55,6 +67,7 @@ export const GuildProvider: React.FC<Props> = ({children}) => {
 		);
 	}
 ;
+
 
 export const useGuild = (): GuildContextType => {
 	const context = useContext(GuildContext);

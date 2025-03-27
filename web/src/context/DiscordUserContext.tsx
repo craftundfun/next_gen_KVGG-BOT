@@ -19,7 +19,17 @@ export const DiscordUserProvider: React.FC<Props> = ({children}) => {
 	const [discordUser, setDiscordUserState] = useState<DiscordUser | null>(() => {
 		const storedUser = sessionStorage.getItem('discordUser');
 
-		return storedUser ? JSON.parse(storedUser) : null;
+		if (storedUser === null) {
+			return null;
+		}
+
+		const user: DiscordUser = JSON.parse(storedUser);
+
+		if (user.discord_id === null || user.discord_id === undefined) {
+			return null;
+		}
+
+		return user;
 	});
 
 	const setDiscordUser = (user: DiscordUser) => {

@@ -19,7 +19,17 @@ export const WebsiteUserProvider: React.FC<Props> = ({children}) => {
 	const [websiteUser, setWebsiteUserState] = useState<WebsiteUser | null>(() => {
 		const storedUser = sessionStorage.getItem('websiteUser');
 
-		return storedUser ? JSON.parse(storedUser) : null;
+		if (storedUser === null) {
+			return null;
+		}
+
+		const user: WebsiteUser = JSON.parse(storedUser);
+
+		if (user.discord_id === null || user.discord_id === undefined) {
+			return null;
+		}
+
+		return user;
 	});
 
 	const setWebsiteUser = (user: WebsiteUser) => {

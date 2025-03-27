@@ -1,6 +1,7 @@
 import React, {createContext, useContext, useState, ReactNode, useEffect} from 'react';
 import {useGuild} from "@context/GuildContext";
 import {useDiscordUser} from "@context/DiscordUserContext";
+import {GuildDiscordUserMapping} from "@customTypes/GuildDiscordUserMapping";
 
 interface GuildDiscordUserMappingContextType {
 	guildDiscordUserMapping: GuildDiscordUserMapping | null;
@@ -20,7 +21,17 @@ export const GuildDiscordUserMappingProvider: React.FC<Props> = ({children}) => 
 	const [guildDiscordUserMapping, setGuildDiscordUserMappingState] = useState<GuildDiscordUserMapping | null>(() => {
 		const storedMapping = sessionStorage.getItem('guildDiscordUserMapping');
 
-		return storedMapping ? JSON.parse(storedMapping) : null;
+		if (storedMapping === null) {
+			return null;
+		}
+
+		const mapping: GuildDiscordUserMapping = JSON.parse(storedMapping);
+
+		if (mapping.guild_id === null || mapping.guild_id === undefined) {
+			return null;
+		}
+
+		return mapping;
 	});
 
 	const setGuildDiscordUserMapping = (mapping: GuildDiscordUserMapping) => {

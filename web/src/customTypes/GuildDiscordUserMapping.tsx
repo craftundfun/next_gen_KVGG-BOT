@@ -1,4 +1,4 @@
-interface GuildDiscordUserMapping {
+export interface GuildDiscordUserMapping {
 	guild_id: string,
 	discord_id: string,
 	display_name: string,
