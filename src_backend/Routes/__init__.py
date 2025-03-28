@@ -2,7 +2,7 @@ from src_backend.Routes.API.Guild.GuildDiscordUserMapping import guildDiscordUse
 from src_backend.Routes.Miscellaneous.Healthcheck import healthcheckBp
 from src_backend.Routes.API.Statistic.Statistic import statisticBp
 from src_backend.Routes.Auth.Auth import authBp
-from src_backend.Routes.API.Guild.Guilds import guildBp
+from src_backend.Routes.API.Guild.Guild import guildBp
 from src_backend.Routes.API.DiscordUser.DiscordUser import discordUserBp
 from src_backend.Routes.API.WebsiteUser.WebsiteUser import websiteUserBp
 
