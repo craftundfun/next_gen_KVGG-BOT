@@ -22,3 +22,5 @@ DELETE FROM discord_user;
 DELETE FROM channel;
 
 DELETE FROM guild;
+
+DELETE FROM ip_address;

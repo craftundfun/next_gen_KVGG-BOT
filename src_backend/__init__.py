@@ -1,13 +1,19 @@
+from datetime import datetime
+
 import pymysql
-from flask import Flask
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+import requests
 
+from database.Domain.models.IpAddress import IpAddress
 from src_backend.Config import Config
 from src_backend.Extensions import database
+from src_backend.Logging.Logger import Logger
 from src_backend.Routes import registerRoutes
 
 pymysql.install_as_MySQLdb()
+logger = Logger(__name__)
 
 
 def createApp():
@@ -18,7 +24,76 @@ def createApp():
 
     # Initialisiere die Datenbank und JWT
     database.init_app(app)
-    JWTManager(app)
+    jwt = JWTManager(app)
+
+    @jwt.unauthorized_loader
+    def noJWTinRequest(errorFromFlask: str):
+        """
+        Callback when no JWT is found in the request.
+        Flask-JWT-Extended will call this function
+        when the user tries to access a protected route without providing a JWT.
+        """
+        logger.warning(f"No JWT in request. IP: {request.remote_addr}, User-Agent: {request.user_agent}")
+
+        if not request.remote_addr:
+            logger.warning("No IP address found in request")
+
+            return jsonify(message="No (accepted) access cookie provided!", error=errorFromFlask), 401
+
+        try:
+            # https://www.geojs.io/docs/v1/endpoints/country/
+            url = f'https://get.geojs.io/v1/ip/country/{request.remote_addr}.json'
+            response = requests.get(url)
+            countryName = None
+            countryCode = None
+
+            if response.status_code == 200:
+                countryName = response.json().get('name', None)
+                countryCode = response.json().get('country', None)
+            else:
+                logger.warning(f"Failed to get country code for IP {request.remote_addr}, "
+                               f"status code: {response.status_code}")
+
+            ipAddress = IpAddress(
+                ip_address=request.remote_addr,
+                countryCode=countryCode,
+                countryName=countryName,
+                access_time=datetime.now(),
+                authorized=False,
+                path=request.path,
+            )
+
+            database.session.add(ipAddress)
+            database.session.commit()
+        except Exception as error:
+            logger.error(f"Error while inserting IP address into database", exc_info=error)
+
+            database.session.rollback()
+
+        return jsonify(message="No (accepted) access cookie provided!", error=errorFromFlask), 401
+
+    @app.after_request
+    def afterSuccessfulRequest(response):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS, PUT, DELETE"
+
+        try:
+            ipAddress = IpAddress(
+                ip_address=request.remote_addr,
+                access_time=datetime.now(),
+                authorized=True,
+                path=request.path,
+            )
+
+            database.session.add(ipAddress)
+            database.session.commit()
+        except Exception as error:
+            logger.error(f"Error while inserting IP address into database", exc_info=error)
+
+            database.session.rollback()
+
+        return response
 
     # CORS anpassen
     cors_options = {
