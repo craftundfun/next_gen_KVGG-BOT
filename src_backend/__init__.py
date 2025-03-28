@@ -4,7 +4,6 @@ import pymysql
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-import requests
 
 from database.Domain.models.IpAddress import IpAddress
 from src_backend.Config import Config
@@ -42,20 +41,18 @@ def createApp():
 
         try:
             # https://www.geojs.io/docs/v1/endpoints/country/
-            url = f'https://get.geojs.io/v1/ip/country/{request.remote_addr}.json'
-            response = requests.get(url)
+            # url = f'https://get.geojs.io/v1/ip/country/{request.remote_addr}.json'
+            # response = requests.get(url)
             countryName = None
             countryCode = None
 
-            print(request.headers.get('X-Forwarded-For', "Kein Header"))
-
-            if response.status_code == 200:
-                print(response.json())
-                countryName = response.json().get('name', None)
-                countryCode = response.json().get('country', None)
-            else:
-                logger.warning(f"Failed to get country code for IP {request.remote_addr}, "
-                               f"status code: {response.status_code}")
+            # not working because we are using a proxy :(
+            # if response.status_code == 200:
+            #     countryName = response.json().get('name', None)
+            #     countryCode = response.json().get('country', None)
+            # else:
+            #     logger.warning(f"Failed to get country code for IP {request.remote_addr}, "
+            #                    f"status code: {response.status_code}")
 
             ipAddress = IpAddress(
                 ip_address=request.remote_addr,
