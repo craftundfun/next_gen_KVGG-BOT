@@ -19,8 +19,6 @@ def getAllGuilds():
     """
     Fetch all guilds from the database.
     """
-    logger.debug(f"{get_jwt_identity()} is fetching all guilds")
-
     selectQuery = (select(Guild))
 
     try:
@@ -71,7 +69,7 @@ def getMyFavouriteGuild():
     userId = get_jwt_identity()
 
     if not userId:
-        return jsonify("UserId from token not present"), 500
+        return jsonify("UserId from token not present"), 404
 
     selectQuery = (select(Guild).order_by(Guild.guild_id.asc()).limit(1))
 

@@ -67,7 +67,7 @@ def getMe():
     userId = get_jwt_identity()
 
     if not userId:
-        return jsonify("UserId from token not present"), 500
+        return jsonify("UserId from token not present"), 404
 
     selectQuery = select(DiscordUser).where(DiscordUser.discord_id == int(userId))
 

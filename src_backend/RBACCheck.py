@@ -28,7 +28,7 @@ def hasUserSpecificRoles(*roles: Role):
             if not userId:
                 logger.warning("Unauthorized: Missing user id")
 
-                return jsonify(message="Unauthorized: Missing user id"), 401
+                return jsonify(message="Unauthorized: Missing user id"), 400
 
             selectQuery = (
                 select(WebsiteRoleUserMapping)
@@ -41,7 +41,7 @@ def hasUserSpecificRoles(*roles: Role):
             except Exception as error:
                 logger.error(f"Couldn't fetch websiteRoleUserMapping for user {userId}", exc_info=error)
 
-                return jsonify(message=f"Something went wrong! {error}")
+                return jsonify(message=f"Something went wrong! {error}"), 500
 
             currentUserRoles = [mapping.website_role.role_name for mapping in websiteRoleUserMapping]
 
@@ -69,7 +69,7 @@ def hasUserMinimumRequiredRole(role: Role):
             if not userId:
                 logger.warning("Unauthorized: Missing user id")
 
-                return jsonify(message="Unauthorized: Missing user id"), 401
+                return jsonify(message="Unauthorized: Missing user id"), 400
 
             # get the highest priority role of the user
             selectQueryRolesOfUser = (
