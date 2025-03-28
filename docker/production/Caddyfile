@@ -1,14 +1,16 @@
 :3000 {
 	# Leite /auth/* und /api/* an das Backend weiter
 	handle /auth/* {
-		reverse_proxy backend:8000
+		reverse_proxy backend:8000 {
+			header_up X-Forwarded-For {remote}
+		}
 	}
 
 	handle /api/* {
-		reverse_proxy backend:8000
+		reverse_proxy backend:8000 {
+			header_up X-Forwarded-For {remote}
+		}
 	}
-
-	header_up X-Forwarded-For {remote}
 
 	# Für alle anderen Anfragen prüfe, ob die Datei existiert oder leite auf /index.html um
 	handle {
