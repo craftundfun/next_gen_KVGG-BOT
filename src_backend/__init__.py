@@ -47,6 +47,8 @@ def createApp():
             countryName = None
             countryCode = None
 
+            print(request.headers.get('X-Forwarded-For', "Kein Header"))
+
             if response.status_code == 200:
                 print(response.json())
                 countryName = response.json().get('name', None)
