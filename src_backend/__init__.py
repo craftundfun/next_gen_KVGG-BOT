@@ -48,6 +48,7 @@ def createApp():
             countryCode = None
 
             if response.status_code == 200:
+                print(response.json())
                 countryName = response.json().get('name', None)
                 countryCode = response.json().get('country', None)
             else:
