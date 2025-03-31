@@ -4,3 +4,4 @@
 Logs/*
 Web
 certs/*
+flask_session

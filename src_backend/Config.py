@@ -12,10 +12,16 @@ class Config:
 
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=15)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=14)
+    JWT_COOKIE_SECURE = True
+    JWT_TOKEN_LOCATION = ["cookies"]
+
+    SESSION_PERMANENT = False
+    SESSION_TYPE = "filesystem"
 
     PRODUCTION = bool(int(os.getenv("PRODUCTION", 0)))
 
     CLIENT_ID = os.getenv("CLIENT_ID")
     CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-    URL = os.getenv("URL")
+    URL = os.getenv("LOCAL_URL")
     DISCORD_OAUTH_URL = os.getenv("DISCORD_OAUTH_URL")

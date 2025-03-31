@@ -17,7 +17,7 @@ function LoginScreen() {
 
 	// upon loading the site, check if the user has a refresh token and log in immediately
 	useEffect(() => {
-		fetch("/auth/login", {
+		fetch("api/welcomeBack", {
 			method: "GET",
 			credentials: "include"
 		}).then(response => {

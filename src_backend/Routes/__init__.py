@@ -11,7 +11,8 @@ def registerRoutes(app):
     """
     Register all routes with the main application instance.
     """
-    app.register_blueprint(authBp, url_prefix="/auth")
+    app.register_blueprint(authBp, url_prefix="/api")
+    app.register_blueprint(healthcheckBp, url_prefix="/api")
 
     app.register_blueprint(discordUserBp, url_prefix="/api/discordUser")
 
@@ -21,5 +22,3 @@ def registerRoutes(app):
     app.register_blueprint(websiteUserBp, url_prefix="/api/websiteUser")
 
     app.register_blueprint(statisticBp, url_prefix="/api/statistic")
-
-    app.register_blueprint(healthcheckBp, url_prefix="/api")
