@@ -15,7 +15,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t frontend_for_build -f docker/forProdBuild/Dockerfile_Frontend ../..
+          docker build -t frontend_for_build -f docker/forProdBuild/Dockerfile_Frontend .
 
       - name: Run Build Command inside Docker
         run: |
