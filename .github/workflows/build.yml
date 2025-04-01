@@ -1,5 +1,3 @@
-name: Build and Deploy
-
 on:
   push:
     branches:
@@ -21,12 +19,18 @@ jobs:
         run: |
           docker run -v $(pwd)/web:/app/web frontend_for_build npm run build
 
+      - name: Check for Changes
+        run: |
+          # Überprüfe, ob es Änderungen gibt
+          git diff --exit-code || echo "Changes detected"
+
       - name: Commit and Push Changes
+        if: success() && steps.check-for-changes.outputs.changes == 'true'
         run: |
           # Set Git config
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
+
           git add .
 
           git commit -m "build."
