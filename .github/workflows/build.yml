@@ -24,7 +24,7 @@ jobs:
 
       - name: Build Docker Image using Docker Compose
         run: |
-          docker-compose -f docker/forProdBuild/docker-compose.yml build
+          docker-compose -f docker/forProdBuild/docker-compose.yaml build
 
       - name: Run Build Command inside Docker
         run: |
