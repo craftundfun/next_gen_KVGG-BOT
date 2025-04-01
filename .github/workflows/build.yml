@@ -13,19 +13,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Docker Compose
+      - name: Build Docker Image
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
-      - name: Install Docker Compose
-        run: |
-          ls
-
-      - name: Build Docker Image using Docker Compose
-        run: |
-          docker-compose -f docker/forProdBuild/docker-compose.yaml build
+          docker build -t frontendForBuild -f docker/development/Dockerfile_Frontend ../..
 
       - name: Run Build Command inside Docker
         run: |
-          docker run --rm frontendForBuild npm run build
+          docker run frontendForBuild npm run build
+
