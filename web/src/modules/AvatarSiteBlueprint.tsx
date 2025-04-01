@@ -3,6 +3,7 @@ import {WebsiteUser} from "@customTypes/WebsiteUser";
 import React from "react";
 import {Spinner} from "@ui/spinner";
 import {Avatar, AvatarImage} from "@ui/avatar";
+import {GuildDiscordUserMapping} from "@customTypes/GuildDiscordUserMapping";
 
 type Props = {
 	discordUser: DiscordUser | null;

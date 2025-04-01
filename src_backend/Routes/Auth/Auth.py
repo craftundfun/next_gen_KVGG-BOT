@@ -17,55 +17,6 @@ authBp = Blueprint('auth', __name__)
 logger = Logger(__name__)
 
 
-@authBp.route('/login')
-def login():
-    """
-    The frontend calls this upon loading the website.
-    If the user has a refresh token, he gets an access token and the necessary information is returned.
-    """
-    if not request.cookies:
-        logger.debug("No cookies were provided")
-
-        return jsonify("No cookies were provided"), 204
-
-    # if the user comes back within the same session
-    if request.cookies.get("access_token_cookie"):
-        logger.debug("Access token cookie already exists")
-
-        return jsonify("Access token cookie already exists"), 200
-
-    if not (refreshToken := request.cookies.get("refresh_token")):
-        logger.debug("No refresh token was provided")
-
-        return jsonify("No refresh token was provided"), 204
-
-    selectQueryWebsiteUser = (select(WebsiteUser).where(WebsiteUser.refresh_token == refreshToken))
-
-    try:
-        websiteUser: WebsiteUser = database.session.execute(selectQueryWebsiteUser).scalars().one()
-    except NoResultFound:
-        logger.debug("No WebsiteUser found with the provided refresh token, redirecting to Discord OAuth")
-
-        return jsonify("No WebsiteUser found with the provided refresh token"), 400
-    except Exception as error:
-        logger.error("Failed to get WebsiteUser from the database", exc_info=error)
-
-        return jsonify(message="Something went wrong!"), 500
-
-    accessToken = create_access_token(identity=str(websiteUser.discord_id))
-    response = make_response(jsonify("Successfully authenticated with refresh token."))
-
-    response.set_cookie(
-        "access_token_cookie",
-        accessToken,
-        httponly=True,
-        secure=True,
-        samesite="Strict",
-    )
-
-    return response, 200
-
-
 @authBp.route('/loginCallback')
 def loginCallback():
     """
@@ -90,7 +41,7 @@ def loginCallback():
         "client_secret": Config.CLIENT_SECRET,
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": f"{Config.URL}/auth/loginCallback",
+        "redirect_uri": f"{Config.URL}/api/loginCallback",
     }
 
     try:
@@ -135,7 +86,7 @@ def loginCallback():
     if remindMe:
         refreshToken = create_refresh_token(identity=str(user['id']), expires_delta=timedelta(days=14))
         response.set_cookie(
-            "refresh_token",
+            "refresh_token_cookie",
             refreshToken,
             httponly=True,
             secure=True,
@@ -158,27 +109,21 @@ def loginCallback():
         httponly=True,
         secure=True,
         samesite="Strict",
+        max_age=int(timedelta(minutes=10).total_seconds()),
     )
 
     # no code because we are redirecting, otherwise it will not work
     return response
 
 
-@authBp.route('/loggedIn')
+@authBp.route('/welcomeBack')
 @jwt_required()
-def isUserLoggedIn():
+def refresh():
     """
-    Check if the user is logged in by checking if the cookies are set.
+    This will be called when the user comes back to the website. The before and after request handle everything,
+    and this is just a placeholder to show that the user is logged in.
     """
-    # we don't need checks here, flask_jwt_extended will do that for us because of the @jwt_required() decorator
-    userId = get_jwt_identity()
-
-    if not userId:
-        logger.debug("No user ID was provided")
-
-        return jsonify("No user ID was provided"), 404
-
-    return jsonify("User is logged in"), 200
+    return jsonify("Hello World!"), 200
 
 
 def doesUserExist(user: dict) -> WebsiteUser | None:

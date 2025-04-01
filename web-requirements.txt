@@ -6,3 +6,4 @@ flask-cors
 requests
 flask_jwt_extended
 gunicorn
+flask-session

@@ -1,9 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pymysql
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, redirect
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, verify_jwt_in_request, create_access_token, get_jwt_identity
+from flask_jwt_extended.exceptions import NoAuthorizationError
+from flask_session import Session
 
 from database.Domain.models.IpAddress import IpAddress
 from src_backend.Config import Config
@@ -18,8 +20,6 @@ logger = Logger(__name__)
 def createApp():
     app = Flask(__name__)
     app.config.from_object(Config)
-    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
-    app.config["JWT_COOKIE_SECURE"] = True
 
     # Initialisiere die Datenbank und JWT
     database.init_app(app)
@@ -37,7 +37,10 @@ def createApp():
         if not request.remote_addr:
             logger.warning("No IP address found in request")
 
-            return jsonify(message="No (accepted) access cookie provided!", error=errorFromFlask), 401
+            if not request.cookies.get("access_token_cookie", None):
+                return jsonify(message="No (accepted) access cookie provided!", error=errorFromFlask), 401
+            else:
+                return jsonify(message="No refresh token cookie provided!", error=errorFromFlask), 401
 
         try:
             # https://www.geojs.io/docs/v1/endpoints/country/
@@ -70,10 +73,51 @@ def createApp():
 
             database.session.rollback()
 
-        return jsonify(message="No (accepted) access cookie provided!", error=errorFromFlask), 401
+        if not request.cookies.get("access_token_cookie", None):
+            return jsonify(message="No (accepted) access cookie provided!", error=errorFromFlask), 401
+        else:
+            return jsonify(message="No refresh token cookie provided!", error=errorFromFlask), 401
+
+    @app.before_request
+    # allow session and refresh tokens
+    def before_request():
+        # try to verify the JWT (access token)
+        try:
+            verify_jwt_in_request(refresh=False, verify_type=True)
+
+            return
+        except NoAuthorizationError:
+            logger.debug("Failed to verify JWT, try to generate a new one with refresh token")
+
+            # try to verify the refresh token (if applicable)
+            try:
+                verify_jwt_in_request(refresh=True, verify_type=True)
+            except NoAuthorizationError:
+                # we cant reverify this user, let them run into the 401
+                logger.debug("Failed to verify refresh token")
+
+                return
+
+            logger.debug(f"JWT verification successful for userId: {get_jwt_identity()}, creating new access token")
+
+            userId = get_jwt_identity()
+            access_token = create_access_token(identity=userId)
+
+            response = redirect(request.path)
+            response.set_cookie(
+                "access_token_cookie",
+                access_token,
+                httponly=True,
+                secure=True,
+                samesite="Strict",
+                max_age=int(timedelta(minutes=10).total_seconds()),
+            )
+
+            return response
 
     @app.after_request
     def afterSuccessfulRequest(response):
+        # add CORS headers to the response
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS, PUT, DELETE"
@@ -102,9 +146,11 @@ def createApp():
         "allow_headers": ["Content-Type", "Authorization"],  # Erlaubte Header
         "supports_credentials": True,  # Unterstützung für Cookies und Anmeldeinformationen
     }
+
     CORS(app, **cors_options)
 
-    # Registriere die Routen
+    Session(app)
+
     registerRoutes(app)
 
     return app
