@@ -19,7 +19,7 @@ jobs:
 
       - name: Run Build Command inside Docker
         run: |
-          docker run -v ./web:/app/web frontend_for_build npm run build
+          docker run -v ../../web:/app/web frontend_for_build npm run build
 
       - name: Commit and Push Changes
         run: |
