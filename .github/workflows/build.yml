@@ -19,15 +19,18 @@ jobs:
         run: |
           docker run -v $(pwd)/web:/app/web frontend_for_build npm run build
 
+      - name: Copy build files from Docker container to host
+        run: |
+          # Falls notwendig, kopiere die Dateien vom Container in das Host-Verzeichnis
+          docker cp $(docker ps -q --filter "ancestor=frontend_for_build"):/app/web $(pwd)/web
+
       - name: Check for Changes
         run: |
-          # Überprüfe, ob es Änderungen gibt
           git diff --exit-code || echo "Changes detected"
 
       - name: Commit and Push Changes
         if: success() && steps.check-for-changes.outputs.changes == 'true'
         run: |
-          # Set Git config
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -38,3 +41,4 @@ jobs:
           git push origin HEAD:master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
