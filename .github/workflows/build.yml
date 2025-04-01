@@ -17,12 +17,7 @@ jobs:
 
       - name: Run Build Command inside Docker
         run: |
-          docker run -v $(pwd)/web:/app/web frontend_for_build npm run build
-
-      - name: Copy build files from Docker container to host
-        run: |
-          # Falls notwendig, kopiere die Dateien vom Container in das Host-Verzeichnis
-          docker cp $(docker ps -q --filter "ancestor=frontend_for_build"):/app/web $(pwd)/web
+          docker run -v ./web:/app/web frontend_for_build npm run build
 
       - name: Check for Changes
         run: |
