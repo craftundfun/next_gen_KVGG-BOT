@@ -18,6 +18,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
+      - name: Install Docker Compose
+        run: |
+          ls
+
       - name: Build Docker Image using Docker Compose
         run: |
           docker-compose -f docker/forProdBuild/docker-compose.yml build
