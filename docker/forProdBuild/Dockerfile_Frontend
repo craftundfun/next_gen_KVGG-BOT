@@ -7,5 +7,3 @@ ENV REACT_APP_DISCORD_OAUTH_URL=https://discord.com/oauth2/authorize?client_id=1
 COPY ../../web .
 
 RUN npm install
-
-CMD ["npm", "run", "build"]
