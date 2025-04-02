@@ -1,28 +1,24 @@
-import {useNavigate} from "react-router-dom";
-import {useDiscordUser} from "@context/DiscordUserContext";
-import {useEffect, useState} from "react";
-import {Statistic} from "@customTypes/Statistic";
+import { useNavigate } from "react-router-dom";
+import { useDiscordUser } from "@context/DiscordUserContext";
+import { useEffect, useState } from "react";
+import { Statistic } from "@customTypes/Statistic";
 import React from "react";
-import {useGuild} from "@context/GuildContext";
-import {Spinner} from "@ui/spinner";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuGroup,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@ui/dropdown-menu";
+import { useGuild } from "@context/GuildContext";
+import { Button, Card, CircularProgress, Typography, Menu, MenuItem } from "@mui/material";
+import { MoreVert as MoreVertIcon } from "@mui/icons-material";
 
 function Statistics() {
 	const navigate = useNavigate();
-	const {discordUser} = useDiscordUser();
-	const {guild} = useGuild();
+	const { discordUser } = useDiscordUser();
+	const { guild } = useGuild();
 
 	const [statistics, setStatistics] = useState<Statistic | null>(null);
 	const [dates, setDates] = useState<Date[] | null>(null);
 	const [loadingStatistics, setLoadingStatistics] = useState<boolean>(true);
 	const [loadingDates, setLoadingDates] = useState<boolean>(true);
 	const [currentDate, setCurrentDate] = useState<Date>(new Date());
+	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+	const open = Boolean(anchorEl);
 
 	const formatter = new Intl.DateTimeFormat('de-DE', {
 		day: '2-digit',
@@ -30,7 +26,7 @@ function Statistics() {
 		year: 'numeric'
 	});
 
-	// fetch statistics for the selected date
+	// Fetch statistics for the selected date
 	useEffect(() => {
 		if (!discordUser || !guild) return;
 
@@ -47,14 +43,12 @@ function Statistics() {
 		}).then(async response => {
 			if (!response.ok) {
 				navigate("/error");
-
 				return;
 			}
 
 			if (response.status === 204) {
 				setStatistics(null);
 				setLoadingStatistics(false);
-
 				return;
 			}
 
@@ -63,7 +57,7 @@ function Statistics() {
 		})
 	}, [navigate, discordUser, guild, currentDate]);
 
-	// fetch all available dates for the user
+	// Fetch all available dates for the user
 	useEffect(() => {
 		if (!discordUser || !guild) return;
 
@@ -78,14 +72,12 @@ function Statistics() {
 		}).then(async response => {
 			if (!response.ok) {
 				navigate("/error");
-
 				return;
 			}
 
 			if (response.status === 204) {
 				setDates(null);
 				setLoadingDates(false);
-
 				return;
 			}
 
@@ -97,7 +89,7 @@ function Statistics() {
 			const datesSet = new Set(datesFromApi.map((date: { getTime: () => never; }) => date.getTime()));
 			const current = new Date(minDate);
 
-			// insert all missing dates between the first date and today
+			// Insert all missing dates between the first date and today
 			while (current <= today) {
 				if (!datesSet.has(current.getTime())) {
 					datesFromApi.push(new Date(current));
@@ -112,73 +104,86 @@ function Statistics() {
 		})
 	}, [discordUser, guild, navigate]);
 
+	const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+		setAnchorEl(event.currentTarget);
+	};
+
+	const handleMenuClose = () => {
+		setAnchorEl(null);
+	};
+
+	const handleDateChange = (date: Date) => {
+		setCurrentDate(date);
+		setAnchorEl(null);
+	};
+
 	return (
-		<div
-			className="flex flex-col items-center p-6 text-white bg-gray-900 rounded-lg shadow-md w-full max-w-4xl mx-auto">
-			<>
-				<div className="flex items-center space-x-6">
-					<h1 className="text-2xl font-bold">Statistiken (nur Datendisplay)</h1>
-					<DropdownMenu>
-						<DropdownMenuTrigger
-							className="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded h-10 flex items-center"
-						>
-							Aktuelles Datum: {formatter.format(currentDate)}
-						</DropdownMenuTrigger>
-						<DropdownMenuContent
-							className="bg-gray-800 text-white mt-2 rounded shadow-lg max-h-60 overflow-auto w-48"
-						>
-							{loadingDates ? (
-								<Spinner/>
-							) : dates ? (
-								<DropdownMenuGroup>
-									{dates.map((date) => (
-										<DropdownMenuItem
-											key={date.toString()}
-											onClick={() => setCurrentDate(date)}
-											className="cursor-pointer px-4 py-2 hover:bg-gray-700"
-										>
-											{formatter.format(date)}
-										</DropdownMenuItem>
-									))}
-								</DropdownMenuGroup>
-							) : (
-								<p className="text-center text-gray-500">Keine (weiteren) Daten verfügbar</p>
-							)}
-						</DropdownMenuContent>
-					</DropdownMenu>
-				</div>
-
-				<div className="bg-gray-800 p-4 rounded-lg shadow w-full mt-4">
-					<p className="text-sm">Discord ID: <span
-						className="font-semibold">{discordUser?.discord_id}</span></p>
-					<p className="text-sm">Global Name: <span
-						className="font-semibold">{discordUser?.global_name}</span></p>
-					<p className="text-sm">Created At: <span
-						className="font-semibold">{discordUser?.created_at}</span></p>
-				</div>
-
-
-				<h2 className="text-xl font-semibold mt-6">Statistics</h2>
-				<div className="bg-gray-800 p-4 rounded-lg shadow w-full">
-					{loadingStatistics ? (
-						<Spinner/>
+		<div className="flex flex-col items-center p-6 text-white bg-gray-900 rounded-lg shadow-md w-full max-w-4xl mx-auto">
+			<div className="flex items-center space-x-6">
+				<Typography variant="h5" className="font-bold">
+					Statistiken (nur Datendisplay)
+				</Typography>
+				<Button
+					variant="contained"
+					color="primary"
+					onClick={handleMenuClick}
+					endIcon={<MoreVertIcon />}
+				>
+					Aktuelles Datum: {formatter.format(currentDate)}
+				</Button>
+				<Menu
+					anchorEl={anchorEl}
+					open={open}
+					onClose={handleMenuClose}
+				>
+					{loadingDates ? (
+						<CircularProgress size={24} />
+					) : dates ? (
+						dates.map((date, index) => (
+							<MenuItem key={index} onClick={() => handleDateChange(date)}>
+								{formatter.format(date)}
+							</MenuItem>
+						))
 					) : (
-						statistics ? (
-							<>
-								<p>Date: {statistics.date}</p>
-								<p>Online Time: {statistics?.online_time}</p>
-								<p>Stream Time: {statistics?.stream_time}</p>
-								<p>Mute Time: {statistics?.mute_time}</p>
-								<p>Deaf Time: {statistics?.deaf_time}</p>
-								<p>Message Count: {statistics?.message_count}</p>
-								<p>Command Count: {statistics?.command_count}</p>
-							</>
-						) : (
-							<p className="text-center text-gray-500 mt-6">Keine Statistiken verfügbar</p>
-						)
+						<MenuItem disabled>Keine Daten verfügbar</MenuItem>
 					)}
-				</div>
-			</>
+				</Menu>
+			</div>
+
+			<Card className="bg-gray-800 p-4 rounded-lg shadow w-full mt-4">
+				<Typography variant="body2">
+					Discord ID: <span className="font-semibold">{discordUser?.discord_id}</span>
+				</Typography>
+				<Typography variant="body2">
+					Global Name: <span className="font-semibold">{discordUser?.global_name}</span>
+				</Typography>
+				<Typography variant="body2">
+					Created At: <span className="font-semibold">{discordUser?.created_at}</span>
+				</Typography>
+			</Card>
+
+			<Typography variant="h6" className="text-xl font-semibold mt-6">
+				Statistics
+			</Typography>
+			<Card className="bg-gray-800 p-4 rounded-lg shadow w-full mt-4">
+				{loadingStatistics ? (
+					<CircularProgress size={24} />
+				) : statistics ? (
+					<>
+						<Typography variant="body2">Date: {statistics.date}</Typography>
+						<Typography variant="body2">Online Time: {statistics?.online_time}</Typography>
+						<Typography variant="body2">Stream Time: {statistics?.stream_time}</Typography>
+						<Typography variant="body2">Mute Time: {statistics?.mute_time}</Typography>
+						<Typography variant="body2">Deaf Time: {statistics?.deaf_time}</Typography>
+						<Typography variant="body2">Message Count: {statistics?.message_count}</Typography>
+						<Typography variant="body2">Command Count: {statistics?.command_count}</Typography>
+					</>
+				) : (
+					<Typography variant="body2" className="text-center text-gray-500 mt-6">
+						Keine Statistiken verfügbar
+					</Typography>
+				)}
+			</Card>
 		</div>
 	);
 }

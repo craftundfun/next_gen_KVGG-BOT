@@ -1,9 +1,17 @@
 import React from 'react';
-import BaseLayout from "@ui/SiteBlueprint";
+import BaseLayout from "@modules/SiteBlueprint";
 import Statistics from "@components/Dashboard/PersonalInfo/Statistics";
 import StatisticGraph from "@components/Dashboard/PersonalInfo/StatisticGraph";
 
 function Dashboard() {
+//	return (
+//		<div>
+//			<BaseLayout>
+//				Test
+//			</BaseLayout>
+//		</div>
+//	);
+
 	return (
 		<div>
 			<BaseLayout>

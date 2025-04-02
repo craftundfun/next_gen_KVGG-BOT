@@ -8,6 +8,11 @@ import {WebsiteUserProvider} from '@context/WebsiteUserContext';
 import {DiscordUserProvider} from '@context/DiscordUserContext';
 import {GuildProvider} from '@context/GuildContext';
 import {GuildDiscordUserMappingProvider} from '@context/GuildDiscordUserMappingContext';
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+
 
 function App() {
 	return (

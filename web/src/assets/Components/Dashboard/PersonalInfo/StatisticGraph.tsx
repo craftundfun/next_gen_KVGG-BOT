@@ -11,8 +11,8 @@ function StatisticGraph() {
 	const {guild} = useGuild();
 
 	const [statistics, setStatistics] = useState<Statistic[] | null>(null);
-	const [endDate, setEndDate] = useState<Date>(new Date());
-	const [startDate, setStartDate] = useState<Date>(() => {
+	const [endDate] = useState<Date>(new Date());
+	const [startDate] = useState<Date>(() => {
 		const initialEndDate = new Date();
 		initialEndDate.setDate(initialEndDate.getDate() - 10);
 		return initialEndDate;
