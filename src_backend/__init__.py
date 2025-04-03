@@ -61,7 +61,7 @@ def createApp():
                 countryName = response.json().get('name', None)
                 countryCode = response.json().get('country', None)
             else:
-                logger.warning(f"Failed to get country code for IP {ip}, status code: {response.status_code}")
+                logger.warning(f"Failed to get country code for IP {ip}, status code: {response.status_code}, response: {response.text}")
 
             ipAddress = IpAddress(
                 ip_address=ip,
