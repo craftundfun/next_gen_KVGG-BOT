@@ -76,6 +76,8 @@ def createApp():
                 path=request.path,
             )
 
+            logger.warning(f"IP address: {ipAddress}")
+
             database.session.add(ipAddress)
             database.session.commit()
         except Exception as error:
