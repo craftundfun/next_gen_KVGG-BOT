@@ -4,8 +4,6 @@ services:
         build:
             context: ../..
             dockerfile: ./docker/production/Dockerfile_Backend
-        volumes:
-            - ../..:/app
         restart: on-failure
         healthcheck:
             test: [ "CMD", "curl", "-f", "http://localhost:8000/api/health" ]

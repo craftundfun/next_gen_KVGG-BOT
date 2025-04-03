@@ -1,9 +1,8 @@
 import {DiscordUser} from "@customTypes/DiscordUser";
 import {WebsiteUser} from "@customTypes/WebsiteUser";
-import React from "react";
-import {Spinner} from "@ui/spinner";
-import {Avatar, AvatarImage} from "@ui/avatar";
 import {GuildDiscordUserMapping} from "@customTypes/GuildDiscordUserMapping";
+import React from "react";
+import {Avatar, CircularProgress} from "@mui/material";
 
 type Props = {
 	discordUser: DiscordUser | null;
@@ -19,12 +18,15 @@ function AvatarNameCombination({discordUser, websiteUser, guildDiscordUserMappin
 					<div>{discordUser?.global_name || "NA"}</div>
 					<div className="text-sm">{websiteUser?.email || "NA"}</div>
 				</div>
-				<Avatar className="ml-2 mt-1 w-8 h-8">
-					<AvatarImage src={guildDiscordUserMapping?.profile_picture ?? ''}/>
-				</Avatar>
+
+				<Avatar
+					className="ml-2 mt-1 w-8 h-8"
+					src={guildDiscordUserMapping?.profile_picture || ""}
+					alt="User Avatar"
+				/>
 			</div>
 		) : (
-			<Spinner size="large"/>
+			<CircularProgress size={24}/>
 		)
 	);
 }

@@ -1,8 +1,9 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
+from database.Domain.models import GuildDiscordUserMapping
 from database.Domain.models.DiscordUser import DiscordUser
 from src_backend import database
 from src_backend.Logging.Logger import Logger
@@ -29,7 +30,65 @@ def getAllDiscordUsers():
         ]
     }
 
-    return jsonify(userDict)
+    return jsonify(userDict), 200
+
+
+@discordUserBp.route("/all/<guild_id>")
+@jwt_required()
+@hasUserMinimumRequiredRole(Role.USER)
+def getAllDiscordUsersForGuild(guild_id):
+    try:
+        guildId = int(guild_id)
+    except ValueError:
+        return jsonify(message="Invalid guild id"), 400
+
+    start = int(request.args.get("start", 0))
+    count = int(request.args.get("count", 9999999))
+    sortBy = request.args.get("sort", "discord_id")
+    sortOrder = request.args.get("order", "asc")
+
+    match sortBy:
+        case "discord_id":
+            sortObject = DiscordUser.discord_id
+        case "global_name":
+            sortObject = DiscordUser.global_name
+        case "created_at":
+            sortObject = DiscordUser.created_at
+        case _:
+            # just in case
+            logger.warning(f"Invalid sortBy parameter: {sortBy}")
+
+            return jsonify(message="Invalid sortBy parameter"), 400
+
+    selectQuery = (
+        select(DiscordUser)
+        .join(GuildDiscordUserMapping)
+        .where(GuildDiscordUserMapping.guild_id == guildId, )
+        .offset(start)
+        .limit(count)
+        .order_by(
+            sortObject.asc() if sortOrder == "asc" else sortObject.desc()
+        )
+    )
+
+    try:
+        discordUsers: list[DiscordUser] = database.session.execute(selectQuery).scalars().all()
+    except NoResultFound:
+        logger.warning(f"No DiscordUser found for the provided guild_id: {guildId}")
+
+        return jsonify(message="DiscordUser does not exist"), 404
+    except Exception as error:
+        logger.error(f"Failed to fetch DiscordUser for guild_id: {guildId}", exc_info=error)
+
+        return jsonify(message="Something went wrong!"), 500
+
+    userDict: dict = {"discordUsers":
+        [
+            user.to_dict() for user in discordUsers
+        ]
+    }
+
+    return jsonify(userDict), 200
 
 
 @discordUserBp.route('/<discord_id>')

@@ -1,10 +1,14 @@
 import React from "react";
+import BaseLayout from "@modules/SiteBlueprint";
+import {Typography} from "@mui/material";
 
 function Error() {
 	return (
-		<div>
-			<h1>Something went wrong!</h1>
-		</div>
+		<BaseLayout>
+			<div>
+				<Typography variant="h4" color="warning">Something went wrong!</Typography>
+			</div>
+		</BaseLayout>
 	);
 }
 

@@ -55,6 +55,9 @@ def getStatisticsFromUserPerGuildPerDate(guild_id, discord_id, date):
 @jwt_required()
 @hasUserMinimumRequiredRole(Role.USER)
 def getAllDatesFromUserPerGuild(guild_id, discord_id):
+    """
+    Returns all dates for a user in a guild. Fills missing dates with empty statistics.
+    """
     try:
         guildId = int(guild_id)
         discordId = int(discord_id)
@@ -64,10 +67,12 @@ def getAllDatesFromUserPerGuild(guild_id, discord_id):
         return jsonify(message="Invalid discord or guild id"), 400
 
     selectQuery = (
-        select(Statistic.date).where(
+        select(Statistic.date)
+        .where(
             Statistic.discord_id == discordId,
             Statistic.guild_id == guildId,
         )
+        .order_by(Statistic.date.asc())
     )
 
     try:
@@ -82,6 +87,19 @@ def getAllDatesFromUserPerGuild(guild_id, discord_id):
         return jsonify(message="Failed to fetch statistics"), 500
     else:
         logger.debug(f"Fetched statistics for user {discordId} in guild {guildId}")
+
+    if not statistics:
+        return jsonify(message="No dates available"), 204
+
+    # add "missing" dates to the list
+    startDate = statistics[0]
+    endDate = datetime.now().date()
+
+    for days in range(1, (endDate - startDate).days + 1):
+        if (startDate + timedelta(days=days)) in statistics:
+            continue
+
+        statistics.append(startDate + timedelta(days=days))
 
     return jsonify([statistic.isoformat() for statistic in statistics]), 200
 
