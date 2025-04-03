@@ -18,6 +18,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import {useNavigate} from "react-router-dom";
 import ClearIcon from '@mui/icons-material/Clear';
 import ErrorIcon from '@mui/icons-material/Error';
+import PeopleIcon from '@mui/icons-material/People';
 
 
 interface BaseLayoutProps {
@@ -50,6 +51,14 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({children}) => {
 			</List>
 			<Divider color="white"/>
 			<List>
+				<ListItem key={"UserList"} disablePadding>
+					<ListItemButton onClick={() => navigate("/userList")}>
+						<ListItemIcon>
+							<PeopleIcon color="primary"/>
+						</ListItemIcon>
+						<ListItemText primary={"User"} sx={{color: "white"}}/>
+					</ListItemButton>
+				</ListItem>
 				<ListItem key={"Forbidden"} disablePadding>
 					<ListItemButton onClick={() => navigate("/forbidden")}>
 						<ListItemIcon>

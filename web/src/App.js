@@ -15,6 +15,7 @@ import '@fontsource/roboto/700.css';
 import {theme} from '@modules/Theme';
 import {ThemeProvider} from '@mui/material/styles';
 import {CssBaseline} from '@mui/material';
+import {UserListSite} from '@components/UserList/UserListSite';
 
 
 function App() {
@@ -38,6 +39,12 @@ function App() {
 										path="/dashboard"
 										element={
 											<Dashboard/>
+										}>
+									</Route>
+									<Route
+										path="/userList"
+										element={
+											<UserListSite/>
 										}>
 									</Route>
 									<Route

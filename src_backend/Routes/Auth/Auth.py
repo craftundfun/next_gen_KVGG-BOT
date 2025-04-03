@@ -2,9 +2,9 @@ from datetime import timedelta
 from urllib.parse import parse_qs
 
 import requests
-from flask import Blueprint, jsonify, request, make_response, redirect
+from flask import Blueprint, jsonify, request, redirect
 from flask_jwt_extended import create_access_token, create_refresh_token
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import jwt_required
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 
