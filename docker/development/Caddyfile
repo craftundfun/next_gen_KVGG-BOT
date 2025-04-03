@@ -9,7 +9,6 @@
 		}
 	}
 
-	reverse_proxy /auth/* backend:8000
 	reverse_proxy /api/* backend:8000
 }
 
@@ -20,7 +19,6 @@
 		}
 	}
 
-	reverse_proxy /auth/* backend:8000
 	reverse_proxy /api/* backend:8000
 
 	tls /etc/certs/cert.pem /etc/certs/key.pem
