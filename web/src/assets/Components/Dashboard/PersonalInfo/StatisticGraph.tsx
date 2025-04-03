@@ -4,6 +4,7 @@ import {useNavigate} from "react-router-dom";
 import {useDiscordUser} from "@context/DiscordUserContext";
 import {useGuild} from "@context/GuildContext";
 import {AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend} from "recharts";
+import {customFetch} from "@modules/CustomFetch";
 
 function StatisticGraph() {
 	const navigate = useNavigate();
@@ -11,8 +12,8 @@ function StatisticGraph() {
 	const {guild} = useGuild();
 
 	const [statistics, setStatistics] = useState<Statistic[] | null>(null);
-	const [endDate, setEndDate] = useState<Date>(new Date());
-	const [startDate, setStartDate] = useState<Date>(() => {
+	const [endDate] = useState<Date>(new Date());
+	const [startDate] = useState<Date>(() => {
 		const initialEndDate = new Date();
 		initialEndDate.setDate(initialEndDate.getDate() - 10);
 		return initialEndDate;
@@ -21,7 +22,7 @@ function StatisticGraph() {
 	useEffect(() => {
 		if (!discordUser || !guild) return;
 
-		fetch(
+		customFetch(
 			`/api/statistic/${guild.guild_id}/${discordUser.discord_id}/${startDate.toISOString().split("T")[0]}/${endDate.toISOString().split("T")[0]}`,
 			{
 				method: "GET",
@@ -32,7 +33,6 @@ function StatisticGraph() {
 			}
 		).then(async (response) => {
 			if (!response.ok) {
-				navigate("/error");
 				return;
 			}
 
