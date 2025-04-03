@@ -77,6 +77,7 @@ def createApp():
             )
 
             logger.warning(f"IP address: {ipAddress}")
+            logger.warning(f"IP address: {ipAddress.ip_address}, {ipAddress.countryCode}, {ipAddress.countryName}")
 
             database.session.add(ipAddress)
             database.session.commit()
