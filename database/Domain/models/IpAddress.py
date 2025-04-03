@@ -17,13 +17,13 @@ class IpAddress(Base):
                  access_time: datetime,
                  authorized: bool,
                  path: str,
-                 countryCode: str = null(),
-                 countryName: str = null(), ):
+                 country_code: str = null(),
+                 country_name: str = null(), ):
         super().__init__()
 
         self.ip_address = ip_address
         self.access_time = access_time
         self.authorized = authorized
         self.path = path
-        self.country_code = countryCode
-        self.country_name = countryName
+        self.country_code = country_code
+        self.country_name = country_name
