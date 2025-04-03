@@ -17,8 +17,8 @@ class IpAddress(Base):
                  access_time: datetime,
                  authorized: bool,
                  path: str,
-                 countryCode: str = None,
-                 countryName: str = None, ):
+                 countryCode: str = null(),
+                 countryName: str = null(), ):
         super().__init__()
 
         self.ip_address = ip_address
@@ -26,8 +26,6 @@ class IpAddress(Base):
         self.authorized = authorized
         self.path = path
 
-        if countryCode:
-            self.countryCode = countryCode
+        self.countryCode = countryCode
 
-        if countryName:
-            self.countryName = countryName
+        self.countryName = countryName
