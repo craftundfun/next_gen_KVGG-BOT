@@ -4,6 +4,11 @@
 			header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
 			header_up X-Real-IP {http.request.header.X-Real-IP}
 		}
+
+		servers {
+        		# Trage hier die IP(s) des ersten Proxies ein, z. B. im privaten Netz
+        		trusted_proxies 192.168.1.0/24
+    		}
 	}
 
 	# Für alle anderen Anfragen prüfe, ob die Datei existiert oder leite auf /index.html um
