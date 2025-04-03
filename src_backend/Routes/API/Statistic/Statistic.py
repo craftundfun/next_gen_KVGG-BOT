@@ -89,6 +89,8 @@ def getAllDatesFromUserPerGuild(guild_id, discord_id):
         logger.debug(f"Fetched statistics for user {discordId} in guild {guildId}")
 
     # add "missing" dates to the list
+    if not statistics:
+        return jsonify(message="No dates available"), 204
     startDate = statistics[0]
     endDate = datetime.now().date()
 
