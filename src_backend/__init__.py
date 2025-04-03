@@ -62,6 +62,7 @@ def createApp():
                 countryCode = response.json().get('country', None)
 
                 logger.warning("GeoJS response: %s", response.json())
+                logger.warning(f"{ip} is from {countryName} ({countryCode})")
             else:
                 logger.warning(
                     f"Failed to get country code for IP {ip}, status code: {response.status_code}, response: {response.text}")
