@@ -60,8 +60,11 @@ def createApp():
             if response.status_code == 200:
                 countryName = response.json().get('name', None)
                 countryCode = response.json().get('country', None)
+
+                logger.warning("GeoJS response: %s", response.json())
             else:
-                logger.warning(f"Failed to get country code for IP {ip}, status code: {response.status_code}, response: {response.text}")
+                logger.warning(
+                    f"Failed to get country code for IP {ip}, status code: {response.status_code}, response: {response.text}")
 
             ipAddress = IpAddress(
                 ip_address=ip,
