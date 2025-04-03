@@ -38,7 +38,7 @@ def createApp():
         """
         # Hol die IP aus dem X-Forwarded-For Header oder fallback auf request.remote_addr
         forwarded_for = request.headers.get("X-Forwarded-For", "")
-        ip = forwarded_for.split(",")[0].strip().split(":")[0] if forwarded_for else request.remote_addr
+        ip = forwarded_for.split(",")[0].strip() if forwarded_for else request.remote_addr
 
         logger.warning(f"No JWT in request. IP: {ip}, User-Agent: {request.user_agent}")
 
