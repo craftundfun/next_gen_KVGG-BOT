@@ -19,12 +19,7 @@ jobs:
         run: |
           docker run -v ${PWD}/web/build:/app/build frontend_for_build sh -c "npm run build && chmod -R 777 build"
 
-      - name: Check for Changes
-        run: |
-          git diff --exit-code || echo "Changes detected"
-
       - name: Commit and Push Changes
-        if: success() && steps.check-for-changes.outputs.changes == 'true'
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
