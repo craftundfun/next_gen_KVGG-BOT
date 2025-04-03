@@ -36,10 +36,13 @@ def createApp():
         Flask-JWT-Extended will call this function
         when the user tries to access a protected route without providing a JWT.
         """
-        logger.warning(f"No JWT in request. IP: {request.remote_addr}, User-Agent: {request.user_agent}")
-        logger.warning(f"{request.headers}")
+        # Hol die IP aus dem X-Forwarded-For Header oder fallback auf request.remote_addr
+        forwarded_for = request.headers.get("X-Forwarded-For", "")
+        ip = forwarded_for.split(",")[0].strip() if forwarded_for else request.remote_addr
 
-        if not request.remote_addr:
+        logger.warning(f"No JWT in request. IP: {ip}, User-Agent: {request.user_agent}")
+
+        if not ip:
             logger.warning("No IP address found in request")
 
             if not request.cookies.get("access_token_cookie", None):
@@ -49,21 +52,19 @@ def createApp():
 
         try:
             # https://www.geojs.io/docs/v1/endpoints/country/
-            url = f'https://get.geojs.io/v1/ip/country/{request.remote_addr}.json'
+            url = f'https://get.geojs.io/v1/ip/country/{ip}.json'
             response = requests.get(url)
             countryName = None
             countryCode = None
 
-            # not working because we are using a proxy :(
             if response.status_code == 200:
                 countryName = response.json().get('name', None)
                 countryCode = response.json().get('country', None)
             else:
-                logger.warning(f"Failed to get country code for IP {request.remote_addr}, "
-                               f"status code: {response.status_code}")
+                logger.warning(f"Failed to get country code for IP {ip}, status code: {response.status_code}")
 
             ipAddress = IpAddress(
-                ip_address=request.remote_addr,
+                ip_address=ip,
                 countryCode=countryCode,
                 countryName=countryName,
                 access_time=datetime.now(),
@@ -74,8 +75,7 @@ def createApp():
             database.session.add(ipAddress)
             database.session.commit()
         except Exception as error:
-            logger.error(f"Error while inserting IP address into database", exc_info=error)
-
+            logger.error("Error while inserting IP address into database", exc_info=error)
             database.session.rollback()
 
         if not request.cookies.get("access_token_cookie", None):
