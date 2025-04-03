@@ -37,7 +37,7 @@ def createApp():
         when the user tries to access a protected route without providing a JWT.
         """
         logger.warning(f"No JWT in request. IP: {request.remote_addr}, User-Agent: {request.user_agent}")
-        logger.warning(f"{request.headers.get("X-Forwarded-For", "Nö")}, {request.headers.get("X-Real-IP", "Nö")}")
+        logger.warning(f"{request.headers}")
 
         if not request.remote_addr:
             logger.warning("No IP address found in request")
