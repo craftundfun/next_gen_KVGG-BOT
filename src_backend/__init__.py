@@ -6,14 +6,13 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, create_access_token, get_jwt_identity
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_session import Session
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from database.Domain.models.IpAddress import IpAddress
 from src_backend.Config import Config
 from src_backend.Extensions import database
 from src_backend.Logging.Logger import Logger
 from src_backend.Routes import registerRoutes
-from werkzeug.middleware.proxy_fix import ProxyFix
-
 
 pymysql.install_as_MySQLdb()
 logger = Logger(__name__)
@@ -37,6 +36,7 @@ def createApp():
         when the user tries to access a protected route without providing a JWT.
         """
         logger.warning(f"No JWT in request. IP: {request.remote_addr}, User-Agent: {request.user_agent}")
+        logger.warning(f"{request.headers.get("X-Forwarded-For", "Nö")}, {request.headers.get("X-Real-IP", "Nö")}")
 
         if not request.remote_addr:
             logger.warning("No IP address found in request")
