@@ -1,12 +1,11 @@
 import * as React from "react";
-import {AppBar, Toolbar, Typography, Box} from "@mui/material";
+import {useState} from "react";
+import {AppBar, Box, Toolbar, Typography} from "@mui/material";
 import {useDiscordUser} from "@context/DiscordUserContext";
 import {useWebsiteUser} from "@context/WebsiteUserContext";
 import AvatarNameCombination from "@modules/AvatarSiteBlueprint";
-import {useGuild} from "@context/GuildContext";
 import {useGuildDiscordUserMapping} from "@context/GuildDiscordUserMappingContext";
 import Drawer from '@mui/material/Drawer';
-import {useState} from "react";
 import List from '@mui/material/List';
 import Divider from '@mui/material/Divider';
 import ListItem from '@mui/material/ListItem';
@@ -28,7 +27,6 @@ interface BaseLayoutProps {
 const BaseLayout: React.FC<BaseLayoutProps> = ({children}) => {
 	const {discordUser} = useDiscordUser();
 	const {websiteUser} = useWebsiteUser();
-	const {guild} = useGuild();
 	const {guildDiscordUserMapping} = useGuildDiscordUserMapping();
 	const navigate = useNavigate();
 
@@ -100,7 +98,6 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({children}) => {
 						}}>
 							{DrawerList}
 						</Drawer>
-
 						<Typography variant="h5" sx={{
 							color: "white",
 							position: "absolute",
@@ -109,7 +106,6 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({children}) => {
 						}}>
 							KVGG
 						</Typography>
-
 						<AvatarNameCombination
 							discordUser={discordUser}
 							websiteUser={websiteUser}
@@ -117,7 +113,6 @@ const BaseLayout: React.FC<BaseLayoutProps> = ({children}) => {
 						/>
 					</Toolbar>
 				</AppBar>
-
 				<Box sx={{flexGrow: 1, overflow: "auto", padding: 2}}>
 					{children}
 				</Box>

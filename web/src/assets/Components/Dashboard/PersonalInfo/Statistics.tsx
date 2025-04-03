@@ -6,6 +6,7 @@ import React from "react";
 import {useGuild} from "@context/GuildContext";
 import {Button, Card, CircularProgress, Typography, Menu, MenuItem} from "@mui/material";
 import {MoreVert as MoreVertIcon} from "@mui/icons-material";
+import {customFetch} from "@modules/CustomFetch";
 
 function Statistics() {
 	const navigate = useNavigate();
@@ -34,7 +35,7 @@ function Statistics() {
 			`${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`
 		);
 
-		fetch(`/api/statistic/${guild.guild_id}/${discordUser.discord_id}/${formattedDate}`, {
+		customFetch(`/api/statistic/${guild.guild_id}/${discordUser.discord_id}/${formattedDate}`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
@@ -63,7 +64,7 @@ function Statistics() {
 
 		setLoadingDates(true);
 
-		fetch(`/api/statistic/${guild.guild_id}/${discordUser.discord_id}/dates`, {
+		customFetch(`/api/statistic/${guild.guild_id}/${discordUser.discord_id}/dates`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
