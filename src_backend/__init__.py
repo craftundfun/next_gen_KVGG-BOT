@@ -12,6 +12,8 @@ from src_backend.Config import Config
 from src_backend.Extensions import database
 from src_backend.Logging.Logger import Logger
 from src_backend.Routes import registerRoutes
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 
 pymysql.install_as_MySQLdb()
 logger = Logger(__name__)
@@ -20,6 +22,8 @@ logger = Logger(__name__)
 def createApp():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2, x_proto=1, x_host=1, x_prefix=1)
 
     # Initialisiere die Datenbank und JWT
     database.init_app(app)
