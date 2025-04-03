@@ -32,7 +32,6 @@ function StatisticGraph() {
 			}
 		).then(async (response) => {
 			if (!response.ok) {
-				navigate("/error");
 				return;
 			}
 

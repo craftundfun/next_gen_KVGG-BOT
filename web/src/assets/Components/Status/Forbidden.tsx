@@ -1,11 +1,17 @@
 import React from "react";
+import BaseLayout from "@modules/SiteBlueprint";
+import {Typography} from "@mui/material";
 
 function Forbidden() {
 	return (
-		<div>
-			<h1>403 Forbidden</h1>
-			<p>You cant login here! You aren’t or weren’t on a server with the bot!</p>
-		</div>
+		<BaseLayout>
+			<div>
+				<Typography variant="h4" color="error">Forbidden</Typography>
+				<Typography variant="body1" color="white">
+					You cant login here! You aren’t or weren’t on a server with the bot!
+				</Typography>
+			</div>
+		</BaseLayout>
 	);
 }
 

@@ -12,53 +12,59 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
+import {theme} from '@modules/Theme';
+import {ThemeProvider} from '@mui/material/styles';
+import {CssBaseline} from '@mui/material';
 
 
 function App() {
 	return (
-		<Router>
-			<WebsiteUserProvider>
-				<DiscordUserProvider>
-					<GuildProvider>
-						<GuildDiscordUserMappingProvider>
-							<Routes>
-								(// login page)
-								<Route
-									path="/"
-									element={
-										<LoginScreen/>
-									}
-								/>
-								<Route
-									path="/dashboard"
-									element={
-										<Dashboard/>
-									}>
-								</Route>
-								<Route
-									path="*"
-									element={
-										<div>Page Not Found</div>
-									}
-								/>
-								<Route
-									path="/forbidden"
-									element={
-										<Forbidden/>
-									}
-								/>
-								<Route
-									path="/error"
-									element={
-										<Error/>
-									}
-								/>
-							</Routes>
-						</GuildDiscordUserMappingProvider>
-					</GuildProvider>
-				</DiscordUserProvider>
-			</WebsiteUserProvider>
-		</Router>
+		<ThemeProvider theme={theme}>
+			<CssBaseline/>
+			<Router>
+				<WebsiteUserProvider>
+					<DiscordUserProvider>
+						<GuildProvider>
+							<GuildDiscordUserMappingProvider>
+								<Routes>
+									(// login page)
+									<Route
+										path="/"
+										element={
+											<LoginScreen/>
+										}
+									/>
+									<Route
+										path="/dashboard"
+										element={
+											<Dashboard/>
+										}>
+									</Route>
+									<Route
+										path="*"
+										element={
+											<div>Page Not Found</div>
+										}
+									/>
+									<Route
+										path="/forbidden"
+										element={
+											<Forbidden/>
+										}
+									/>
+									<Route
+										path="/error"
+										element={
+											<Error/>
+										}
+									/>
+								</Routes>
+							</GuildDiscordUserMappingProvider>
+						</GuildProvider>
+					</DiscordUserProvider>
+				</WebsiteUserProvider>
+			</Router>
+		</ThemeProvider>
 	);
 }
 

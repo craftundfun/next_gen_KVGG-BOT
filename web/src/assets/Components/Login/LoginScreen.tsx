@@ -35,7 +35,8 @@ function LoginScreen() {
 	}, [navigate]);
 
 	return (
-		<div className="flex flex-col justify-between h-screen bg-gradient-to-b from-gray-900 to-gray-800 overflow-hidden" >
+		<div
+			className="flex flex-col justify-between h-screen bg-gradient-to-b from-gray-900 to-gray-800 overflow-hidden">
 			<div className="flex items-center justify-center h-full p-4">
 				<Card
 					className="flex flex-col items-center justify-center w-full max-w-md p-6 shadow-xl overflow-hidden"
@@ -50,20 +51,20 @@ function LoginScreen() {
 						className="flex flex-col items-center space-y-2"
 						sx={{
 							display: "flex",
-							flexDirection: "column",  // Stack avatar and text vertically
-							alignItems: "center",     // Center content horizontally
-							justifyContent: "center", // Center content vertically if the header has extra space
-							textAlign: "center",      // Ensure the text is centered
+							flexDirection: "column",
+							alignItems: "center",
+							justifyContent: "center",
+							textAlign: "center",
 						}}
 						avatar={
 							<Avatar
 								alt="Discord"
 								src="/KVGG/KVGG Logo Icon.png"
-								sx={{ width: 64, height: 64, align: "center", marginLeft: 2}}
+								sx={{width: 64, height: 64, align: "center", marginLeft: 2}}
 							/>
 						}
 						title={
-							<Typography variant="h5" color="white" sx={{ fontWeight: 600}}>
+							<Typography variant="h5" color="white" sx={{fontWeight: 600}}>
 								KVGG
 							</Typography>
 						}

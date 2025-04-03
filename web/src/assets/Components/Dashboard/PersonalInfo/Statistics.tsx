@@ -1,16 +1,16 @@
-import { useNavigate } from "react-router-dom";
-import { useDiscordUser } from "@context/DiscordUserContext";
-import { useEffect, useState } from "react";
-import { Statistic } from "@customTypes/Statistic";
+import {useNavigate} from "react-router-dom";
+import {useDiscordUser} from "@context/DiscordUserContext";
+import {useEffect, useState} from "react";
+import {Statistic} from "@customTypes/Statistic";
 import React from "react";
-import { useGuild } from "@context/GuildContext";
-import { Button, Card, CircularProgress, Typography, Menu, MenuItem } from "@mui/material";
-import { MoreVert as MoreVertIcon } from "@mui/icons-material";
+import {useGuild} from "@context/GuildContext";
+import {Button, Card, CircularProgress, Typography, Menu, MenuItem} from "@mui/material";
+import {MoreVert as MoreVertIcon} from "@mui/icons-material";
 
 function Statistics() {
 	const navigate = useNavigate();
-	const { discordUser } = useDiscordUser();
-	const { guild } = useGuild();
+	const {discordUser} = useDiscordUser();
+	const {guild} = useGuild();
 
 	const [statistics, setStatistics] = useState<Statistic | null>(null);
 	const [dates, setDates] = useState<Date[] | null>(null);
@@ -42,13 +42,13 @@ function Statistics() {
 			credentials: "include",
 		}).then(async response => {
 			if (!response.ok) {
-				navigate("/error");
 				return;
 			}
 
 			if (response.status === 204) {
 				setStatistics(null);
 				setLoadingStatistics(false);
+
 				return;
 			}
 
@@ -71,33 +71,18 @@ function Statistics() {
 			credentials: "include",
 		}).then(async response => {
 			if (!response.ok) {
-				navigate("/error");
 				return;
 			}
 
 			if (response.status === 204) {
 				setDates(null);
 				setLoadingDates(false);
+
 				return;
 			}
 
 			let datesFromApi = await response.json();
-
-			const today = new Date();
 			datesFromApi = datesFromApi.map((date: string) => new Date(date));
-			const minDate = new Date(Math.min(...datesFromApi.map((date: Date) => date.getTime())));
-			const datesSet = new Set(datesFromApi.map((date: { getTime: () => never; }) => date.getTime()));
-			const current = new Date(minDate);
-
-			// Insert all missing dates between the first date and today
-			while (current <= today) {
-				if (!datesSet.has(current.getTime())) {
-					datesFromApi.push(new Date(current));
-					datesSet.add(current.getTime());
-				}
-
-				current.setDate(current.getDate() + 1);
-			}
 
 			setDates(datesFromApi.sort((a: Date, b: Date) => b.getTime() - a.getTime()));
 			setLoadingDates(false);
@@ -118,7 +103,8 @@ function Statistics() {
 	};
 
 	return (
-		<div className="flex flex-col items-center p-6 text-white bg-gray-900 rounded-lg shadow-md w-full max-w-4xl mx-auto">
+		<div
+			className="flex flex-col items-center p-6 text-white bg-gray-900 rounded-lg shadow-md w-full max-w-4xl mx-auto">
 			<div className="flex items-center space-x-6">
 				<Typography variant="h5" className="font-bold">
 					Statistiken (nur Datendisplay)
@@ -127,7 +113,7 @@ function Statistics() {
 					variant="contained"
 					color="primary"
 					onClick={handleMenuClick}
-					endIcon={<MoreVertIcon />}
+					endIcon={<MoreVertIcon/>}
 				>
 					Aktuelles Datum: {formatter.format(currentDate)}
 				</Button>
@@ -137,7 +123,7 @@ function Statistics() {
 					onClose={handleMenuClose}
 				>
 					{loadingDates ? (
-						<CircularProgress size={24} />
+						<CircularProgress size={24}/>
 					) : dates ? (
 						dates.map((date, index) => (
 							<MenuItem key={index} onClick={() => handleDateChange(date)}>
@@ -167,7 +153,7 @@ function Statistics() {
 			</Typography>
 			<Card className="bg-gray-800 p-4 rounded-lg shadow w-full mt-4">
 				{loadingStatistics ? (
-					<CircularProgress size={24} />
+					<CircularProgress size={24}/>
 				) : statistics ? (
 					<>
 						<Typography variant="body2">Date: {statistics.date}</Typography>
