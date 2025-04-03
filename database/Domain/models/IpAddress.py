@@ -25,5 +25,5 @@ class IpAddress(Base):
         self.access_time = access_time
         self.authorized = authorized
         self.path = path
-        self.countryCode = countryCode
-        self.countryName = countryName
+        self.country_code = countryCode
+        self.country_name = countryName
