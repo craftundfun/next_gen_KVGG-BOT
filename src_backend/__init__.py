@@ -1,15 +1,16 @@
+import ipaddress
 from datetime import datetime, timedelta
 
 import pymysql
 import requests
-from flask import Flask, jsonify, request, redirect
+from flask import Flask, jsonify, request, redirect, Response
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, create_access_token, get_jwt_identity
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_session import Session
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from database.Domain.models.IpAddress import IpAddress
+from database.Domain.models.BackendAccess import BackendAccess
 from src_backend.Config import Config
 from src_backend.Extensions import database
 from src_backend.Logging.Logger import Logger
@@ -23,6 +24,7 @@ def createApp():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # to allow Flask to see the real IP behind the two proxies
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2, x_proto=1, x_host=1, x_prefix=1)
 
     # Initialisiere die Datenbank und JWT
@@ -36,47 +38,7 @@ def createApp():
         Flask-JWT-Extended will call this function
         when the user tries to access a protected route without providing a JWT.
         """
-        # Hol die IP aus dem X-Forwarded-For Header oder fallback auf request.remote_addr
-        forwarded_for = request.headers.get("X-Forwarded-For", "")
-        ip = forwarded_for.split(",")[0].strip() if forwarded_for else request.remote_addr
-
-        logger.warning(f"No JWT in request. IP: {ip}, User-Agent: {request.user_agent}")
-
-        if not ip:
-            logger.warning("No IP address found in request")
-
-            if not request.cookies.get("access_token_cookie", None):
-                return jsonify(message="No (accepted) access cookie provided!", error=errorFromFlask), 401
-            else:
-                return jsonify(message="No refresh token cookie provided!", error=errorFromFlask), 401
-
-        try:
-            # https://www.geojs.io/docs/v1/endpoints/country/
-            url = f'https://get.geojs.io/v1/ip/country/{ip}.json'
-            response = requests.get(url)
-            countryName = None
-            countryCode = None
-
-            if response.status_code == 200:
-                countryName = response.json().get('name', None)
-                countryCode = response.json().get('country', None)
-            else:
-                logger.warning(f"Failed to get country code for IP {ip}")
-
-            ipAddress = IpAddress(
-                ip_address=ip,
-                country_code=countryCode,
-                country_name=countryName,
-                access_time=datetime.now(),
-                authorized=False,
-                path=request.path,
-            )
-
-            database.session.add(ipAddress)
-            database.session.commit()
-        except Exception as error:
-            logger.error("Error while inserting IP address into database", exc_info=error)
-            database.session.rollback()
+        logger.warning("No IP address found in request")
 
         if not request.cookies.get("access_token_cookie", None):
             return jsonify(message="No (accepted) access cookie provided!", error=errorFromFlask), 401
@@ -121,25 +83,71 @@ def createApp():
             return response
 
     @app.after_request
-    def afterSuccessfulRequest(response):
+    def afterRequest(response: Response):
         # add CORS headers to the response
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS, PUT, DELETE"
 
-        try:
-            ipAddress = IpAddress(
-                ip_address=request.remote_addr,
-                access_time=datetime.now(),
-                authorized=True,
-                path=request.path,
-            )
+        # we dont want to log the health check
+        if request.path == "/api/health":
+            return response
 
-            database.session.add(ipAddress)
+        forwarded_for = request.headers.get("X-Forwarded-For", "")
+        ip: str | None = forwarded_for.split(",")[0].strip() if forwarded_for else request.remote_addr
+
+        try:
+            ip = str(ipaddress.ip_address(ip))
+        except ValueError:
+            logger.warning(f"Invalid IP address format: {ip}")
+
+            ip = None
+
+        if not ip:
+            logger.warning("Invalid IP address format")
+
+            return response
+
+        countryName = None
+        countryCode = None
+
+        # for unauthorized requests, we want their geolocation
+        if response.status_code == 401:
+            try:
+                # https://www.geojs.io/docs/v1/endpoints/country/
+                url = f'https://get.geojs.io/v1/ip/country/{ip}.json'
+                apiResponse = requests.get(url)
+
+                if apiResponse.status_code == 200:
+                    countryName = apiResponse.json().get('name', None)
+                    countryCode = apiResponse.json().get('country', None)
+                else:
+                    logger.warning(f"Failed to get country code for IP {ip}")
+            except Exception as error:
+                logger.error("Error while getting country code", exc_info=error)
+
+        # some responses have no data
+        try:
+            data = response.get_data(as_text=True)
+        except AttributeError:
+            data = None
+
+        backendAccess = BackendAccess(
+            ip_address=ip,
+            country_code=countryCode,
+            country_name=countryName,
+            access_time=datetime.now(),
+            authorized=response.status_code != 401,
+            path=request.path,
+            response_code=response.status_code,
+            response=data,
+        )
+
+        try:
+            database.session.add(backendAccess)
             database.session.commit()
         except Exception as error:
-            logger.error(f"Error while inserting IP address into database", exc_info=error)
-
+            logger.error("Error while saving backend access", exc_info=error)
             database.session.rollback()
 
         return response
