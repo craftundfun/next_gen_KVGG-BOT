@@ -142,7 +142,7 @@ def createApp():
             path=request.path,
             response_code=response.status_code,
             response=data,
-            query_header=str(request.args.to_dict()) if len(request.args.to_dict().keys()) > 0 else null,
+            query_header=str(request.args.to_dict()) if len(request.args.to_dict().keys()) > 0 else null(),
         )
 
         try:
