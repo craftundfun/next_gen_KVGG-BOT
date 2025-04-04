@@ -13,6 +13,7 @@ class BackendAccess(Base):
     path = Column(TEXT, nullable=False)
     response_code = Column(Integer, nullable=False)
     response = Column(TEXT, nullable=True)
+    query_header = Column(TEXT, nullable=True)
 
     def __init__(self,
                  ip_address: str,
@@ -22,7 +23,8 @@ class BackendAccess(Base):
                  response_code: int,
                  country_code: str | Null = null(),
                  country_name: str | Null = null(),
-                 response: str | Null = null(), ):
+                 response: str | Null = null(),
+                 query_header: str | Null = null()):
         super().__init__()
 
         self.ip_address = ip_address
@@ -33,3 +35,4 @@ class BackendAccess(Base):
         self.country_name = country_name
         self.response_code = response_code
         self.response = response
+        self.query_header = query_header

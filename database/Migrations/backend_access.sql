@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS backend_access (
 	path          TEXT         NOT NULL,
 	response_code INT          NOT NULL,
 	response      TEXT         NULL     DEFAULT NULL,
+	query_header  TEXT         NULL     DEFAULT NULL,
 
 	PRIMARY KEY (id)
 );

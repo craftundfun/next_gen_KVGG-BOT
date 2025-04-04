@@ -8,6 +8,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, create_access_token, get_jwt_identity
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_session import Session
+from sqlalchemy import null
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from database.Domain.models.BackendAccess import BackendAccess
@@ -141,6 +142,7 @@ def createApp():
             path=request.path,
             response_code=response.status_code,
             response=data,
+            query_header=str(request.args),
         )
 
         try:
