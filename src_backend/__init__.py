@@ -119,7 +119,7 @@ def createApp():
                 url = f'https://get.geojs.io/v1/ip/country/{ip}.json'
                 apiResponse = requests.get(url)
 
-                if response.status_code == 200:
+                if apiResponse.status_code == 200:
                     countryName = apiResponse.json().get('name', None)
                     countryCode = apiResponse.json().get('country', None)
                 else:
