@@ -47,4 +47,3 @@ jobs:
                     ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
                       cd ${{ secrets.DEPLOY_PATH }}
                       ./deploy.sh
-                    EOF                  
