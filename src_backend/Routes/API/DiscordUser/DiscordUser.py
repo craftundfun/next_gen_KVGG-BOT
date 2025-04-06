@@ -82,13 +82,21 @@ def getAllDiscordUsersForGuild(guild_id):
 
         return jsonify(message="Something went wrong!"), 500
 
-    userDict: dict = {"discordUsers":
-        [
-            user.to_dict() for user in discordUsers
-        ]
-    }
+    selectQuery = (
+        select(func.count())
+        .select_from(DiscordUser)
+        .join(GuildDiscordUserMapping)
+        .where(GuildDiscordUserMapping.guild_id == guildId)
+    )
 
-    return jsonify(userDict), 200
+    try:
+        discordUsersCount: int = database.session.execute(selectQuery).scalars().one()
+    except Exception as error:
+        logger.error(f"Failed to fetch DiscordUser count for guild_id: {guildId}", exc_info=error)
+
+        return jsonify(message="Something went wrong!"), 500
+
+    return jsonify({"count": discordUsersCount, "discordUsers": [user.to_dict() for user in discordUsers]}), 200
 
 
 @discordUserBp.route("/all/<guild_id>/count")

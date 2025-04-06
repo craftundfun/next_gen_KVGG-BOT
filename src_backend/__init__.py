@@ -7,7 +7,6 @@ from flask import Flask, jsonify, request, redirect, Response
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, create_access_token, get_jwt_identity
 from flask_jwt_extended.exceptions import NoAuthorizationError
-from flask_session import Session
 from sqlalchemy import null
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -163,8 +162,6 @@ def createApp():
     }
 
     CORS(app, **cors_options)
-
-    Session(app)
 
     registerRoutes(app)
 
