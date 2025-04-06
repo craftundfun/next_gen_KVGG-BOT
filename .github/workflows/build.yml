@@ -37,6 +37,11 @@ jobs:
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+            -   name: Setup SSH Agent with Private Key
+                uses: webfactory/ssh-agent@v0.9.0
+                with:
+                    ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
             -   name: Deploy to Remote Server via SSH
                 run: |
                     ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
