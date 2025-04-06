@@ -118,6 +118,8 @@ def getDiscordUsersCountForGuild(guild_id):
         .where(GuildDiscordUserMapping.guild_id == guildId)
     )
 
+    print("Test")
+
     try:
         discordUsersCount: int = database.session.execute(selectQuery).scalars().one()
     except Exception as error:
