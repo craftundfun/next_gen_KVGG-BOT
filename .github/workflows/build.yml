@@ -44,6 +44,7 @@ jobs:
 
             -   name: Deploy to Remote Server via SSH
                 run: |
-                    ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+                    ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << EOF
                       cd ${{ secrets.DEPLOY_PATH }}
                       ./deploy.sh
+                    EOF
