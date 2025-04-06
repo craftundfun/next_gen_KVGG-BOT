@@ -1,5 +1,5 @@
 on:
-  pull_request:
+  push:
     branches:
       - 'master'
 
@@ -18,3 +18,21 @@ jobs:
       - name: Run Build Command inside Docker
         run: |
           docker run -v ${PWD}/web/build:/app/build frontend_for_build sh -c "npm run build && chmod -R 777 build"
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "Keine Änderungen nach dem Build. Beende Workflow."
+            exit 0
+          fi
+
+          git add .
+          
+          git commit -m "build. [skip ci]"
+
+          git push origin HEAD:master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
