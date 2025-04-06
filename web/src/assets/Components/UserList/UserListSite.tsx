@@ -23,6 +23,7 @@ export function UserListSite() {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [sortBy, setSortBy] = useState<keyof DiscordUser>("created_at");
 	const [orderBy, setOrderBy] = useState<"asc" | "desc">("desc");
+	const [count, setCount] = useState(0);
 
 	const handlePageChange = (event: unknown, newPage: number) => {
 		setPage(newPage);
@@ -36,7 +37,7 @@ export function UserListSite() {
 	useEffect(() => {
 			if (!guild) return;
 
-			customFetch(`/api/discordUser/all/${guild.guild_id}?orderBy=${orderBy}&sortBy=${sortBy}`, {
+			customFetch(`/api/discordUser/all/${guild.guild_id}?orderBy=${orderBy}&sortBy=${sortBy}&start=${rowsPerPage * page}&count=${rowsPerPage}`, {
 				method: "GET",
 				headers: {
 					"Content-Type": "application/json",
@@ -51,10 +52,15 @@ export function UserListSite() {
 
 				const data = await response.json();
 				setUsers(data.discordUsers);
+				setCount(data.count);
 			})
 		},
-		[guild, orderBy, sortBy]
+		[guild, orderBy, page, rowsPerPage, sortBy]
 	);
+
+	useEffect(() => {
+		console.log("Users:", users);
+	}, [users]);
 
 	const getTableHeaderName = (key: string) => {
 		switch (key) {
@@ -106,7 +112,7 @@ export function UserListSite() {
 											</TableRow>
 										</TableHead>
 										<TableBody sx={{backgroundColor: "secondary.main"}}>
-											{users.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((user) => (
+											{users.map((user) => (
 												<TableRow
 													key={user.discord_id}
 													sx={{'&:last-child td, &:last-child th': {border: 0}}}
@@ -128,7 +134,7 @@ export function UserListSite() {
 								>
 									<TablePagination
 										rowsPerPageOptions={[10, 15, 20, 25, 50, 100]}
-										count={users.length}
+										count={count}
 										rowsPerPage={rowsPerPage}
 										page={page}
 										onPageChange={handlePageChange}
