@@ -13,7 +13,7 @@ class BasicTests(unittest.TestCase):
 
     def test_home(self):
         response = self.client.get('/api/health')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
 
     def tearDown(self):
         pass
