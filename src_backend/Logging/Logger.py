@@ -15,20 +15,22 @@ class Logger(BaseLogger):
         filePath = os.getenv("LOG_FILE_BACKEND", "Logs/Backend/log.txt")
         directory = os.path.dirname(filePath)
 
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        if os.environ["IS_TEST"] == "false":
+            if not os.path.exists(directory):
+                os.makedirs(directory)
 
-        fileHandler = logging.handlers.TimedRotatingFileHandler(filename=filePath,
-                                                                when="midnight",
-                                                                backupCount=int(os.getenv("LOG_BACKUP_COUNT", 5)), )
-        fileHandler.setFormatter(CustomFormatterFile())
-        fileHandler.setLevel(os.getenv("LOG_LEVEL_FILE", "DEBUG"))
+            fileHandler = logging.handlers.TimedRotatingFileHandler(filename=filePath,
+                                                                    when="midnight",
+                                                                    backupCount=int(os.getenv("LOG_BACKUP_COUNT", 5)), )
+            fileHandler.setFormatter(CustomFormatterFile())
+            fileHandler.setLevel(os.getenv("LOG_LEVEL_FILE", "DEBUG"))
+
+            self.addHandler(fileHandler)
 
         consoleHandler = logging.StreamHandler(sys.stdout)
         consoleHandler.setFormatter(CustomFormatterConsole())
         consoleHandler.setLevel(os.getenv("LOG_LEVEL_CONSOLE", "INFO"))
 
-        self.addHandler(fileHandler)
         self.addHandler(consoleHandler)
 
         logLevel = os.getenv("LOG_LEVEL", "DEBUG")
