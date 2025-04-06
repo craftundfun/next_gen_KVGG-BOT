@@ -15,7 +15,12 @@ class Logger(BaseLogger):
         filePath = os.getenv("LOG_FILE_BACKEND", "Logs/Backend/log.txt")
         directory = os.path.dirname(filePath)
 
-        if os.environ["IS_TEST"] == "false":
+        try:
+            testing = os.environ.get("IS_TEST")
+        except KeyError:
+            testing = "false"
+
+        if testing == "false":
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
