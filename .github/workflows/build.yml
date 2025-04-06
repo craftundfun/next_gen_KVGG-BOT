@@ -36,4 +36,3 @@ jobs:
           git push origin HEAD:master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
