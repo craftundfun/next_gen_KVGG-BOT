@@ -58,10 +58,6 @@ export function UserListSite() {
 		[guild, orderBy, page, rowsPerPage, sortBy]
 	);
 
-	useEffect(() => {
-		console.log("Users:", users);
-	}, [users]);
-
 	const getTableHeaderName = (key: string) => {
 		switch (key) {
 			case "discord_id":
