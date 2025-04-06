@@ -22,4 +22,4 @@ jobs:
 
             -   name: Run Tests
                 run: |
-                    IS_TEST=true python -m unittest discover -s tests
+                    IS_TEST=true python -m unittest discover -s src_backend/Tests
