@@ -6,6 +6,5 @@ COPY ../../web .
 COPY ../../.env .
 
 RUN npm install
-RUN npm install -g @craco/craco
 
 CMD ["npm", "start"]
