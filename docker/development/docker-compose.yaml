@@ -1,6 +1,6 @@
 services:
     backend:
-        container_name: backend
+        container_name: kvgg_next_gen_backend
         build:
             context: ../..
             dockerfile: ./docker/development/Dockerfile_Backend
@@ -11,6 +11,8 @@ services:
                     target: /app
         volumes:
             - ../..:/app
+        depends_on:
+             - database
         restart: on-failure
         healthcheck:
             test: [ "CMD", "curl", "-f", "http://localhost:8000/api/health" ]
@@ -18,10 +20,10 @@ services:
             timeout: 10s
             retries: 2
         networks:
-            - caddy_net
+            - next_gen_local_net
 
     frontend:
-        container_name: frontend
+        container_name: kvgg_next_gen_frontend
         build:
             context: ../..
             dockerfile: ./docker/development/Dockerfile_Frontend
@@ -36,13 +38,14 @@ services:
             - ../../web:/app
         depends_on:
             - backend
+            - database
         restart: on-failure
         networks:
-            - caddy_net
+            - next_gen_local_net
 
     caddy:
         image: caddy:2
-        container_name: caddy
+        container_name: kvgg_next_gen_caddy
         restart: always
         ports:
             - "80:80"
@@ -55,20 +58,44 @@ services:
             - backend
             - frontend
         networks:
-            - caddy_net
+           - next_gen_local_net
 
     # bot:
     #     container_name: bot
     #     build:
     #         context: ../..
     #         dockerfile: ./docker/development/Dockerfile_Bot
+    #     depends_on:
+    #         - database
+    #     networks:
+    #         - next_gen_local_net
     #     develop:
     #         watch:
     #             -   action: sync
     #                 path: ./src_bot
     #                 target: /app
 
+    database:
+        container_name: kvgg_next_gen_db
+        image: percona/percona-server:8.0.34-26.1-multi      
+        volumes:
+            - ./config/docker/percona/conf.d/:/etc/my.cnf.d
+            - ./config/docker/percona/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+        environment:
+            MYSQL_ROOT_PASSWORD: kvggnextgen
+        networks:
+            next_gen_local_net:
+                ipv4_address: 192.168.100.100
+                aliases:
+                    - kvgg_next_gen.db.local
+
+
 networks:
-    caddy_net:
-        driver:
-            bridge
+    next_gen_local_net:
+        name: kvgg_next_gen_dev_db_network
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: 192.168.100.0/24
+
