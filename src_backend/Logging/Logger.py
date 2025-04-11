@@ -12,13 +12,15 @@ class Logger(BaseLogger):
     def __init__(self, name: str):
         super().__init__(name)
 
-        filePath = os.getenv("LOG_FILE_BACKEND", "Logs/Backend/log.txt")
+        filePath = os.getenv("LOG_FILE_BACKEND", "Logs/log.txt")
         directory = os.path.dirname(filePath)
 
         try:
             testing = os.environ.get("IS_TEST")
         except KeyError:
             testing = "false"
+
+            print("We are not in testing mode, so we will create the log file.")
 
         if testing == "false":
             if not os.path.exists(directory):
