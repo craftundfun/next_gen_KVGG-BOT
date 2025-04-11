@@ -98,7 +98,7 @@ class StatisticManager(TimeCalculatorListenerInterface):
                     case EventType.DND_START:
                         statusStatistic.dnd_time += time
                     case EventType.OFFLINE_START:
-                        logger.debug("Skipping {eventId} for {member.display_name, member.id}")
+                        logger.debug(f"Skipping {eventId} for {member.display_name, member.id}")
                         
                         return
                     case _:
