@@ -12,6 +12,8 @@ services:
             retries: 2
         networks:
             - caddy_net
+        volumes:
+            - ./Logs/Backend:/app/next_gen_KVGG-BOT/Logs/Backend
 
     caddy:
         image: caddy:2
@@ -32,6 +34,8 @@ services:
         build:
             context: ../..
             dockerfile: ./docker/production/Dockerfile_Bot
+        volumes:
+            - ./Logs/Bot:/app/next_gen_KVGG-BOT/Logs/Bot
 
 networks:
     caddy_net:
