@@ -68,21 +68,24 @@ class TimeCalculator(StatusManagerListenerInterface):
         logger.debug("Status update listener registered")
 
     async def onStatusChange(self, before: Member, after: Member, eventBefore: EventType, eventAfter: EventType):
-        selectQuery = select(History).where(History.discord_id == before.id,
-                                            History.guild_id == before.guild.id,
-                                            History.event_id == eventBefore.value, )
-
         # TODO finish that function
+        pass
 
-        with self.session:
-            try:
-                history = self.session.execute(selectQuery).scalars().one()
-            except Exception as error:
-                logger.error("Error while executing select query", exc_info=error)
-
-                return
-
-            print(history)
+#        selectQuery = select(History).where(History.discord_id == before.id,
+#                                            History.guild_id == before.guild.id,
+#                                            History.event_id == eventBefore.value, )
+#
+#
+#
+#        with self.session:
+#            try:
+#                history = self.session.execute(selectQuery).scalars().one()
+#            except Exception as error:
+#                logger.error("Error while executing select query", exc_info=error)
+#
+#                return
+#
+#            print(history)
 
     # noinspection PyMethodMayBeStatic
     def _timedeltaToMicroseconds(self, delta: timedelta) -> int:
