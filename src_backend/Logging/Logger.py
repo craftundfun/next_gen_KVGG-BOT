@@ -20,7 +20,9 @@ class Logger(BaseLogger):
         except KeyError:
             testing = "false"
 
-            print("We are not in testing mode, so we will create the log file.")
+        # isolate if for future additions
+        if testing is None:
+            testing = "false"
 
         if testing == "false":
             if not os.path.exists(directory):
