@@ -13,7 +13,7 @@ services:
         networks:
             - caddy_net
         volumes:
-            - ./../../Logs/Backend:/app/Logs/:ro
+            - ./../../Logs/Backend:/app/Logs/
 
     caddy:
         image: caddy:2
@@ -35,7 +35,7 @@ services:
             context: ../..
             dockerfile: ./docker/production/Dockerfile_Bot
         volumes:
-            - ./../../Logs/Bot:/app/Logs/:ro
+            - ./../../Logs/Bot:/app/Logs/
 
 networks:
     caddy_net:
