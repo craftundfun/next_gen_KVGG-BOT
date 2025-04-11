@@ -13,7 +13,7 @@ function Dashboard() {
 							<p>Test</p>
 						</div>
 						<div className="overflow-auto">
-							<p>Test1</p>
+							<p>Test2</p>
 						</div>
 						<div className="overflow-auto">
 							<StatisticGraph/>

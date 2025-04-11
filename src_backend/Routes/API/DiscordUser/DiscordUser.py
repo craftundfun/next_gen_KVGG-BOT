@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.exc import NoResultFound
 
 from database.Domain.models import GuildDiscordUserMapping
@@ -44,8 +44,8 @@ def getAllDiscordUsersForGuild(guild_id):
 
     start = int(request.args.get("start", 0))
     count = int(request.args.get("count", 9999999))
-    sortBy = request.args.get("sort", "discord_id")
-    sortOrder = request.args.get("order", "asc")
+    sortBy = request.args.get("sortBy", "discord_id")
+    sortOrder = request.args.get("orderBy", "asc")
 
     match sortBy:
         case "discord_id":
@@ -82,13 +82,50 @@ def getAllDiscordUsersForGuild(guild_id):
 
         return jsonify(message="Something went wrong!"), 500
 
-    userDict: dict = {"discordUsers":
-        [
-            user.to_dict() for user in discordUsers
-        ]
-    }
+    selectQuery = (
+        select(func.count())
+        .select_from(DiscordUser)
+        .join(GuildDiscordUserMapping)
+        .where(GuildDiscordUserMapping.guild_id == guildId)
+    )
 
-    return jsonify(userDict), 200
+    try:
+        discordUsersCount: int = database.session.execute(selectQuery).scalars().one()
+    except Exception as error:
+        logger.error(f"Failed to fetch DiscordUser count for guild_id: {guildId}", exc_info=error)
+
+        return jsonify(message="Something went wrong!"), 500
+
+    return jsonify({"count": discordUsersCount, "discordUsers": [user.to_dict() for user in discordUsers]}), 200
+
+
+@discordUserBp.route("/all/<guild_id>/count")
+@jwt_required()
+@hasUserMinimumRequiredRole(Role.USER)
+def getDiscordUsersCountForGuild(guild_id):
+    """
+    Count all Discord users for a specific guild.
+    """
+    try:
+        guildId = int(guild_id)
+    except ValueError:
+        return jsonify(message="Invalid guild id"), 400
+
+    selectQuery = (
+        select(func.count())
+        .select_from(DiscordUser)
+        .join(GuildDiscordUserMapping)
+        .where(GuildDiscordUserMapping.guild_id == guildId)
+    )
+
+    try:
+        discordUsersCount: int = database.session.execute(selectQuery).scalars().one()
+    except Exception as error:
+        logger.error(f"Failed to fetch DiscordUser count for guild_id: {guildId}", exc_info=error)
+
+        return jsonify(message="Something went wrong!"), 500
+
+    return jsonify({"count": discordUsersCount}), 200
 
 
 @discordUserBp.route('/<discord_id>')

@@ -1,39 +1,51 @@
 on:
-  push:
-    branches:
-      - 'master'
+    push:
+        branches:
+            - 'master'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+    build:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+        steps:
+            -   name: Checkout Repository
+                uses: actions/checkout@v4
 
-      - name: Build Docker Image
-        run: |
-          docker build -t frontend_for_build -f docker/forProdBuild/Dockerfile_Frontend .
+            -   name: Build Docker Image
+                run: |
+                    docker build -t frontend_for_build -f docker/forProdBuild/Dockerfile_Frontend .
 
-      - name: Run Build Command inside Docker
-        run: |
-          docker run -v ${PWD}/web/build:/app/build frontend_for_build sh -c "npm run build && chmod -R 777 build"
+            -   name: Run Build Command inside Docker
+                run: |
+                    docker run -v ${PWD}/web/build:/app/build frontend_for_build sh -c "npm run build && chmod -R 777 build"
 
-      - name: Commit and Push Changes
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            -   name: Commit and Push Changes
+                run: |
+                    git config --global user.name "GitHub Actions"
+                    git config --global user.email "github-actions[bot]@users.noreply.github.com"
+                    
+                    if git diff --quiet && git diff --staged --quiet; then
+                      echo "Keine Änderungen nach dem Build. Beende Workflow."
+                      exit 0
+                    fi
+                    
+                    git add .
+                    
+                    git commit -m "build. [skip ci]"
+                    
+                    git push origin HEAD:master
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-          if git diff --quiet && git diff --staged --quiet; then
-            echo "Keine Änderungen nach dem Build. Beende Workflow."
-            exit 0
-          fi
+            -   name: Setup SSH Agent with Private Key
+                uses: webfactory/ssh-agent@v0.9.0
+                with:
+                    ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-          git add .
-          
-          git commit -m "build. [skip ci]"
-
-          git push origin HEAD:master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+            -   name: Deploy to Remote Server via SSH
+                run: |
+                    ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << EOF
+                      cd ${{ secrets.DEPLOY_PATH }}
+                      ./deploy.sh
+                      exit
+                    EOF
