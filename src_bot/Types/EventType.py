@@ -21,3 +21,27 @@ class EventType(Enum):
     DND_END = 17
     OFFLINE_START = 18
     OFFLINE_END = 19
+
+    @classmethod
+    def getCorrespondingStartEvent(cls, startEvent: "EventType") -> "EventType":
+        match startEvent:
+            case EventType.UNMUTE:
+                return EventType.MUTE
+            case EventType.UNDEAF:
+                return EventType.DEAF
+            case EventType.STREAM_END:
+                return EventType.STREAM_START
+            case EventType.VOICE_LEAVE:
+                return EventType.VOICE_JOIN
+            case EventType.ACTIVITY_END:
+                return EventType.ACTIVITY_START
+            case EventType.ONLINE_END:
+                return EventType.ONLINE_START
+            case EventType.IDLE_END:
+                return EventType.IDLE_START
+            case EventType.DND_END:
+                return EventType.DND_START
+            case EventType.OFFLINE_END:
+                return EventType.OFFLINE_START
+            case _:
+                raise ValueError(f"Unknown event type or this event has no start: {self}")

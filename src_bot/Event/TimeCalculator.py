@@ -10,7 +10,9 @@ from src_bot.Activity.ActivityManager import ActivityManager
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Event.EventHandler import EventHandler
 from src_bot.Helpers.FunctionName import listenerName
+from src_bot.Helpers.InterfaceImplementationCheck import checkInterfaceImplementation
 from src_bot.Interface.StatusManagerListenerInterface import StatusManagerListenerInterface
+from src_bot.Interface.TimeCalculatorListenerInterface import TimeCalculatorListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Member.StatusManager import StatusManager
 from src_bot.Types.ActivityManagerType import ActivityManagerType
@@ -25,6 +27,7 @@ logger = Logger("TimeCalculator")
 class TimeCalculator(StatusManagerListenerInterface):
     memberLeaveListeners = []
     activityStopListeners = []
+    onStatusEndListeners = []
 
     def __init__(self, eventHandler: EventHandler, activityManager: ActivityManager, statusManager: StatusManager):
         self.eventHandler = eventHandler
@@ -47,6 +50,15 @@ class TimeCalculator(StatusManagerListenerInterface):
                 self.memberLeaveListeners.append(listener)
             case TimeCalculatorType.ACTIVITY_STOP:
                 self.activityStopListeners.append(listener)
+            case TimeCalculatorType.STATUS_STOP:
+                if not checkInterfaceImplementation(listener, TimeCalculatorListenerInterface):
+                    logger.error(f"Listener is not correct for TimeCalculatorListenerInterface: "
+                                 f"{listenerName(listener)}")
+
+                    raise ValueError(f"Listener is not correct for TimeCalculatorListenerInterface: "
+                                     f"{listenerName(listener)}")
+
+                self.onStatusEndListeners.append(listener)
             case _:
                 logger.error(f"Unknown time calculator type {type}")
 
@@ -68,24 +80,75 @@ class TimeCalculator(StatusManagerListenerInterface):
         logger.debug("Status update listener registered")
 
     async def onStatusChange(self, before: Member, after: Member, eventBefore: EventType, eventAfter: EventType):
-        # TODO finish that function
-        pass
+        """
+        Called when a member's status changes. This includes online, idle, and dnd.
+        The corresponding time of the ended event is calculated and the listeners are invoked.
 
-#        selectQuery = select(History).where(History.discord_id == before.id,
-#                                            History.guild_id == before.guild.id,
-#                                            History.event_id == eventBefore.value, )
-#
-#
-#
-#        with self.session:
-#            try:
-#                history = self.session.execute(selectQuery).scalars().one()
-#            except Exception as error:
-#                logger.error("Error while executing select query", exc_info=error)
-#
-#                return
-#
-#            print(history)
+        :param before: The member before the status change
+        :param after: The member after the status change
+        :param eventBefore: The event before the status change
+        :param eventAfter: The event after the status change
+        """
+        selectQuery = (
+            select(History)
+            .where(
+                History.discord_id == before.id,
+                History.guild_id == before.guild.id,
+                History.event_id.in_([i for i in range(EventType.ONLINE_START.value, EventType.OFFLINE_END.value + 1)]),
+                # get the start event
+                History.id >= (
+                    select(History.id)
+                    .where(History.discord_id == before.id,
+                           History.guild_id == before.guild.id,
+                           # for example, online_end = 13 -> we look for online start
+                           History.event_id == EventType.getCorrespondingStartEvent(eventBefore).value, )
+                    .order_by(History.time.desc())
+                    .limit(1)
+                    .scalar_subquery()
+                ),
+            )
+            .order_by(History.id.desc())
+        )
+
+        with self.session:
+            try:
+                histories: list[History] = list(self.session.execute(selectQuery).scalars().all())
+            except Exception as error:
+                logger.error("Error while executing select query", exc_info=error)
+
+                return
+
+            # we only want the start and end of the ended status, and the start of the new status because why not
+            if len(histories) != 3:
+                # TODO raise to error and handle the case someone has no history
+                logger.warning(f"Expected 3 histories, but got {len(histories)} for {before.display_name, before.id} "
+                               f"on {before.guild.name, before.guild.id}")
+
+                return
+
+            histories = histories[1:3][::-1]
+            statusSince = histories[0].time
+            time = {}
+
+            # calculate the time everyday
+            while statusSince.date() < histories[1].time.date():
+                midnight = datetime.combine(statusSince + timedelta(days=1), datetime.min.time())
+                delta = midnight - statusSince
+                time[statusSince.date()] = self._timedeltaToMicroseconds(delta)
+                statusSince = midnight
+
+            delta = histories[1].time - statusSince
+            time[histories[1].time.date()] = self._timedeltaToMicroseconds(delta)
+
+            for key in time:
+                for listener in self.onStatusEndListeners:
+                    try:
+                        await listener(after, EventType.getCorrespondingStartEvent(eventBefore), time[key], key)
+                        logger.debug(f"Invoked listener: {listenerName(listener)}")
+                    except Exception as error:
+                        logger.error(f"Error while invoking listener {listenerName(listener)}", exc_info=error)
+
+                        continue
 
     # noinspection PyMethodMayBeStatic
     def _timedeltaToMicroseconds(self, delta: timedelta) -> int:

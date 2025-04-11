@@ -2,12 +2,9 @@ from datetime import date as datetimeDate
 
 from database.Domain.BaseClass import *
 
-if TYPE_CHECKING:
-    from database.Domain.models.DiscordUser import DiscordUser
 
-
-class StatusActivity(Base):
-    __tablename__ = "status_activity"
+class StatusStatistic(Base):
+    __tablename__ = "status_statistic"
 
     discord_id = Column(BigInteger, primary_key=True)
     guild_id = Column(BigInteger, primary_key=True)
@@ -15,8 +12,6 @@ class StatusActivity(Base):
     online_time = Column(BigInteger, default=0, nullable=False)
     idle_time = Column(BigInteger, default=0, nullable=False)
     dnd_time = Column(BigInteger, default=0, nullable=False)
-
-    discordUser: Mapped[DiscordUser] = relationship("DiscordUser", uselist=False, )
 
     def __init__(self,
                  discord_id: int,

@@ -28,7 +28,7 @@ class History(Base):
         if channel_id:
             self.channel_id = channel_id
 
-        if additional_info:
+        if additional_info is not None:
             self.additional_info = additional_info
 
     id = Column(BigInteger, primary_key=True)
