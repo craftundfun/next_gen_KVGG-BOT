@@ -10,21 +10,26 @@ from src_bot.Activity.ActivityManager import ActivityManager
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Event.EventHandler import EventHandler
 from src_bot.Helpers.FunctionName import listenerName
+from src_bot.Interface.StatusManagerListenerInterface import StatusManagerListenerInterface
 from src_bot.Logging.Logger import Logger
+from src_bot.Member.StatusManager import StatusManager
 from src_bot.Types.ActivityManagerType import ActivityManagerType
 from src_bot.Types.EventHandlerType import EventHandlerType
+from src_bot.Types.EventType import EventType
+from src_bot.Types.StatusListenerType import StatusListenerType
 from src_bot.Types.TimeCalculatorType import TimeCalculatorType
 
 logger = Logger("TimeCalculator")
 
 
-class TimeCalculator:
+class TimeCalculator(StatusManagerListenerInterface):
     memberLeaveListeners = []
     activityStopListeners = []
 
-    def __init__(self, eventHandler: EventHandler, activityManager: ActivityManager):
+    def __init__(self, eventHandler: EventHandler, activityManager: ActivityManager, statusManager: StatusManager):
         self.eventHandler = eventHandler
         self.activityManager = activityManager
+        self.statusManager = statusManager
 
         self.session = getSession()
 
@@ -58,6 +63,26 @@ class TimeCalculator:
 
         self.activityManager.addListener(self.onActivityStop, ActivityManagerType.ACTIVITY_STOP)
         logger.debug("Activity stop listener registered")
+
+        self.statusManager.addListener(self.onStatusChange, StatusListenerType.STATUS_UPDATE)
+        logger.debug("Status update listener registered")
+
+    async def onStatusChange(self, before: Member, after: Member, eventBefore: EventType, eventAfter: EventType):
+        selectQuery = select(History).where(History.discord_id == before.id,
+                                            History.guild_id == before.guild.id,
+                                            History.event_id == eventBefore.value, )
+
+        # TODO finish that function
+
+        with self.session:
+            try:
+                history = self.session.execute(selectQuery).scalars().one()
+            except Exception as error:
+                logger.error("Error while executing select query", exc_info=error)
+
+                return
+
+            print(history)
 
     # noinspection PyMethodMayBeStatic
     def _timedeltaToMicroseconds(self, delta: timedelta) -> int:

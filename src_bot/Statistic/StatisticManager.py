@@ -1,10 +1,9 @@
-from datetime import datetime, date
+from asyncio import Lock
+from datetime import date
 
 from discord import Client, Member
 from sqlalchemy import select
 from sqlalchemy.orm.exc import NoResultFound
-
-from asyncio import Lock
 
 from database.Domain.models import Statistic
 from database.Domain.models.ActivityStatistic import ActivityStatistic

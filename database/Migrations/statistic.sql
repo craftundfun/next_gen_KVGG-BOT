@@ -2,6 +2,7 @@ USE kvgg_next_beta;
 
 DROP TABLE IF EXISTS statistic;
 DROP TABLE IF EXISTS activity_statistic;
+DROP TABLE IF EXISTS status_statistic;
 
 CREATE TABLE IF NOT EXISTS statistic (
 	discord_id    BIGINT UNSIGNED NOT NULL,
@@ -44,3 +45,20 @@ CREATE TABLE IF NOT EXISTS activity_statistic (
 )
 	ENGINE = InnoDB
 	CHARSET = UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS status_statistic (
+	discord_id  BIGINT UNSIGNED NOT NULL,
+	guild_id    BIGINT UNSIGNED NOT NULL,
+	date        DATE            NOT NULL,
+
+	# microseconds online due to lack of timedelta in MySQL
+	online_time BIGINT UNSIGNED NOT NULL DEFAULT 0,
+	idle_time   BIGINT UNSIGNED NOT NULL DEFAULT 0,
+	dnd_time    BIGINT UNSIGNED NOT NULL DEFAULT 0,
+
+	PRIMARY KEY (discord_id, guild_id, date)
+)
+
+	ENGINE = InnoDB
+	CHARSET = UTF8MB4;
+
