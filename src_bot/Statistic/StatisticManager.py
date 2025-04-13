@@ -97,6 +97,10 @@ class StatisticManager(TimeCalculatorListenerInterface):
                         statusStatistic.idle_time += time
                     case EventType.DND_START:
                         statusStatistic.dnd_time += time
+                    case EventType.OFFLINE_START:
+                        logger.debug(f"Skipping {eventId} for {member.display_name, member.id}")
+                        
+                        return
                     case _:
                         logger.error(f"Unknown eventId: {eventId} for {member.display_name, member.id}")
 
