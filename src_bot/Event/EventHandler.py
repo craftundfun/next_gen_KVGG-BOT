@@ -11,7 +11,7 @@ from src_bot.Guild.GuildManager import GuildManager
 from src_bot.Helpers.FunctionName import listenerName
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ClientListenerType import ClientListenerType
-from src_bot.Types.EventHandlerType import EventHandlerType
+from src_bot.Types.EventHandlerListenerType import EventHandlerListenerType
 from src_bot.Types.GuildListenerType import GuildListenerType
 
 logger = Logger("EventHandler")
@@ -37,7 +37,7 @@ class EventHandler:
 
         return cls._self
 
-    def addListener(self, type: EventHandlerType, listener: callable):
+    def addListener(self, type: EventHandlerListenerType, listener: callable):
         """
         Add a listener to the event handler.
 
@@ -45,7 +45,7 @@ class EventHandler:
         :param listener: The listener to add.
         """
         match type:
-            case EventHandlerType.MEMBER_LEAVE:
+            case EventHandlerListenerType.MEMBER_LEAVE:
                 self.memberLeaveListeners.append(listener)
             case _:
                 logger.error(f"Unknown event handler type {type}")

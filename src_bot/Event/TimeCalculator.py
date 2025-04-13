@@ -11,20 +11,21 @@ from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Event.EventHandler import EventHandler
 from src_bot.Helpers.FunctionName import listenerName
 from src_bot.Helpers.InterfaceImplementationCheck import checkInterfaceImplementation
+from src_bot.Interface.ActivityManagerListenerInterface import ActivityManagerListenerInterface
 from src_bot.Interface.StatusManagerListenerInterface import StatusManagerListenerInterface
 from src_bot.Interface.TimeCalculatorListenerInterface import TimeCalculatorListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Member.StatusManager import StatusManager
-from src_bot.Types.ActivityManagerType import ActivityManagerType
-from src_bot.Types.EventHandlerType import EventHandlerType
+from src_bot.Types.ActivityManagerListenerType import ActivityManagerListenerType
+from src_bot.Types.EventHandlerListenerType import EventHandlerListenerType
 from src_bot.Types.EventType import EventType
 from src_bot.Types.StatusListenerType import StatusListenerType
-from src_bot.Types.TimeCalculatorType import TimeCalculatorType
+from src_bot.Types.TimeCalculatorListenerType import TimeCalculatorListenerType
 
 logger = Logger("TimeCalculator")
 
 
-class TimeCalculator(StatusManagerListenerInterface):
+class TimeCalculator(StatusManagerListenerInterface, ActivityManagerListenerInterface):
     memberLeaveListeners = []
     activityStopListeners = []
     onStatusEndListeners = []
@@ -38,26 +39,21 @@ class TimeCalculator(StatusManagerListenerInterface):
 
         self.registerListener()
 
-    def addListener(self, type: TimeCalculatorType, listener: callable):
+    def addListener(self, type: TimeCalculatorListenerType, listener: callable):
         """
         Add a listener to the time calculator.
 
         :param type: The type of the listener.
         :param listener: The listener to add.
         """
+        checkInterfaceImplementation(listener, TimeCalculatorListenerInterface)
+
         match type:
-            case TimeCalculatorType.MEMBER_LEAVE:
+            case TimeCalculatorListenerType.MEMBER_LEAVE:
                 self.memberLeaveListeners.append(listener)
-            case TimeCalculatorType.ACTIVITY_STOP:
+            case TimeCalculatorListenerType.ACTIVITY_STOP:
                 self.activityStopListeners.append(listener)
-            case TimeCalculatorType.STATUS_STOP:
-                if not checkInterfaceImplementation(listener, TimeCalculatorListenerInterface):
-                    logger.error(f"Listener is not correct for TimeCalculatorListenerInterface: "
-                                 f"{listenerName(listener)}")
-
-                    raise ValueError(f"Listener is not correct for TimeCalculatorListenerInterface: "
-                                     f"{listenerName(listener)}")
-
+            case TimeCalculatorListenerType.STATUS_STOP:
                 self.onStatusEndListeners.append(listener)
             case _:
                 logger.error(f"Unknown time calculator type {type}")
@@ -70,10 +66,10 @@ class TimeCalculator(StatusManagerListenerInterface):
         """
         Register the listener for the time calculator.
         """
-        self.eventHandler.addListener(EventHandlerType.MEMBER_LEAVE, self.onMemberLeave)
+        self.eventHandler.addListener(EventHandlerListenerType.MEMBER_LEAVE, self.onMemberLeave)
         logger.debug("Member leave listener registered")
 
-        self.activityManager.addListener(self.onActivityStop, ActivityManagerType.ACTIVITY_STOP)
+        self.activityManager.addListener(self.activityStop, ActivityManagerListenerType.ACTIVITY_STOP)
         logger.debug("Activity stop listener registered")
 
         self.statusManager.addListener(self.onStatusChange, StatusListenerType.STATUS_UPDATE)
@@ -157,7 +153,7 @@ class TimeCalculator(StatusManagerListenerInterface):
         """
         return delta.days * 86400 * 1_000_000 + delta.seconds * 1_000_000 + delta.microseconds
 
-    async def onActivityStop(self, member: Member, endtime: datetime, activityId: int):
+    async def activityStop(self, member: Member, endtime: datetime, activityId: int):
         """
         Calculate the time the member did the activity and invoke the listeners.
 
@@ -362,3 +358,9 @@ class TimeCalculator(StatusManagerListenerInterface):
 
                 await listener(member, key, onlineTime, muteTime, deafTime, streamTime, )
                 logger.debug(f"Invoked listener: {listenerName(listener)}")
+
+    async def activityStart(self, member: Member):
+        pass
+
+    async def activitySwitch(self, before: Member, after: Member):
+        pass

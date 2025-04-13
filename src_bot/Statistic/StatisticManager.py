@@ -13,7 +13,7 @@ from src_bot.Event.TimeCalculator import TimeCalculator
 from src_bot.Interface.TimeCalculatorListenerInterface import TimeCalculatorListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.EventType import EventType
-from src_bot.Types.TimeCalculatorType import TimeCalculatorType
+from src_bot.Types.TimeCalculatorListenerType import TimeCalculatorListenerType
 
 logger = Logger("StatisticManager")
 
@@ -42,13 +42,13 @@ class StatisticManager(TimeCalculatorListenerInterface):
         """
         Register the listener for the statistic manager.
         """
-        self.timeCalculator.addListener(TimeCalculatorType.MEMBER_LEAVE, self.increaseStatistic)
+        self.timeCalculator.addListener(TimeCalculatorListenerType.MEMBER_LEAVE, self.increaseStatistic)
         logger.debug("TimeCalculator listener successfully registered")
 
-        self.timeCalculator.addListener(TimeCalculatorType.ACTIVITY_STOP, self.increaseActivityStatistic)
+        self.timeCalculator.addListener(TimeCalculatorListenerType.ACTIVITY_STOP, self.increaseActivityStatistic)
         logger.debug("TimeCalculator listener successfully registered")
 
-        self.timeCalculator.addListener(TimeCalculatorType.STATUS_STOP, self.onStatusEnd)
+        self.timeCalculator.addListener(TimeCalculatorListenerType.STATUS_STOP, self.onStatusEnd)
         logger.debug("TimeCalculator listener successfully registered")
 
     async def onStatusEnd(self, member: Member, eventId: EventType, time: int, date: date):

@@ -1,5 +1,5 @@
 from enum import Enum
 
 
-class EventHandlerType(Enum):
+class EventHandlerListenerType(Enum):
     MEMBER_LEAVE = "member_leave"

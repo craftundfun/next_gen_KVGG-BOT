@@ -10,8 +10,10 @@ from database.Domain.models.ActivityHistory import ActivityHistory
 from database.Domain.models.ActivityMapping import ActivityMapping
 from src_bot.Client.Client import Client
 from src_bot.Database.DatabaseConnection import getSession
+from src_bot.Helpers.InterfaceImplementationCheck import checkInterfaceImplementation
+from src_bot.Interface.ActivityManagerListenerInterface import ActivityManagerListenerInterface
 from src_bot.Logging.Logger import Logger
-from src_bot.Types.ActivityManagerType import ActivityManagerType
+from src_bot.Types.ActivityManagerListenerType import ActivityManagerListenerType
 from src_bot.Types.ClientListenerType import ClientListenerType
 
 logger = Logger("ActivityManager")
@@ -38,19 +40,21 @@ class ActivityManager:
 
         return cls._self
 
-    def addListener(self, listener: callable, listenerType: ActivityManagerType):
+    def addListener(self, listener: callable, listenerType: ActivityManagerListenerType):
         """
         Add a listener to the ActivityManager.
 
         :param listener: The listener to add.
         :param listenerType: The type of the listener.
         """
+        checkInterfaceImplementation(listener, ActivityManagerListenerInterface)
+
         match listenerType:
-            case ActivityManagerType.ACTIVITY_START:
+            case ActivityManagerListenerType.ACTIVITY_START:
                 self.activityStartListener.append(listener)
-            case ActivityManagerType.ACTIVITY_SWITCH:
+            case ActivityManagerListenerType.ACTIVITY_SWITCH:
                 self.activitySwitchListener.append(listener)
-            case ActivityManagerType.ACTIVITY_STOP:
+            case ActivityManagerListenerType.ACTIVITY_STOP:
                 self.activityStopListener.append(listener)
             case _:
                 logger.error(f"Unknown listener type: {listenerType}")

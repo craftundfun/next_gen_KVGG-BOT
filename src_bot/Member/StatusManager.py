@@ -35,15 +35,10 @@ class StatusManager:
         :param listenerType: Type
         :return:
         """
+        checkInterfaceImplementation(listener, StatusManagerListenerInterface)
+
         match listenerType:
             case StatusListenerType.STATUS_UPDATE:
-                if not checkInterfaceImplementation(listener, StatusManagerListenerInterface):
-                    logger.error(f"Listener is not an instance of StatusManagerListenerInterface: "
-                                 f"{listenerName(listener)}")
-
-                    raise ValueError(f"Listener is not an instance of StatusManagerListenerInterface: "
-                                     f"{listenerName(listener)}")
-
                 self.statusChangeListener.append(listener)
             case _:
                 logger.error(f"Unknown listener type: {listenerName(listener)}")
