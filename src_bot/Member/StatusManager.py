@@ -1,11 +1,12 @@
-from discord import Member, Status
+from discord import Member, Status, VoiceState
 
 from database.Domain.models import History
 from src_bot.Client.Client import Client
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Helpers.FunctionName import listenerName
 from src_bot.Helpers.InterfaceImplementationCheck import checkInterfaceImplementation
-from src_bot.Interface.StatusManagerListenerInterface import StatusManagerListenerInterface
+from src_bot.Interface.Client.ClientStatusUpdateListenerInterface import ClientStatusUpdateListenerInterface
+from src_bot.Interface.Member.StatusManagerListenerInterface import StatusManagerListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ClientListenerType import ClientListenerType
 from src_bot.Types.EventType import EventType
@@ -14,7 +15,7 @@ from src_bot.Types.StatusListenerType import StatusListenerType
 logger = Logger("StatusManager")
 
 
-class StatusManager:
+class StatusManager(ClientStatusUpdateListenerInterface):
     statusChangeListener = []
 
     def __init__(self, client: Client):
@@ -25,7 +26,7 @@ class StatusManager:
         self.registerListeners()
 
     def registerListeners(self):
-        self.client.addListener(self.onStatusUpdate, ClientListenerType.STATUS_UPDATE)
+        self.client.addListener(self.onPresenceUpdate, ClientListenerType.STATUS_UPDATE)
 
     def addListener(self, listener: callable, listenerType: StatusListenerType):
         """
@@ -43,7 +44,7 @@ class StatusManager:
             case _:
                 logger.error(f"Unknown listener type: {listenerName(listener)}")
 
-    async def onStatusUpdate(self, before: Member, after: Member):
+    async def onPresenceUpdate(self, before: Member, after: Member):
         """
         Called when a member's status changes. This includes online, idle, dnd, and offline.
         The corresponding event is saved to the database.
@@ -106,3 +107,6 @@ class StatusManager:
             for listener in self.statusChangeListener:
                 await listener(before, after, eventIdBefore, eventIdAfter)
                 logger.debug(f"Notified status change listener: {listenerName(listener)}")
+
+    async def onVoiceStateUpdate(self, member: Member, before: VoiceState, after: VoiceState):
+        pass

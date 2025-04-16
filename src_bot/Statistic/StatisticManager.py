@@ -10,7 +10,7 @@ from database.Domain.models.ActivityStatistic import ActivityStatistic
 from database.Domain.models.StatusStatistic import StatusStatistic
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Event.TimeCalculator import TimeCalculator
-from src_bot.Interface.TimeCalculatorListenerInterface import TimeCalculatorListenerInterface
+from src_bot.Interface.Event.TimeCalculatorListenerInterface import TimeCalculatorListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.EventType import EventType
 from src_bot.Types.TimeCalculatorListenerType import TimeCalculatorListenerType
@@ -78,7 +78,7 @@ class StatisticManager(TimeCalculatorListenerInterface):
                     statusStatistic = StatusStatistic(
                         discord_id=member.id,
                         guild_id=member.guild.id,
-                        date=date.today(),
+                        date=date,
                     )
                 except Exception as error:
                     logger.error(
@@ -99,7 +99,7 @@ class StatisticManager(TimeCalculatorListenerInterface):
                         statusStatistic.dnd_time += time
                     case EventType.OFFLINE_START:
                         logger.debug(f"Skipping {eventId} for {member.display_name, member.id}")
-                        
+
                         return
                     case _:
                         logger.error(f"Unknown eventId: {eventId} for {member.display_name, member.id}")

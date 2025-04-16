@@ -9,6 +9,8 @@ from database.Domain.models.Category import Category
 from src_bot.Client.Client import Client
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Guild.GuildManager import GuildManager
+from src_bot.Interface.Client.ClientChannelListenerInterface import ClientChannelListenerInterface
+from src_bot.Interface.Guild.GuildListenerInterface import GuildListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ClientListenerType import ClientListenerType
 from src_bot.Types.GuildListenerType import GuildListenerType
@@ -16,7 +18,7 @@ from src_bot.Types.GuildListenerType import GuildListenerType
 logger = Logger("CategoryManager")
 
 
-class CategoryManager:
+class CategoryManager(ClientChannelListenerInterface, GuildListenerInterface):
 
     def __init__(self, client: Client, guildManager: GuildManager):
         self.client = client
@@ -25,7 +27,7 @@ class CategoryManager:
 
         self.registerListener()
 
-    async def categoryDelete(self, category: GuildChannel):
+    async def onGuildChannelDelete(self, category: GuildChannel):
         """
         Sets the category as deleted in the database
 
@@ -52,7 +54,7 @@ class CategoryManager:
             else:
                 logger.debug(f"Category {category.name, category.id} deleted from database")
 
-    async def createCategory(self, category: GuildChannel):
+    async def onGuildChannelCreate(self, category: GuildChannel):
         """
         Checks if the given channel is a category and invokes the category creation
 
@@ -171,7 +173,7 @@ class CategoryManager:
 
                 logger.error(f"Failed to delete categories in guild {guild.name, guild.id}", exc_info=error)
 
-    async def onBotStart(self, guild: Guild):
+    async def onGuildStartupCheck(self, guild: Guild):
         """
         Start up check for categories
 
@@ -181,7 +183,7 @@ class CategoryManager:
         await self._findMissingCategories(guild)
         await self._findDeletedCategories(guild)
 
-    async def categoryUpdate(self, before: GuildChannel, after: GuildChannel):
+    async def onGuildChannelUpdate(self, before: GuildChannel, after: GuildChannel):
         """
         Update the category in the database
 
@@ -218,19 +220,22 @@ class CategoryManager:
 
         :return:
         """
-        self.client.addListener(self.createCategory, ClientListenerType.CHANNEL_CREATE)
+        self.client.addListener(self.onGuildChannelCreate, ClientListenerType.CHANNEL_CREATE)
         logger.debug("Category create listener registered")
 
-        self.client.addListener(self.categoryDelete, ClientListenerType.CHANNEL_DELETE)
+        self.client.addListener(self.onGuildChannelDelete, ClientListenerType.CHANNEL_DELETE)
         logger.debug("Category delete listener registered")
 
-        self.client.addListener(self.categoryUpdate, ClientListenerType.CHANNEL_UPDATE)
+        self.client.addListener(self.onGuildChannelUpdate, ClientListenerType.CHANNEL_UPDATE)
         logger.debug("Category update listener registered")
 
-        self.guildManager.addListener(self.onBotStart, GuildListenerType.START_UP)
+        self.guildManager.addListener(self.onGuildStartupCheck, GuildListenerType.START_UP)
         logger.debug("Guild manager listener registered")
 
-        self.guildManager.addListener(self.onBotStart, GuildListenerType.GUILD_JOIN)
+        self.guildManager.addListener(self.onGuildStartupCheck, GuildListenerType.GUILD_JOIN)
         logger.debug("Guild join listener registered")
 
         logger.debug("Registered listeners to client")
+
+    async def onGuildJoin(self, guild: Guild):
+        pass

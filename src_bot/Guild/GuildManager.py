@@ -4,11 +4,14 @@ from discord.guild import Guild as DiscordGuild
 from sqlalchemy import update, null, select
 from sqlalchemy.exc import NoResultFound
 
-from database.Domain import DiscordUser
 from database.Domain.models.Guild import Guild
 from src_bot.Client.Client import Client
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Helpers.FunctionName import listenerName
+from src_bot.Helpers.InterfaceImplementationCheck import checkInterfaceImplementation
+from src_bot.Interface.Client.ClientGuildListenerInterface import ClientGuildListenerInterface
+from src_bot.Interface.Client.ClientReadyListenerInterface import ClientReadyListenerInterface
+from src_bot.Interface.Guild.GuildListenerInterface import GuildListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ClientListenerType import ClientListenerType
 from src_bot.Types.GuildListenerType import GuildListenerType
@@ -16,19 +19,13 @@ from src_bot.Types.GuildListenerType import GuildListenerType
 logger = Logger("GuildManager")
 
 
-class GuildManager:
+class GuildManager(ClientReadyListenerInterface, ClientGuildListenerInterface):
     startUpGuildCheck = []
     guildJoin = []
 
     def __init__(self, client: Client):
         self.client = client
-
         self.session = getSession()
-
-        if not self.session:
-            logger.error("No session found")
-
-            exit(1)
 
         self.registerListeners()
 
@@ -40,6 +37,8 @@ class GuildManager:
         :param type: Type of listener
         :return:
         """
+        checkInterfaceImplementation(listener, GuildListenerInterface)
+
         match type:
             case GuildListenerType.GUILD_JOIN:
                 self.guildJoin.append(listener)
@@ -51,7 +50,7 @@ class GuildManager:
         logger.debug(f"Listener successfully added: {listenerName(listener)}")
 
     # TODO look for changes in existing guilds while bot was offline
-    async def onBotStart(self):
+    async def onBotReady(self):
         """
         Traverse all guilds the bot is in and evaluate if they are in the database
 
@@ -109,7 +108,7 @@ class GuildManager:
         else:
             logger.debug(f"Updated guild name from {nameBefore} to {guild.name}")
 
-    async def updateGuild(self, before: DiscordGuild, after: DiscordGuild):
+    async def onGuildUpdate(self, before: DiscordGuild, after: DiscordGuild):
         """
         Update the guild in the database if changes are detected
 
@@ -120,7 +119,7 @@ class GuildManager:
         # TODO
         print(before, after)
 
-    async def joinedGuild(self, guild: DiscordGuild):
+    async def onGuildJoin(self, guild: DiscordGuild):
         """
         Add the guild to the database or renew it
 
@@ -161,7 +160,7 @@ class GuildManager:
         for listener in self.guildJoin:
             await listener(guild)
 
-    async def leftGuild(self, guild: DiscordGuild):
+    async def onGuildRemove(self, guild: DiscordGuild):
         """
         When the bot leaves a guild, update the guild in the database
 
@@ -188,14 +187,14 @@ class GuildManager:
 
         :return:
         """
-        self.client.addListener(self.onBotStart, ClientListenerType.READY)
+        self.client.addListener(self.onBotReady, ClientListenerType.READY)
         logger.debug("Registered ready listener to Client")
 
-        self.client.addListener(self.updateGuild, ClientListenerType.GUILD_UPDATE)
+        self.client.addListener(self.onGuildUpdate, ClientListenerType.GUILD_UPDATE)
         logger.debug("Registered guild update listener to Client")
 
-        self.client.addListener(self.joinedGuild, ClientListenerType.GUILD_JOIN)
+        self.client.addListener(self.onGuildJoin, ClientListenerType.GUILD_JOIN)
         logger.debug("Registered guild join listener to Client")
 
-        self.client.addListener(self.leftGuild, ClientListenerType.GUILD_REMOVE)
+        self.client.addListener(self.onGuildRemove, ClientListenerType.GUILD_REMOVE)
         logger.debug("Registered guild remove listener to Client")

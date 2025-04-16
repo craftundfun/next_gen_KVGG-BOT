@@ -11,9 +11,10 @@ from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Event.EventHandler import EventHandler
 from src_bot.Helpers.FunctionName import listenerName
 from src_bot.Helpers.InterfaceImplementationCheck import checkInterfaceImplementation
-from src_bot.Interface.ActivityManagerListenerInterface import ActivityManagerListenerInterface
-from src_bot.Interface.StatusManagerListenerInterface import StatusManagerListenerInterface
-from src_bot.Interface.TimeCalculatorListenerInterface import TimeCalculatorListenerInterface
+from src_bot.Interface.Activity.ActivityManagerListenerInterface import ActivityManagerListenerInterface
+from src_bot.Interface.Event.EventHandlerListenerInterface import EventHandlerListenerInterface
+from src_bot.Interface.Member.StatusManagerListenerInterface import StatusManagerListenerInterface
+from src_bot.Interface.Event.TimeCalculatorListenerInterface import TimeCalculatorListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Member.StatusManager import StatusManager
 from src_bot.Types.ActivityManagerListenerType import ActivityManagerListenerType
@@ -25,7 +26,7 @@ from src_bot.Types.TimeCalculatorListenerType import TimeCalculatorListenerType
 logger = Logger("TimeCalculator")
 
 
-class TimeCalculator(StatusManagerListenerInterface, ActivityManagerListenerInterface):
+class TimeCalculator(StatusManagerListenerInterface, ActivityManagerListenerInterface, EventHandlerListenerInterface):
     memberLeaveListeners = []
     activityStopListeners = []
     onStatusEndListeners = []
@@ -178,7 +179,7 @@ class TimeCalculator(StatusManagerListenerInterface, ActivityManagerListenerInte
 
         # the activity happened on the same day
         if startTime.date() == endtime.date():
-            logger.debug(f"f{member.display_name, member.id} played the activity {activityId} on "
+            logger.debug(f"{member.display_name, member.id} played the activity {activityId} on "
                          f"{member.guild.name, member.guild.id} on the same day")
 
             await calculateTimeAndNotifyListeners(endtime - startTime, endtime.date())

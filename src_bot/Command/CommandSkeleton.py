@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
-from inspect import iscoroutinefunction
 
 import discord.object
 from discord.app_commands import CommandTree
 
 from src_bot.Helpers.FunctionName import listenerName
+from src_bot.Helpers.InterfaceImplementationCheck import checkInterfaceImplementation
+from src_bot.Interface.Command.CommandSkeletonListenerInterface import CommandSkeletonListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.CommandListenerType import CommandListenerType
 
@@ -33,13 +34,10 @@ class CommandSkeleton(ABC):
         Add a callable (function /) listener
 
         :param listenerType: Type of listener, for example, before or after
-        :param listener: Callable async function
+        :param listener:  a callable async function
         :return:
         """
-        if not iscoroutinefunction(listener):
-            logger.error(f"Listener is not an asynchronous function: {listener}")
-
-            raise Exception("Listener must be a coroutine function")
+        checkInterfaceImplementation(listener, CommandSkeletonListenerInterface)
 
         match listenerType:
             case CommandListenerType.BEFORE:

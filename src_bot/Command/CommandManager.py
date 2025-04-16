@@ -1,8 +1,10 @@
-from discord.app_commands import CommandTree
 import discord
+from discord.app_commands import CommandTree
+
 from src_bot.Client.Client import Client
 from src_bot.Command.CommandWorker import CommandWorker
 from src_bot.Command.Commands.PingCommand import PingCommand
+from src_bot.Interface.Client.ClientReadyListenerInterface import ClientReadyListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Translator.Translator import Translator
 from src_bot.Types.ClientListenerType import ClientListenerType
@@ -10,7 +12,7 @@ from src_bot.Types.ClientListenerType import ClientListenerType
 logger = Logger("CommandManager")
 
 
-class CommandManager:
+class CommandManager(ClientReadyListenerInterface):
     """
     Manages all commands and syncs them with the discord API
     """

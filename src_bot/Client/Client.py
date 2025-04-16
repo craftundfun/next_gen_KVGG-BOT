@@ -1,4 +1,3 @@
-from inspect import iscoroutinefunction
 from typing import Any
 
 from discord import Client as discordClient, Guild, Member, RawMemberRemoveEvent
@@ -6,6 +5,12 @@ from discord import Intents, VoiceState
 from discord.abc import GuildChannel
 
 from src_bot.Helpers.FunctionName import listenerName
+from src_bot.Helpers.InterfaceImplementationCheck import checkInterfaceImplementation
+from src_bot.Interface.Client.ClientChannelListenerInterface import ClientChannelListenerInterface
+from src_bot.Interface.Client.ClientGuildListenerInterface import ClientGuildListenerInterface
+from src_bot.Interface.Client.ClientMemberListenerInterface import ClientMemberListenerInterface
+from src_bot.Interface.Client.ClientReadyListenerInterface import ClientReadyListenerInterface
+from src_bot.Interface.Client.ClientStatusUpdateListenerInterface import ClientStatusUpdateListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ClientListenerType import ClientListenerType
 
@@ -51,10 +56,27 @@ class Client(discordClient):
         :param listenerType: Type
         :return:
         """
-        if not iscoroutinefunction(listener):
-            logger.error(f"Listener is not an asynchronous function: {listener}")
-
-            raise ValueError(f"Listener is not async")
+        if listenerType == ClientListenerType.READY:
+            checkInterfaceImplementation(listener, ClientReadyListenerInterface)
+        elif listenerType in [ClientListenerType.GUILD_JOIN,
+                              ClientListenerType.GUILD_UPDATE,
+                              ClientListenerType.GUILD_REMOVE, ]:
+            checkInterfaceImplementation(listener, ClientGuildListenerInterface)
+        elif listenerType in [ClientListenerType.CHANNEL_CREATE,
+                              ClientListenerType.CHANNEL_UPDATE,
+                              ClientListenerType.CHANNEL_DELETE, ]:
+            checkInterfaceImplementation(listener, ClientChannelListenerInterface)
+        elif listenerType in [ClientListenerType.MEMBER_JOIN,
+                              ClientListenerType.MEMBER_UPDATE,
+                              ClientListenerType.MEMBER_REMOVE,
+                              ClientListenerType.RAW_MEMBER_REMOVE, ]:
+            checkInterfaceImplementation(listener, ClientMemberListenerInterface)  #
+        elif listenerType in [ClientListenerType.VOICE_UPDATE,
+                              ClientListenerType.ACTIVITY_UPDATE,
+                              ClientListenerType.STATUS_UPDATE, ]:
+            checkInterfaceImplementation(listener, ClientStatusUpdateListenerInterface)
+        else:
+            raise NotImplementedError(f"Listener {listenerName(listener)} has no interface check")
 
         match listenerType:
             case ClientListenerType.READY:

@@ -1,7 +1,7 @@
 from asyncio import Lock
 from datetime import datetime, timezone
 
-from discord import Member, CustomActivity, Streaming, BaseActivity
+from discord import Member, CustomActivity, Streaming, BaseActivity, VoiceState
 from sqlalchemy import select, null, insert
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -11,7 +11,8 @@ from database.Domain.models.ActivityMapping import ActivityMapping
 from src_bot.Client.Client import Client
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Helpers.InterfaceImplementationCheck import checkInterfaceImplementation
-from src_bot.Interface.ActivityManagerListenerInterface import ActivityManagerListenerInterface
+from src_bot.Interface.Activity.ActivityManagerListenerInterface import ActivityManagerListenerInterface
+from src_bot.Interface.Client.ClientStatusUpdateListenerInterface import ClientStatusUpdateListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ActivityManagerListenerType import ActivityManagerListenerType
 from src_bot.Types.ClientListenerType import ClientListenerType
@@ -19,7 +20,7 @@ from src_bot.Types.ClientListenerType import ClientListenerType
 logger = Logger("ActivityManager")
 
 
-class ActivityManager:
+class ActivityManager(ClientStatusUpdateListenerInterface):
     _self = None
 
     activityStartListener = []
@@ -63,7 +64,7 @@ class ActivityManager:
         """
         Register all listeners for the ActivityManager.
         """
-        self.client.addListener(self.onActivityUpdate, ClientListenerType.ACTIVITY_UPDATE)
+        self.client.addListener(self.onPresenceUpdate, ClientListenerType.ACTIVITY_UPDATE)
         logger.debug("Registered ActivityManager listener")
 
     # noinspection PyMethodMayBeStatic
@@ -153,7 +154,7 @@ class ActivityManager:
 
             return None
 
-    async def onActivityUpdate(self, before: Member, after: Member):
+    async def onPresenceUpdate(self, before: Member, after: Member):
         """
         Handle the activity update event.
 
@@ -316,3 +317,6 @@ class ActivityManager:
                     await listener(before, endtime, activityId)
             case _:
                 logger.error(f"Unknown case: {case}")
+
+    async def onVoiceStateUpdate(self, member: Member, before: VoiceState, after: VoiceState):
+        pass
