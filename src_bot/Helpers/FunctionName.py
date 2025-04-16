@@ -5,4 +5,4 @@ def listenerName(function: callable) -> str:
     :param function: Callable function
     :return:
     """
-    return getattr(function, "__name__", "Unknown")
+    return getattr(function, "__name__", "Unknown") + "@" + getattr(function, "__module__", "Unknown")

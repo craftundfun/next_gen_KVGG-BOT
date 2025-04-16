@@ -9,6 +9,28 @@ if TYPE_CHECKING:
 class History(Base):
     __tablename__ = "history"
 
+    def __init__(self,
+                 discord_id: int,
+                 guild_id: int,
+                 event_id: int,
+                 time: datetime | None = None,
+                 channel_id: int | None = None,
+                 additional_info: dict | None = None, ):
+        super().__init__()
+
+        self.discord_id = discord_id
+        self.guild_id = guild_id
+        self.event_id = event_id
+
+        if time:
+            self.time = time
+
+        if channel_id:
+            self.channel_id = channel_id
+
+        if additional_info is not None:
+            self.additional_info = additional_info
+
     id = Column(BigInteger, primary_key=True)
     discord_id = Column(BigInteger, ForeignKey("discord_user.discord_id"), nullable=False)
     guild_id = Column(BigInteger, ForeignKey("guild.guild_id"), nullable=False)

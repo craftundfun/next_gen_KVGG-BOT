@@ -1,6 +1,6 @@
 services:
     backend:
-        container_name: backend
+        container_name: next_gen_backend
         build:
             context: ../..
             dockerfile: ./docker/production/Dockerfile_Backend
@@ -17,7 +17,7 @@ services:
 
     caddy:
         image: caddy:2
-        container_name: caddy
+        container_name: next_gen_caddy
         restart: always
         ports:
             - "127.0.0.1:3000:3000"
@@ -30,7 +30,7 @@ services:
             - caddy_net
 
     bot:
-        container_name: bot
+        container_name: next_gen_bot
         build:
             context: ../..
             dockerfile: ./docker/production/Dockerfile_Bot

@@ -1,22 +1,31 @@
-from datetime import datetime, date
+from asyncio import Lock
+from datetime import date
 
 from discord import Client, Member
 from sqlalchemy import select
 from sqlalchemy.orm.exc import NoResultFound
 
-from asyncio import Lock
-
 from database.Domain.models import Statistic
 from database.Domain.models.ActivityStatistic import ActivityStatistic
+from database.Domain.models.StatusStatistic import StatusStatistic
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Event.TimeCalculator import TimeCalculator
+from src_bot.Interface.Event.TimeCalculatorListenerInterface import TimeCalculatorListenerInterface
 from src_bot.Logging.Logger import Logger
-from src_bot.Types.TimeCalculatorType import TimeCalculatorType
+from src_bot.Types.EventType import EventType
+from src_bot.Types.TimeCalculatorListenerType import TimeCalculatorListenerType
 
 logger = Logger("StatisticManager")
 
 
-class StatisticManager:
+class StatisticManager(TimeCalculatorListenerInterface):
+    _self = None
+
+    def __new__(cls, *args, **kwargs) -> "StatisticManager":
+        if not cls._self:
+            cls._self = super().__new__(cls)
+
+        return cls._self
 
     def __init__(self, client: Client, timeCalculator: TimeCalculator):
         self.client = client
@@ -24,6 +33,7 @@ class StatisticManager:
 
         self.statisticLock = Lock()
         self.activityStatisticLock = Lock()
+        self.statusStatisticLock = Lock()
         self.session = getSession()
 
         self.registerListener()
@@ -32,11 +42,85 @@ class StatisticManager:
         """
         Register the listener for the statistic manager.
         """
-        self.timeCalculator.addListener(TimeCalculatorType.MEMBER_LEAVE, self.increaseStatistic)
+        self.timeCalculator.addListener(TimeCalculatorListenerType.MEMBER_LEAVE, self.increaseStatistic)
         logger.debug("TimeCalculator listener successfully registered")
 
-        self.timeCalculator.addListener(TimeCalculatorType.ACTIVITY_STOP, self.increaseActivityStatistic)
+        self.timeCalculator.addListener(TimeCalculatorListenerType.ACTIVITY_STOP, self.increaseActivityStatistic)
         logger.debug("TimeCalculator listener successfully registered")
+
+        self.timeCalculator.addListener(TimeCalculatorListenerType.STATUS_STOP, self.onStatusEnd)
+        logger.debug("TimeCalculator listener successfully registered")
+
+    async def onStatusEnd(self, member: Member, eventId: EventType, time: int, date: date):
+        """
+        Called when a member's status ends.
+        This includes online, idle, and dnd.
+        The given time will be saved to the database.
+
+        :param member: The member whose status ended
+        :param eventId: The event type of the status change
+        :param time: The time the status was active in microseconds
+        """
+        async with self.statusStatisticLock:
+            with self.session:
+                selectQuery = (
+                    select(StatusStatistic)
+                    .where(
+                        StatusStatistic.discord_id == member.id,
+                        StatusStatistic.guild_id == member.guild.id,
+                        StatusStatistic.date == date.today(),
+                    )
+                )
+
+                try:
+                    statusStatistic = self.session.execute(selectQuery).scalars().one()
+                except NoResultFound:
+                    statusStatistic = StatusStatistic(
+                        discord_id=member.id,
+                        guild_id=member.guild.id,
+                        date=date,
+                    )
+                except Exception as error:
+                    logger.error(
+                        f"Couldn't fetch status statistic for {member.display_name, member.id} "
+                        f"on {member.guild.name, member.guild.id}",
+                        exc_info=error,
+                    )
+
+                    self.session.rollback()
+                    return
+
+                match eventId:
+                    case EventType.ONLINE_START:
+                        statusStatistic.online_time += time
+                    case EventType.IDLE_START:
+                        statusStatistic.idle_time += time
+                    case EventType.DND_START:
+                        statusStatistic.dnd_time += time
+                    case EventType.OFFLINE_START:
+                        logger.debug(f"Skipping {eventId} for {member.display_name, member.id}")
+
+                        return
+                    case _:
+                        logger.error(f"Unknown eventId: {eventId} for {member.display_name, member.id}")
+
+                        return
+
+                try:
+                    self.session.add(statusStatistic)
+                    self.session.commit()
+                except Exception as error:
+                    logger.error(
+                        f"Couldn't commit changes for {member.display_name, member.id} "
+                        f"on {member.guild.name, member.guild.id}",
+                        exc_info=error,
+                    )
+
+                    self.session.rollback()
+
+                    return
+                else:
+                    logger.debug(f"Updated status statistic for {member.display_name, member.id} for {eventId.name}")
 
     async def increaseActivityStatistic(self, member: Member, time: int, activityId: int, date: date):
         """

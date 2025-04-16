@@ -9,6 +9,8 @@ from database.Domain.models.GuildDiscordUserMapping import GuildDiscordUserMappi
 from src_bot.Client.Client import Client
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Guild.GuildManager import GuildManager
+from src_bot.Interface.Client.ClientMemberListenerInterface import ClientMemberListenerInterface
+from src_bot.Interface.Guild.GuildListenerInterface import GuildListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ClientListenerType import ClientListenerType
 from src_bot.Types.GuildListenerType import GuildListenerType
@@ -16,7 +18,7 @@ from src_bot.Types.GuildListenerType import GuildListenerType
 logger = Logger("MemberManager")
 
 
-class MemberManager:
+class MemberManager(ClientMemberListenerInterface, GuildListenerInterface):
 
     def __init__(self, client: Client, guildManager: GuildManager):
         self.client = client
@@ -32,24 +34,24 @@ class MemberManager:
 
         :return:
         """
-        self.client.addListener(self.memberJoinGuild, ClientListenerType.MEMBER_JOIN)
+        self.client.addListener(self.onMemberJoin, ClientListenerType.MEMBER_JOIN)
         logger.debug("Registered member join listener")
 
         """the raw event is called everytime, use that to avoid unnecessary database calls"""
         # self.client.addListener(self.memberLeftGuild, ClientListenerType.MEMBER_REMOVE)
         # logger.debug("Registered member remove listener")
 
-        self.client.addListener(self.memberLeftGuildRaw, ClientListenerType.RAW_MEMBER_REMOVE)
+        self.client.addListener(self.onRawMemberRemove, ClientListenerType.RAW_MEMBER_REMOVE)
         logger.debug("Registered raw member remove listener")
 
-        self.client.addListener(self.memberUpdate, ClientListenerType.MEMBER_UPDATE)
+        self.client.addListener(self.onMemberUpdate, ClientListenerType.MEMBER_UPDATE)
         logger.debug("Registered member update listener")
 
-        self.guildManager.addListener(self.onBotStart, GuildListenerType.START_UP)
+        self.guildManager.addListener(self.onGuildStartupCheck, GuildListenerType.START_UP)
         logger.debug("Registered guild manager start up listener")
 
     # TODO detect members that left the guild while the bot was offline
-    async def onBotStart(self, guild: Guild):
+    async def onGuildStartupCheck(self, guild: Guild):
         """
         Add all (missing) members of a guild to the database when the bot starts
 
@@ -152,7 +154,7 @@ class MemberManager:
 
             logger.debug(f"Added new DiscordUsers and GuildMappings to the database for guild {guild.name, guild.id}")
 
-    async def memberJoinGuild(self, member: Member):
+    async def onMemberJoin(self, member: Member):
         """
         Adds a member to the database when they join a guild
 
@@ -229,7 +231,7 @@ class MemberManager:
             else:
                 logger.debug(f"Member {member.name, member.id} added to guild {member.guild.name, member.guild.id}")
 
-    async def memberLeftGuild(self, member: Member):
+    async def onMemberRemove(self, member: Member):
         """
         Remove a member from the guild
 
@@ -254,7 +256,7 @@ class MemberManager:
             else:
                 logger.debug(f"Member {member.name, member.id} removed from guild {member.guild.name, member.guild.id}")
 
-    async def memberLeftGuildRaw(self, payload: RawMemberRemoveEvent):
+    async def onRawMemberRemove(self, payload: RawMemberRemoveEvent):
         """
         Remove a member from the guild using the user object because the member object is not available
 
@@ -286,7 +288,10 @@ class MemberManager:
             else:
                 logger.debug(f"Member {user.name, user.id} removed from guild {guildId}")
 
-    async def memberUpdate(self, before: Member, after: Member):
+    async def onMemberUpdate(self, before: Member, after: Member):
         # TODO
 
+        pass
+
+    async def onGuildJoin(self, guild: Guild):
         pass

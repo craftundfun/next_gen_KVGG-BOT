@@ -9,15 +9,19 @@ from src_bot.Client.Client import Client
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Guild.GuildManager import GuildManager
 from src_bot.Helpers.FunctionName import listenerName
+from src_bot.Helpers.InterfaceImplementationCheck import checkInterfaceImplementation
+from src_bot.Interface.Client.ClientStatusUpdateListenerInterface import ClientStatusUpdateListenerInterface
+from src_bot.Interface.Event.EventHandlerListenerInterface import EventHandlerListenerInterface
+from src_bot.Interface.Guild.GuildListenerInterface import GuildListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ClientListenerType import ClientListenerType
-from src_bot.Types.EventHandlerType import EventHandlerType
+from src_bot.Types.EventHandlerListenerType import EventHandlerListenerType
 from src_bot.Types.GuildListenerType import GuildListenerType
 
 logger = Logger("EventHandler")
 
 
-class EventHandler:
+class EventHandler(ClientStatusUpdateListenerInterface, GuildListenerInterface):
     _self = None
 
     memberLeaveListeners = []
@@ -37,15 +41,17 @@ class EventHandler:
 
         return cls._self
 
-    def addListener(self, type: EventHandlerType, listener: callable):
+    def addListener(self, type: EventHandlerListenerType, listener: callable):
         """
         Add a listener to the event handler.
 
         :param type: The type of the event handler.
         :param listener: The listener to add.
         """
+        checkInterfaceImplementation(listener, EventHandlerListenerInterface)
+
         match type:
-            case EventHandlerType.MEMBER_LEAVE:
+            case EventHandlerListenerType.MEMBER_LEAVE:
                 self.memberLeaveListeners.append(listener)
             case _:
                 logger.error(f"Unknown event handler type {type}")
@@ -58,16 +64,16 @@ class EventHandler:
         """
         Register the listeners for the event handler.
         """
-        self.client.addListener(self.voiceStateUpdate, ClientListenerType.VOICE_UPDATE)
+        self.client.addListener(self.onVoiceStateUpdate, ClientListenerType.VOICE_UPDATE)
         logger.debug("Registered voice state update listener")
 
-        self.guildManager.addListener(self.onBotStart, GuildListenerType.START_UP)
+        self.guildManager.addListener(self.onGuildStartupCheck, GuildListenerType.START_UP)
         logger.debug("Registered bot start listener")
 
-        self.guildManager.addListener(self.onBotStart, GuildListenerType.GUILD_JOIN)
+        self.guildManager.addListener(self.onGuildStartupCheck, GuildListenerType.GUILD_JOIN)
         logger.debug("Registered guild join listener")
 
-    async def onBotStart(self, guild: Guild):
+    async def onGuildStartupCheck(self, guild: Guild):
         """
         Refresh the history for all members in the guild.
 
@@ -256,7 +262,7 @@ class EventHandler:
                     await listener(member)
                     logger.debug("Notified member leave listeners")
 
-    async def voiceStateUpdate(self, member: Member, before: VoiceState, after: VoiceState):
+    async def onVoiceStateUpdate(self, member: Member, before: VoiceState, after: VoiceState):
         """
         Handles voice state updates for a member and saves the history to the database.
 
@@ -380,3 +386,9 @@ class EventHandler:
             for listener in self.memberLeaveListeners:
                 await listener(member)
                 logger.debug("Notified member leave listeners")
+
+    async def onPresenceUpdate(self, before: Member, after: Member):
+        pass
+
+    async def onGuildJoin(self, guild: Guild):
+        pass

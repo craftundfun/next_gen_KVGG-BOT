@@ -4,13 +4,14 @@ from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from src_bot.Client.Client import Client
+from src_bot.Interface.Client.ClientReadyListenerInterface import ClientReadyListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ClientListenerType import ClientListenerType
 
 logger = Logger("Timer")
 
 
-class Timer:
+class Timer(ClientReadyListenerInterface):
 
     def __init__(self, client: Client):
         self.scheduler = AsyncIOScheduler()
@@ -22,10 +23,10 @@ class Timer:
         """
         Register the listeners for the timer
         """
-        self.client.addListener(self.start, ClientListenerType.READY)
+        self.client.addListener(self.onBotReady, ClientListenerType.READY)
         logger.debug("Registered listeners")
 
-    async def start(self):
+    async def onBotReady(self):
         """
         Start the timer
         """

@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS history (
 	additional_info JSON                           NULL     DEFAULT NULL,
 
 	PRIMARY KEY (id),
-	# at the moment we dont need the history longer than for the time calculation, so we can safely delete it
 	FOREIGN KEY (discord_id) REFERENCES discord_user(discord_id),
 	FOREIGN KEY (guild_id) REFERENCES guild(guild_id),
 	FOREIGN KEY (event_id) REFERENCES event(id),
@@ -35,17 +34,23 @@ CREATE INDEX idc_discord_id ON history(discord_id);
 CREATE INDEX idc_guild_id ON history(guild_id);
 CREATE INDEX idc_discord_guild_id ON history(discord_id, guild_id);
 
-INSERT INTO event (type)
-VALUES ('MUTE'),
-	('UNMUTE'),
-	('DEAF'),
-	('UNDEAF'),
-	('STEAM_START'),
-	('STREAM_END'),
-	#('WEBCAM_START'),
-	#('WEBCAM_END'),
-	('VOICE_JOIN'),
-	('VOICE_LEAVE'),
-	('VOICE_CHANGE'),
-	('ACTIVITY START'),
-	('ACTIVITY END');
+INSERT INTO event (id, type)
+VALUES (1, 'MUTE'),
+	(2, 'UNMUTE'),
+	(3, 'DEAF'),
+	(4, 'UNDEAF'),
+	(5, 'STEAM_START'),
+	(6, 'STREAM_END'),
+	(7, 'VOICE_JOIN'),
+	(8, 'VOICE_LEAVE'),
+	(9, 'VOICE_CHANGE'),
+	(10, 'ACTIVITY_START'),
+	(11, 'ACTIVITY_END'),
+	(12, 'ONLINE_START'),
+	(13, 'ONLINE_END'),
+	(14, 'IDLE_START'),
+	(15, 'IDLE_END'),
+	(16, 'DND_START'),
+	(17, 'DND_END'),
+	(18, 'OFFLINE_START'),
+	(19, 'OFFLINE_END');

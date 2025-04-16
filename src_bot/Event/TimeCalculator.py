@@ -10,38 +10,52 @@ from src_bot.Activity.ActivityManager import ActivityManager
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Event.EventHandler import EventHandler
 from src_bot.Helpers.FunctionName import listenerName
+from src_bot.Helpers.InterfaceImplementationCheck import checkInterfaceImplementation
+from src_bot.Interface.Activity.ActivityManagerListenerInterface import ActivityManagerListenerInterface
+from src_bot.Interface.Event.EventHandlerListenerInterface import EventHandlerListenerInterface
+from src_bot.Interface.Member.StatusManagerListenerInterface import StatusManagerListenerInterface
+from src_bot.Interface.Event.TimeCalculatorListenerInterface import TimeCalculatorListenerInterface
 from src_bot.Logging.Logger import Logger
-from src_bot.Types.ActivityManagerType import ActivityManagerType
-from src_bot.Types.EventHandlerType import EventHandlerType
-from src_bot.Types.TimeCalculatorType import TimeCalculatorType
+from src_bot.Member.StatusManager import StatusManager
+from src_bot.Types.ActivityManagerListenerType import ActivityManagerListenerType
+from src_bot.Types.EventHandlerListenerType import EventHandlerListenerType
+from src_bot.Types.EventType import EventType
+from src_bot.Types.StatusListenerType import StatusListenerType
+from src_bot.Types.TimeCalculatorListenerType import TimeCalculatorListenerType
 
 logger = Logger("TimeCalculator")
 
 
-class TimeCalculator:
+class TimeCalculator(StatusManagerListenerInterface, ActivityManagerListenerInterface, EventHandlerListenerInterface):
     memberLeaveListeners = []
     activityStopListeners = []
+    onStatusEndListeners = []
 
-    def __init__(self, eventHandler: EventHandler, activityManager: ActivityManager):
+    def __init__(self, eventHandler: EventHandler, activityManager: ActivityManager, statusManager: StatusManager):
         self.eventHandler = eventHandler
         self.activityManager = activityManager
+        self.statusManager = statusManager
 
         self.session = getSession()
 
         self.registerListener()
 
-    def addListener(self, type: TimeCalculatorType, listener: callable):
+    def addListener(self, type: TimeCalculatorListenerType, listener: callable):
         """
         Add a listener to the time calculator.
 
         :param type: The type of the listener.
         :param listener: The listener to add.
         """
+        checkInterfaceImplementation(listener, TimeCalculatorListenerInterface)
+
         match type:
-            case TimeCalculatorType.MEMBER_LEAVE:
+            case TimeCalculatorListenerType.MEMBER_LEAVE:
                 self.memberLeaveListeners.append(listener)
-            case TimeCalculatorType.ACTIVITY_STOP:
+            case TimeCalculatorListenerType.ACTIVITY_STOP:
                 self.activityStopListeners.append(listener)
+            case TimeCalculatorListenerType.STATUS_STOP:
+                self.onStatusEndListeners.append(listener)
             case _:
                 logger.error(f"Unknown time calculator type {type}")
 
@@ -53,11 +67,85 @@ class TimeCalculator:
         """
         Register the listener for the time calculator.
         """
-        self.eventHandler.addListener(EventHandlerType.MEMBER_LEAVE, self.onMemberLeave)
+        self.eventHandler.addListener(EventHandlerListenerType.MEMBER_LEAVE, self.onMemberLeave)
         logger.debug("Member leave listener registered")
 
-        self.activityManager.addListener(self.onActivityStop, ActivityManagerType.ACTIVITY_STOP)
+        self.activityManager.addListener(self.activityStop, ActivityManagerListenerType.ACTIVITY_STOP)
         logger.debug("Activity stop listener registered")
+
+        self.statusManager.addListener(self.onStatusChange, StatusListenerType.STATUS_UPDATE)
+        logger.debug("Status update listener registered")
+
+    async def onStatusChange(self, before: Member, after: Member, eventBefore: EventType, eventAfter: EventType):
+        """
+        Called when a member's status changes. This includes online, idle, and dnd.
+        The corresponding time of the ended event is calculated and the listeners are invoked.
+
+        :param before: The member before the status change
+        :param after: The member after the status change
+        :param eventBefore: The event before the status change
+        :param eventAfter: The event after the status change
+        """
+        selectQuery = (
+            select(History)
+            .where(
+                History.discord_id == before.id,
+                History.guild_id == before.guild.id,
+                History.event_id.in_([i for i in range(EventType.ONLINE_START.value, EventType.OFFLINE_END.value + 1)]),
+                # get the start event
+                History.id >= (
+                    select(History.id)
+                    .where(History.discord_id == before.id,
+                           History.guild_id == before.guild.id,
+                           # for example, online_end = 13 -> we look for online start
+                           History.event_id == EventType.getCorrespondingStartEvent(eventBefore).value, )
+                    .order_by(History.time.desc())
+                    .limit(1)
+                    .scalar_subquery()
+                ),
+            )
+            .order_by(History.id.desc())
+        )
+
+        with self.session:
+            try:
+                histories: list[History] = list(self.session.execute(selectQuery).scalars().all())
+            except Exception as error:
+                logger.error("Error while executing select query", exc_info=error)
+
+                return
+
+            # we only want the start and end of the ended status, and the start of the new status because why not
+            if len(histories) != 3:
+                # TODO raise to error and handle the case someone has no history
+                logger.warning(f"Expected 3 histories, but got {len(histories)} for {before.display_name, before.id} "
+                               f"on {before.guild.name, before.guild.id}")
+
+                return
+
+            histories = histories[1:3][::-1]
+            statusSince = histories[0].time
+            time = {}
+
+            # calculate the time everyday
+            while statusSince.date() < histories[1].time.date():
+                midnight = datetime.combine(statusSince + timedelta(days=1), datetime.min.time())
+                delta = midnight - statusSince
+                time[statusSince.date()] = self._timedeltaToMicroseconds(delta)
+                statusSince = midnight
+
+            delta = histories[1].time - statusSince
+            time[histories[1].time.date()] = self._timedeltaToMicroseconds(delta)
+
+            for key in time:
+                for listener in self.onStatusEndListeners:
+                    try:
+                        await listener(after, EventType.getCorrespondingStartEvent(eventBefore), time[key], key)
+                        logger.debug(f"Invoked listener: {listenerName(listener)}")
+                    except Exception as error:
+                        logger.error(f"Error while invoking listener {listenerName(listener)}", exc_info=error)
+
+                        continue
 
     # noinspection PyMethodMayBeStatic
     def _timedeltaToMicroseconds(self, delta: timedelta) -> int:
@@ -66,7 +154,7 @@ class TimeCalculator:
         """
         return delta.days * 86400 * 1_000_000 + delta.seconds * 1_000_000 + delta.microseconds
 
-    async def onActivityStop(self, member: Member, endtime: datetime, activityId: int):
+    async def activityStop(self, member: Member, endtime: datetime, activityId: int):
         """
         Calculate the time the member did the activity and invoke the listeners.
 
@@ -91,7 +179,7 @@ class TimeCalculator:
 
         # the activity happened on the same day
         if startTime.date() == endtime.date():
-            logger.debug(f"f{member.display_name, member.id} played the activity {activityId} on "
+            logger.debug(f"{member.display_name, member.id} played the activity {activityId} on "
                          f"{member.guild.name, member.guild.id} on the same day")
 
             await calculateTimeAndNotifyListeners(endtime - startTime, endtime.date())
@@ -271,3 +359,9 @@ class TimeCalculator:
 
                 await listener(member, key, onlineTime, muteTime, deafTime, streamTime, )
                 logger.debug(f"Invoked listener: {listenerName(listener)}")
+
+    async def activityStart(self, member: Member):
+        pass
+
+    async def activitySwitch(self, before: Member, after: Member):
+        pass

@@ -9,6 +9,8 @@ from database.Domain.models.Channel import Channel
 from src_bot.Client.Client import Client
 from src_bot.Database.DatabaseConnection import getSession
 from src_bot.Guild.GuildManager import GuildManager
+from src_bot.Interface.Client.ClientChannelListenerInterface import ClientChannelListenerInterface
+from src_bot.Interface.Guild.GuildListenerInterface import GuildListenerInterface
 from src_bot.Logging.Logger import Logger
 from src_bot.Types.ClientListenerType import ClientListenerType
 from src_bot.Types.GuildListenerType import GuildListenerType
@@ -16,7 +18,7 @@ from src_bot.Types.GuildListenerType import GuildListenerType
 logger = Logger("ChannelManager")
 
 
-class ChannelManager:
+class ChannelManager(ClientChannelListenerInterface, GuildListenerInterface):
 
     def __init__(self, client: Client, guildManager: GuildManager):
         self.client = client
@@ -25,7 +27,7 @@ class ChannelManager:
 
         self.registerListener()
 
-    async def channelDelete(self, channel: GuildChannel):
+    async def onGuildChannelDelete(self, channel: GuildChannel):
         """
         Sets the channel as deleted in the database
 
@@ -90,7 +92,7 @@ class ChannelManager:
 
                 self.session.rollback()
 
-    async def createChannel(self, channel: GuildChannel):
+    async def onGuildChannelCreate(self, channel: GuildChannel):
         """
         Checks if the given channel is a channel and invokes the channel creation
 
@@ -179,7 +181,7 @@ class ChannelManager:
             except Exception as error:
                 logger.error(f"Failed to find deleted channels for guild {guild.name, guild.id}", exc_info=error)
 
-    async def onBotStart(self, guild: Guild):
+    async def onGuildStartupCheck(self, guild: Guild):
         """
         Check if all channels are in the database
 
@@ -204,7 +206,7 @@ class ChannelManager:
         await self._findDeletedChannels(guild)
 
     # TODO also check for changes on startup
-    async def updateChannel(self, before: GuildChannel, after: GuildChannel):
+    async def onGuildChannelUpdate(self, before: GuildChannel, after: GuildChannel):
         """
         Update the channel in the database
 
@@ -242,16 +244,16 @@ class ChannelManager:
 
         :return:
         """
-        self.client.addListener(self.channelDelete, ClientListenerType.CHANNEL_DELETE)
+        self.client.addListener(self.onGuildChannelDelete, ClientListenerType.CHANNEL_DELETE)
         logger.debug("Channel delete listener registered")
 
-        self.client.addListener(self.createChannel, ClientListenerType.CHANNEL_CREATE)
+        self.client.addListener(self.onGuildChannelCreate, ClientListenerType.CHANNEL_CREATE)
         logger.debug("Channel create listener registered")
 
-        self.client.addListener(self.updateChannel, ClientListenerType.CHANNEL_UPDATE)
+        self.client.addListener(self.onGuildChannelUpdate, ClientListenerType.CHANNEL_UPDATE)
         logger.debug("Channel update listener registered")
 
-        self.guildManager.addListener(self.onBotStart, GuildListenerType.START_UP)
+        self.guildManager.addListener(self.onGuildStartupCheck, GuildListenerType.START_UP)
         logger.debug("Guild manager listener registered")
 
         self.guildManager.addListener(self.onGuildJoin, GuildListenerType.GUILD_JOIN)
