@@ -61,8 +61,8 @@ class BasicTests(unittest.TestCase):
 
             userCount = response.json["count"]
 
-            def getQuery(sortBy: str | None,
-                         sortOrder: str | None,
+            def getQuery(sortBy: str | None = None,
+                         sortOrder: str | None = None,
                          offset: int | None = None,
                          limit: int | None = None, ):
                 """
@@ -142,7 +142,7 @@ class BasicTests(unittest.TestCase):
                         self.assertIn(user.to_dict(), response.json["discordUsers"])
 
             # test with random order
-            runMyTest(*getQuery(sortBy=None, sortOrder=None))
+            runMyTest(*getQuery())
 
             # test with discord_id asc
             runMyTest(*getQuery(sortBy="discord_id", sortOrder="asc"))
@@ -186,4 +186,4 @@ class BasicTests(unittest.TestCase):
             offset = random.randint(0, userCount - 1)
             limit = random.randint(1, userCount - offset)
 
-            runMyTest(*getQuery(sortBy=None, sortOrder=None, offset=offset, limit=limit))
+            runMyTest(*getQuery(sortBy="discord_id", sortOrder="asc", offset=offset, limit=limit))
