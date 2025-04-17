@@ -51,6 +51,9 @@ def getAllDiscordUsersForGuild(guild_id):
     try:
         start = int(start)
         count = int(count)
+
+        if start < 0 or count < 0:
+            raise ValueError
     except ValueError:
         logger.warning(f"Invalid start or count parameter: {start}, {count}")
 
@@ -95,6 +98,9 @@ def getAllDiscordUsersForGuild(guild_id):
         logger.error(f"Failed to fetch DiscordUser for guild_id: {guildId}", exc_info=error)
 
         return jsonify(message="Something went wrong!"), 500
+
+    if len(discordUsers) == 0:
+        return jsonify(message="No DiscordUser found for the provided guild_id"), 404
 
     selectQuery = (
         select(func.count())

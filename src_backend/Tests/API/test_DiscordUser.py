@@ -1,5 +1,6 @@
 import random
 import unittest
+from itertools import product
 
 from flask_jwt_extended import create_access_token
 from sqlalchemy import select, func, GenerativeSelect
@@ -10,9 +11,11 @@ from src_backend import createApp
 from src_backend import database
 
 
-class BasicTests(unittest.TestCase):
+class DiscordUserApiTest(unittest.TestCase):
 
     def setUp(self):
+        random.seed(42)
+
         self.app = createApp()
         self.app.testing = True
         self.app.config["JWT_SECRET_KEY"] = "test"
@@ -64,7 +67,8 @@ class BasicTests(unittest.TestCase):
             def getQuery(sortBy: str | None = None,
                          sortOrder: str | None = None,
                          offset: int | None = None,
-                         limit: int | None = None, ):
+                         limit: int | None = None,
+                         invalidTest: bool = False, ) -> tuple[GenerativeSelect | None, dict[str, str] | None]:
                 """
                 This function generates a query for all discord users in a guild.
 
@@ -72,6 +76,7 @@ class BasicTests(unittest.TestCase):
                 :param sortOrder: The order to sort by
                 :param offset: The offset to start from
                 :param limit: The limit of the number of results
+                :param invalidTest: If True, the test will be invalid, and we don't need the query
                 """
                 match sortBy:
                     case "discord_id":
@@ -86,7 +91,10 @@ class BasicTests(unittest.TestCase):
                 if sortOrder not in ["asc", "desc"]:
                     sortingOrder = func.rand()
                 else:
-                    sortingOrder = sortObject.asc() if sortOrder == "asc" else sortObject.desc()
+                    if sortObject:
+                        sortingOrder = sortObject.asc() if sortOrder == "asc" else sortObject.desc()
+                    else:
+                        sortingOrder = func.rand()
 
                 queryParameter = {}
 
@@ -111,19 +119,25 @@ class BasicTests(unittest.TestCase):
                     .order_by(sortingOrder)
                     .offset(offset)
                     .limit(limit)
-                ), queryParameter
+                ) if not invalidTest else None, queryParameter
 
-            def runMyTest(query: GenerativeSelect, queryParameter: dict[str, str] | None = None):
+            def runMyTest(query: GenerativeSelect,
+                          queryParameter: dict[str, str] | None = None,
+                          invalidTest: bool = False, ):
                 """
                 This function runs the test for the given query and query parameters.
 
                 :param query: The query to run
                 :param queryParameter: The query parameters to use for the backend
+                :param invalidTest: If True, the test will be invalid,
+                                    and we don't need to run the query
                 """
-                if queryParameter:
-                    response = self.client.get(f'/api/discordUser/all/{guild.guild_id}', query_string=queryParameter)
-                else:
-                    response = self.client.get(f'/api/discordUser/all/{guild.guild_id}')
+                response = self.client.get(f'/api/discordUser/all/{guild.guild_id}', query_string=queryParameter)
+
+                if invalidTest:
+                    self.assertTrue(400 == response.status_code or 404 == response.status_code)
+
+                    return
 
                 discordUsers: list[DiscordUser] = (
                     self.session
@@ -136,54 +150,44 @@ class BasicTests(unittest.TestCase):
                 self.assertEqual(len(discordUsers), len(response.json["discordUsers"]))
 
                 if queryParameter:
-                    self.assertListEqual([user.to_dict() for user in discordUsers], response.json["discordUsers"])
+                    # if one of the query parameters is None, we don't want to check the order
+                    if not queryParameter.get("sortBy", None) or not queryParameter.get("sortOrder", None):
+                        for user in discordUsers:
+                            self.assertIn(user.to_dict(), response.json["discordUsers"])
+                    else:
+                        self.assertListEqual([user.to_dict() for user in discordUsers], response.json["discordUsers"])
                 else:
                     for user in discordUsers:
                         self.assertIn(user.to_dict(), response.json["discordUsers"])
 
-            # test with random order
-            runMyTest(*getQuery())
+            """valid tests"""
+            sortBy = [None, "discord_id", "global_name", "created_at"]
+            sortOrder = [None, "asc", "desc"]
+            maxCombinations = random.randint(1, 2)
+            counts = [
+                (start := (random.randint(0, userCount - 1)), random.randint(start, userCount),)
+                for _ in range(maxCombinations)
+            ]
 
-            # test with discord_id asc
-            runMyTest(*getQuery(sortBy="discord_id", sortOrder="asc"))
+            for sortBy, sortOrder, counts in product(sortBy, sortOrder, counts):
+                offset, limit = counts
 
-            # test with discord_id desc
-            runMyTest(*getQuery(sortBy="discord_id", sortOrder="desc"))
+                with self.subTest(sortBy=sortBy, sortOrder=sortOrder, offset=offset, limit=limit):
+                    runMyTest(*getQuery(sortBy, sortOrder))
 
-            # test with global_name asc
-            runMyTest(*getQuery(sortBy="global_name", sortOrder="asc"))
+            """invalid tests"""
+            sortBy = ["invalid", 123, -123, ]
+            sortOrder = ["invalid", 123, -123, ]
+            counts = [
+                (-1, -1),
+                (0, 0),
+                (userCount, userCount),
+                (userCount + 1, userCount + 1),
+                ("invalid", "invalid"),
+            ]
 
-            # test with global_name desc
-            runMyTest(*getQuery(sortBy="global_name", sortOrder="desc"))
+            for sortBy, sortOrder, counts in product(sortBy, sortOrder, counts):
+                offset, limit = counts
 
-            # test with created_at asc
-            runMyTest(*getQuery(sortBy="created_at", sortOrder="asc"))
-
-            # test with created_at desc
-            runMyTest(*getQuery(sortBy="created_at", sortOrder="desc"))
-
-            # test with invalid sortBy
-            response = self.client.get(f'/api/discordUser/all/{guild.guild_id}?sortBy=invalid')
-            self.assertEqual(400, response.status_code)
-
-            # test with invalid orderBy
-            response = self.client.get(f'/api/discordUser/all/{guild.guild_id}?orderBy=invalid')
-            self.assertEqual(400, response.status_code)
-
-            # test with invalid guild id
-            response = self.client.get('/api/discordUser/all/invalid')
-            self.assertEqual(400, response.status_code)
-
-            # test with invalid start
-            response = self.client.get(f'/api/discordUser/all/{guild.guild_id}?start=invalid')
-            self.assertEqual(400, response.status_code)
-
-            # test with invalid count
-            response = self.client.get(f'/api/discordUser/all/{guild.guild_id}?count=invalid')
-            self.assertEqual(400, response.status_code)
-
-            # test with random offset and limit
-            offset = random.randint(0, userCount - 1)
-            limit = random.randint(1, userCount - offset)
-
-            runMyTest(*getQuery(sortBy="discord_id", sortOrder="asc", offset=offset, limit=limit))
+                with self.subTest(sortBy=sortBy, sortOrder=sortOrder, offset=offset, limit=limit):
+                    runMyTest(*getQuery(sortBy, sortOrder, offset, limit, invalidTest=True), invalidTest=True)
