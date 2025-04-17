@@ -7,3 +7,4 @@ requests
 flask_jwt_extended
 gunicorn
 Werkzeug
+cryptography
