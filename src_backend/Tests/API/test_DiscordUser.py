@@ -15,6 +15,7 @@ class BasicTests(unittest.TestCase):
     def setUp(self):
         self.app = createApp()
         self.app.testing = True
+        self.app.config["JWT_SECRET_KEY"] = "test"
 
         self.client = self.app.test_client()
         self.session = database.session
