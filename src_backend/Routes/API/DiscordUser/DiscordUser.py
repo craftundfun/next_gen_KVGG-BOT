@@ -42,10 +42,24 @@ def getAllDiscordUsersForGuild(guild_id):
     except ValueError:
         return jsonify(message="Invalid guild id"), 400
 
-    start = int(request.args.get("start", 0))
-    count = int(request.args.get("count", 9999999))
+    # get the parameters from the request
+    start = request.args.get("start", 0)
+    count = request.args.get("count", 9999999)
     sortBy = request.args.get("sortBy", "discord_id")
     sortOrder = request.args.get("orderBy", "asc")
+
+    try:
+        start = int(start)
+        count = int(count)
+    except ValueError:
+        logger.warning(f"Invalid start or count parameter: {start}, {count}")
+
+        return jsonify(message="Invalid start or count parameter"), 400
+
+    if sortOrder not in ["asc", "desc"]:
+        logger.warning(f"Invalid orderBy parameter: {sortOrder}")
+
+        return jsonify(message="Invalid orderBy parameter"), 400
 
     match sortBy:
         case "discord_id":
