@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 import pymysql
 import requests
+import sqlalchemy.exc
 from flask import Flask, jsonify, request, redirect, Response
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, create_access_token, get_jwt_identity
@@ -147,6 +148,8 @@ def createApp():
         try:
             database.session.add(backendAccess)
             database.session.commit()
+        except sqlalchemy.exc.OperationalError as error:
+            logger.warning("Database connection error, skipping backend access save", exc_info=error)
         except Exception as error:
             logger.error("Error while saving backend access", exc_info=error)
             database.session.rollback()
