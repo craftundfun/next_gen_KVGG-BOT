@@ -148,7 +148,7 @@ def createApp():
         try:
             database.session.add(backendAccess)
             database.session.commit()
-        except sqlalchemy.exc.OperationalError | pymysql.err.OperationalError as error:
+        except (sqlalchemy.exc.OperationalError, pymysql.err.OperationalError) as error:
             logger.warning("Database connection error, skipping backend access save", exc_info=error)
         except Exception as error:
             logger.error("Error while saving backend access", exc_info=error)
