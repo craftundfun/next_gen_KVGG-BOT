@@ -22,19 +22,15 @@ def getAllGuilds():
     selectQuery = (select(Guild))
 
     try:
-        guilds = database.session.execute(selectQuery).scalars().all()
+        guilds: list[Guild] = database.session.execute(selectQuery).scalars().all()
     except Exception as error:
         logger.error("Failed to fetch all guilds", exc_info=error)
 
         return jsonify({"message": "Failed to fetch all guilds"}), 500
 
-    # Convert the guilds to a list of dictionaries, iterate over each column to avoid sqlalchemy metadata
-    guildList: list = [{column.name: getattr(guild, column.name) for column in guild.__table__.columns}
-                       for guild in guilds]
-
     logger.debug("Fetched all guilds")
 
-    return jsonify({'guilds': guildList}), 200
+    return jsonify({'guilds': [guild.to_dict() for guild in guilds]}), 200
 
 
 @guildBp.route('/<guild_id>')
@@ -45,6 +41,11 @@ def getGuild(guild_id):
         guildId = int(guild_id)
     except ValueError:
         logger.debug(f"Invalid guild id {guild_id}")
+
+        return jsonify(message="Invalid guild id"), 400
+
+    if guildId < 0:
+        logger.warning(f"Invalid guild id {guildId}")
 
         return jsonify(message="Invalid guild id"), 400
 

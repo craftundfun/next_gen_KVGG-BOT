@@ -1,13 +1,10 @@
 import random
 from itertools import product
 
-from flask_jwt_extended import create_access_token
 from sqlalchemy import select, func, GenerativeSelect
 
 from database.Domain import DiscordUser
-from database.Domain.models import WebsiteUser, Guild, GuildDiscordUserMapping
-from src_backend import createApp
-from src_backend import database
+from database.Domain.models import Guild, GuildDiscordUserMapping
 from src_backend.Tests.API.BaseTest import BaseTest
 
 
