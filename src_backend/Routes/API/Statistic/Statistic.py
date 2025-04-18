@@ -28,6 +28,11 @@ def getStatisticsFromUserPerGuildPerDate(guild_id, discord_id, date):
 
         return jsonify(message="Invalid discord or guild id"), 400
 
+    if guildId < 0 or discordId < 0:
+        logger.warning(f"Invalid discord {discord_id} or guild {guild_id} id")
+
+        return jsonify(message="Invalid discord or guild id"), 400
+
     selectQuery = (
         select(Statistic).where(
             Statistic.discord_id == discordId,
@@ -63,6 +68,11 @@ def getAllDatesFromUserPerGuild(guild_id, discord_id):
         discordId = int(discord_id)
     except ValueError:
         logger.debug(f"Invalid discord {discord_id} or guild {guild_id} id")
+
+        return jsonify(message="Invalid discord or guild id"), 400
+
+    if guildId < 0 or discordId < 0:
+        logger.warning(f"Invalid discord {discord_id} or guild {guild_id} id")
 
         return jsonify(message="Invalid discord or guild id"), 400
 

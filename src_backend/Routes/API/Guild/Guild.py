@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 
 from database.Domain.models import Guild
 from src_backend import database
@@ -53,6 +54,10 @@ def getGuild(guild_id):
 
     try:
         guild: Guild = database.session.execute(selectQuery).scalars().one()
+    except NoResultFound:
+        logger.debug(f"No guild found with id {guildId}")
+
+        return jsonify(message="Guild does not exist"), 404
     except Exception as error:
         logger.error(f"Failed to fetch guild with id {guildId}", exc_info=error)
 

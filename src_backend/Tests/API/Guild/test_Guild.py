@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy import select, func
 
 from database.Domain.models.Guild import Guild
@@ -29,19 +31,24 @@ class GuildApiTest(BaseTest):
             # fetch random guild for testing
             selectQuery = select(Guild).order_by(func.rand()).limit(1)
             guild: Guild = self.session.execute(selectQuery).scalars().one()
+            guildDict = guild.to_dict()
+
             response = self.client.get(f'/api/guild/{guild.guild_id}')
 
             self.assertEqual(200, response.status_code)
-
-            guildDict = guild.to_dict()
-
             self.assertEqual(guildDict, response.json)
 
-            response = self.client.get(f'/api/guild/{-1}')
-            self.assertEqual(400, response.status_code)
+            invalidIds: list[tuple[Any, int]] = [(-1, 400), ("invalid", 400), ("", 404), (123, 404)]
 
-            response = self.client.get(f'/api/guild/invalid')
-            self.assertEqual(400, response.status_code)
+            for invalidId, expectedStatusCode in invalidIds:
+                with self.subTest(invalidId=invalidId, expectedStatusCode=expectedStatusCode):
+                    response = self.client.get(f'/api/guild/{invalidId}')
+
+                    self.assertEqual(
+                        expectedStatusCode,
+                        response.status_code,
+                        msg=f"Invalid status code for ({invalidId})",
+                    )
 
     def testGetMyFavouriteGuild(self):
         # TODO implement this later, currently this function is not correctly implemented
