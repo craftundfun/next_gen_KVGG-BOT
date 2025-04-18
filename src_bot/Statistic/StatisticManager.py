@@ -68,7 +68,7 @@ class StatisticManager(TimeCalculatorListenerInterface):
                     .where(
                         StatusStatistic.discord_id == member.id,
                         StatusStatistic.guild_id == member.guild.id,
-                        StatusStatistic.date == date.today(),
+                        StatusStatistic.date == date,
                     )
                 )
 
