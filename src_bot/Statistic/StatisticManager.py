@@ -80,6 +80,8 @@ class StatisticManager(TimeCalculatorListenerInterface):
                         guild_id=member.guild.id,
                         date=date,
                     )
+
+                    self.session.add(statusStatistic)
                 except Exception as error:
                     logger.error(
                         f"Couldn't fetch status statistic for {member.display_name, member.id} "
@@ -107,7 +109,6 @@ class StatisticManager(TimeCalculatorListenerInterface):
                         return
 
                 try:
-                    self.session.add(statusStatistic)
                     self.session.commit()
                 except Exception as error:
                     logger.error(
