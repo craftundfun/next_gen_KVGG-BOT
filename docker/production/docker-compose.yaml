@@ -4,7 +4,7 @@ services:
         build:
             context: ../..
             dockerfile: ./docker/production/Dockerfile_Backend
-        restart: on-failure
+        restart: always
         healthcheck:
             test: [ "CMD", "curl", "-f", "http://localhost:8000/api/health" ]
             interval: 30s
@@ -31,6 +31,7 @@ services:
 
     bot:
         container_name: next_gen_bot
+        restart: always
         build:
             context: ../..
             dockerfile: ./docker/production/Dockerfile_Bot
