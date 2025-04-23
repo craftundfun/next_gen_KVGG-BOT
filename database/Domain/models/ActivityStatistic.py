@@ -18,3 +18,12 @@ class ActivityStatistic(Base):
     discordUser: Mapped[Optional["DiscordUser"]] = relationship("DiscordUser")
     guild: Mapped[Optional["Guild"]] = relationship("Guild")
     activity: Mapped[Optional["Activity"]] = relationship("Activity")
+
+    def __init__(self, discord_id: int, guild_id: int, activity_id: int, date: datetime.date, time: int = 0):
+        super().__init__()
+
+        self.discord_id = discord_id
+        self.guild_id = guild_id
+        self.activity_id = activity_id
+        self.date = date
+        self.time = time

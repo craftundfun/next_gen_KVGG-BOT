@@ -12,6 +12,17 @@ class Activity(Base):
     external_activity_id = Column(BigInteger, nullable=True, server_default=null())
     name = Column(VARCHAR(255), nullable=False)
 
+    def __init__(self, id: int | None = None, external_activity_id: int | None = None, name: str = ""):
+        super().__init__()
+
+        if id is not None:
+            self.id = id
+
+        if external_activity_id is not None:
+            self.external_activity_id = external_activity_id
+
+        self.name = name
+
     # activityMappings: Mapped["ActivityMapping"] = relationship(
     #     "ActivityMapping",
     #     foreign_keys=lambda: [

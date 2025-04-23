@@ -21,3 +21,23 @@ class ActivityHistory(Base):
     activityMapping: Mapped["ActivityMapping"] = relationship("Activity", uselist=False)
     event: Mapped["Event"] = relationship("Event", uselist=False)
     guild: Mapped["Guild"] = relationship("Guild", uselist=False)
+
+    def __init__(self,
+                 discord_id: int,
+                 guild_id: int,
+                 primary_activity_id: int,
+                 event_id: int,
+                 time: datetime | None = None,
+                 id: int | None = None, ):
+        super().__init__()
+
+        self.discord_id = discord_id
+        self.guild_id = guild_id
+        self.primary_activity_id = primary_activity_id
+        self.event_id = event_id
+
+        if time is not None:
+            self.time = time
+
+        if id is not None:
+            self.id = id

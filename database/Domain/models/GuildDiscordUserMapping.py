@@ -28,10 +28,10 @@ class GuildDiscordUserMapping(Base):
         self.display_name = display_name
         self.joined_at = joined_at
 
-        if profile_picture:
+        if profile_picture is not None:
             self.profile_picture = profile_picture
 
-        if left_at:
+        if left_at is not None:
             self.left_at = left_at
 
     def to_dict(self):
