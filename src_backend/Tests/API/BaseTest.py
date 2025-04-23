@@ -73,7 +73,6 @@ class BaseTest(TestCase, ABC):
             database.session.bulk_save_objects(getChannels())
             database.session.bulk_save_objects(getChannelSettings())
             database.session.bulk_save_objects(getExperiences())
-            database.session.bulk_save_objects(getChannels())
             database.session.bulk_save_objects(getHistories())
             database.session.bulk_save_objects(getStatistics())
             database.session.bulk_save_objects(getStatusStatistics())
