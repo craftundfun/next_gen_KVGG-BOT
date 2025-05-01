@@ -4,10 +4,11 @@ import sys
 from abc import ABC
 from unittest import TestCase
 
+from flask_jwt_extended import create_access_token
 from testcontainers.mysql import MySqlContainer
 
+from database.Domain import WebsiteUser
 from database.Domain.BaseClass import Base
-from database.Domain.models import DiscordUser
 from src_backend import createApp, database
 from src_backend.Tests.API.getObjects import getDiscordUsers, getGuilds, getGuildDiscordUserMappings, getWebsiteUsers, \
     getActivities, getEvents, getActivityMappings, getActivityHistory, getActivityStatistics, getChannels, \
@@ -44,42 +45,52 @@ class BaseTest(TestCase, ABC):
             "SQLALCHEMY_DATABASE_URI": test_uri,
             "TESTING": True,
             "SQLALCHEMY_ECHO": False,
+            "JWT_SECRET_KEY": "test",
         })
 
+        cls.app.testing = True
         cls.client = cls.app.test_client()
+
+        with cls.app.app_context():
+            # create cookie to access the API
+            # TODO choose specific user for testing because of permissions
+            cls.client.set_cookie(
+                "access_token_cookie",
+                create_access_token(identity=str(list(getWebsiteUsers())[0].discord_id)),
+            )
 
     def setUp(self):
         # Fixtures pro Test
         with self.app.app_context():
-            database.drop_all()
-            Base.metadata.drop_all(bind=database.engine)
+            try:
+                database.drop_all()
+                database.create_all()
 
-            database.create_all()
-            Base.metadata.create_all(bind=database.engine)
+                database.session.bulk_save_objects(getDiscordUsers())
+                database.session.bulk_save_objects(getGuilds())
+                database.session.bulk_save_objects(getGuildDiscordUserMappings())
+                database.session.bulk_save_objects(getWebsiteUsers())
+                database.session.bulk_save_objects(getActivities())
+                database.session.bulk_save_objects(getEvents())
+                database.session.bulk_save_objects(getActivityHistory())
+                database.session.bulk_save_objects(getActivityMappings())
+                database.session.bulk_save_objects(getActivityStatistics())
+                database.session.bulk_save_objects(getBoost())
+                database.session.bulk_save_objects(getCategories())
+                database.session.bulk_save_objects(getChannels())
+                database.session.bulk_save_objects(getChannelSettings())
+                database.session.bulk_save_objects(getExperiences())
+                database.session.bulk_save_objects(getHistories())
+                database.session.bulk_save_objects(getStatistics())
+                database.session.bulk_save_objects(getStatusStatistics())
+                database.session.bulk_save_objects(getWebsiteRoles())
+                database.session.bulk_save_objects(getWebsiteRoleUserMappings())
 
-            database.session.query(DiscordUser).delete()
+                database.session.commit()
+            except Exception as error:
+                print(f"Error during setup: {error}")
 
-            database.session.bulk_save_objects(getDiscordUsers())
-            database.session.bulk_save_objects(getGuilds())
-            database.session.bulk_save_objects(getGuildDiscordUserMappings())
-            database.session.bulk_save_objects(getWebsiteUsers())
-            database.session.bulk_save_objects(getActivities())
-            database.session.bulk_save_objects(getEvents())
-            database.session.bulk_save_objects(getActivityHistory())
-            database.session.bulk_save_objects(getActivityMappings())
-            database.session.bulk_save_objects(getActivityStatistics())
-            database.session.bulk_save_objects(getBoost())
-            database.session.bulk_save_objects(getCategories())
-            database.session.bulk_save_objects(getChannels())
-            database.session.bulk_save_objects(getChannelSettings())
-            database.session.bulk_save_objects(getExperiences())
-            database.session.bulk_save_objects(getHistories())
-            database.session.bulk_save_objects(getStatistics())
-            database.session.bulk_save_objects(getStatusStatistics())
-            database.session.bulk_save_objects(getWebsiteRoles())
-            database.session.bulk_save_objects(getWebsiteRoleUserMappings())
-
-            database.session.commit()
+                sys.exit(1)
 
         self.session = database.session
 
