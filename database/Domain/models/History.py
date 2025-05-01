@@ -15,21 +15,25 @@ class History(Base):
                  event_id: int,
                  time: datetime | None = None,
                  channel_id: int | None = None,
-                 additional_info: dict | None = None, ):
+                 additional_info: dict | None = None,
+                 id: int | None = None, ):
         super().__init__()
 
         self.discord_id = discord_id
         self.guild_id = guild_id
         self.event_id = event_id
 
-        if time:
+        if time is not None:
             self.time = time
 
-        if channel_id:
+        if channel_id is not None:
             self.channel_id = channel_id
 
         if additional_info is not None:
             self.additional_info = additional_info
+
+        if id is not None:
+            self.id = id
 
     id = Column(BigInteger, primary_key=True)
     discord_id = Column(BigInteger, ForeignKey("discord_user.discord_id"), nullable=False)

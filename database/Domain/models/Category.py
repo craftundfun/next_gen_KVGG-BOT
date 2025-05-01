@@ -13,3 +13,13 @@ class Category(Base):
 
     def __repr__(self):
         return f"Category(category_id={self.category_id}, name={self.name}, deleted_at={self.deleted_at})"
+
+    def __init__(self, category_id: int, name: str, guild_id: int, deleted_at: datetime | None = None):
+        super().__init__()
+
+        self.category_id = category_id
+        self.name = name
+        self.guild_id = guild_id
+
+        if deleted_at is not None:
+            self.deleted_at = deleted_at

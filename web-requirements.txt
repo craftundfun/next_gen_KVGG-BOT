@@ -8,3 +8,6 @@ flask_jwt_extended
 gunicorn
 Werkzeug
 cryptography
+sqlalchemy_utils
+testcontainers
+cryptography
