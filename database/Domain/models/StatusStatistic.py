@@ -25,7 +25,7 @@ class StatusStatistic(Base):
         self.discord_id = discord_id
         self.guild_id = guild_id
 
-        if date:
+        if date is not None:
             self.date = date
 
         self.online_time = online_time

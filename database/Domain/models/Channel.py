@@ -14,3 +14,14 @@ class Channel(Base):
 
     def __repr__(self):
         return f"Channel(channel_id={self.channel_id}, name={self.name}, type={self.type}, deleted_at={self.deleted_at})"
+
+    def __init__(self, channel_id: int, name: str, type: str, guild_id: int, deleted_at: datetime | None = None):
+        super().__init__()
+
+        self.channel_id = channel_id
+        self.name = name
+        self.type = type
+        self.guild_id = guild_id
+
+        if deleted_at is not None:
+            self.deleted_at = deleted_at

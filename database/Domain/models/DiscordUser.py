@@ -21,7 +21,7 @@ class DiscordUser(Base):
         self.discord_id = discord_id
         self.global_name = global_name
 
-        if created_at:
+        if created_at is not None:
             self.created_at = created_at
 
     def __repr__(self):
