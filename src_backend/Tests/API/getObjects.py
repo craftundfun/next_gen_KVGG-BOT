@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import lru_cache
 from itertools import product, count
 
@@ -284,7 +284,7 @@ def getStatistics():
             Statistic(
                 discord_id=discordUser.discord_id,
                 guild_id=guild.guild_id,
-                date=datetime.now(),
+                date=datetime.now() - timedelta(days=2),
                 online_time=(discordUser.discord_id + guild.guild_id) * 10,
                 stream_time=(discordUser.discord_id + guild.guild_id) * 5,
                 mute_time=(discordUser.discord_id + guild.guild_id) * 2,
