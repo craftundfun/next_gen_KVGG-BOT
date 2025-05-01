@@ -20,9 +20,13 @@ pymysql.install_as_MySQLdb()
 logger = Logger(__name__)
 
 
-def createApp():
+def createApp(testConfig: dict | None = None):
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    # insert config stuff for tests
+    if testConfig:
+        app.config.update(testConfig)
 
     # to allow Flask to see the real IP behind the two proxies
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2, x_proto=1, x_host=1, x_prefix=1)

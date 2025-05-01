@@ -1,5 +1,6 @@
+from src_backend.Logging.Logger import Logger
+
 from flask import Blueprint, jsonify
-from logging import Logger
 from flask_jwt_extended import jwt_required
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -22,6 +23,11 @@ def getMapping(guild_id, discord_id):
         discordId = int(discord_id)
     except ValueError:
         logger.debug(f"Invalid guild id {guild_id} or discord id {discord_id}")
+
+        return jsonify(message="Invalid guild id or discord id"), 400
+
+    if guildId < 0 or discordId < 0:
+        logger.warning(f"Invalid guild id {guildId} or discord id {discordId}")
 
         return jsonify(message="Invalid guild id or discord id"), 400
 

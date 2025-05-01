@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 
 from database.Domain.models import Guild
 from src_backend import database
@@ -22,19 +23,15 @@ def getAllGuilds():
     selectQuery = (select(Guild))
 
     try:
-        guilds = database.session.execute(selectQuery).scalars().all()
+        guilds: list[Guild] = database.session.execute(selectQuery).scalars().all()
     except Exception as error:
         logger.error("Failed to fetch all guilds", exc_info=error)
 
         return jsonify({"message": "Failed to fetch all guilds"}), 500
 
-    # Convert the guilds to a list of dictionaries, iterate over each column to avoid sqlalchemy metadata
-    guildList: list = [{column.name: getattr(guild, column.name) for column in guild.__table__.columns}
-                       for guild in guilds]
-
     logger.debug("Fetched all guilds")
 
-    return jsonify({'guilds': guildList}), 200
+    return jsonify({'guilds': [guild.to_dict() for guild in guilds]}), 200
 
 
 @guildBp.route('/<guild_id>')
@@ -48,10 +45,19 @@ def getGuild(guild_id):
 
         return jsonify(message="Invalid guild id"), 400
 
+    if guildId < 0:
+        logger.warning(f"Invalid guild id {guildId}")
+
+        return jsonify(message="Invalid guild id"), 400
+
     selectQuery = (select(Guild).where(Guild.guild_id == guildId))
 
     try:
         guild: Guild = database.session.execute(selectQuery).scalars().one()
+    except NoResultFound:
+        logger.debug(f"No guild found with id {guildId}")
+
+        return jsonify(message="Guild does not exist"), 404
     except Exception as error:
         logger.error(f"Failed to fetch guild with id {guildId}", exc_info=error)
 

@@ -9,6 +9,12 @@ jobs:
     test:
         runs-on: ubuntu-latest
 
+        env:
+            DATABASE_USER: ${{ secrets.DATABASE_USER }}
+            DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+            DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+            DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+
         steps:
             -   name: Checkout Code
                 uses: actions/checkout@v3

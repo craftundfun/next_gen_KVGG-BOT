@@ -10,6 +10,18 @@ class Guild(Base):
     joined_at = Column(DATETIME, nullable=True, server_default=func.utc_timestamp(6))
     icon = Column(TEXT, nullable=True)
 
+    def __init__(self, guild_id: int, name: str, joined_at: datetime | None = None, icon: str | None = None):
+        super().__init__()
+
+        self.guild_id = guild_id
+        self.name = name
+
+        if joined_at is not None:
+            self.joined_at = joined_at
+
+        if icon is not None:
+            self.icon = icon
+
     def to_dict(self):
         return {
             "guild_id": str(self.guild_id),
