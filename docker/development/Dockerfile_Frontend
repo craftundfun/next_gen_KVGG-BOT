@@ -7,4 +7,4 @@ COPY ../../.env .
 
 RUN npm install
 
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev", "--" ,"--host"]
