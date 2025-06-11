@@ -115,17 +115,6 @@ def loginCallback():
     # no code because we are redirecting, otherwise it will not work
     return response
 
-
-@authBp.route('/welcomeBack')
-@jwt_required()
-def refresh():
-    """
-    This will be called when the user comes back to the website. The before and after request handle everything,
-    and this is just a placeholder to show that the user is logged in.
-    """
-    return jsonify("Hello World!"), 200
-
-
 def doesUserExist(user: dict) -> WebsiteUser | None:
     selectQuery = (select(DiscordUser).where(DiscordUser.discord_id == user['id']))
 
