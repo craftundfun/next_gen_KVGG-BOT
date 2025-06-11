@@ -2,7 +2,7 @@ import {createTheme} from "@mui/material";
 
 const kvggTheme = createTheme({
 	palette: {
-		type: 'dark',
+		mode: "dark",
 		primary: {
 			main: '#2196f3',
 		},
