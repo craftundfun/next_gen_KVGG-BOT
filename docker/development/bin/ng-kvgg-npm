@@ -1,0 +1,4 @@
+#!/bin/bash
+
+docker exec -w /app -it next_gen_frontend npm "$@"
+exit $?

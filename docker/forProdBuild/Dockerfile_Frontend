@@ -2,7 +2,7 @@ FROM node
 
 WORKDIR /app
 
-ENV REACT_APP_DISCORD_OAUTH_URL=https://discord.com/oauth2/authorize?client_id=1076510738576855051&response_type=code&redirect_uri=https%3A%2F%2Fkvgg.axellotl.de%2Fapi%2FloginCallback&scope=identify+email
+ENV VITE_DISCORD_OAUTH_URL=https://discord.com/oauth2/authorize?client_id=1076510738576855051&response_type=code&redirect_uri=https%3A%2F%2Fkvgg.axellotl.de%2Fapi%2FloginCallback&scope=identify+email
 
 COPY ../../web .
 
