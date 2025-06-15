@@ -11,7 +11,6 @@ function WebsiteUserContextProvider({children}: React.PropsWithChildren): React.
 	const {data: websiteUser, isError, isFetching} = useQuery({
 		queryKey: ['websiteUser'],
 		queryFn: fetchWebsiteUser,
-		refetchOnWindowFocus: false,
 		retry: false,
 	});
 
