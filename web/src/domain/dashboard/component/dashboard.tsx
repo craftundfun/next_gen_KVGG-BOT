@@ -1,6 +1,8 @@
 import * as React from "react";
 import {Suspense} from "react";
 import sleep from "../../common/helper/sleep.ts";
+import Sidebar from "../../navigation/component/siedebar.tsx";
+import DashboardSkeleton from "./dashboard-skeleton.tsx";
 
 function Dashboard(): React.ReactNode {
 	const loadComponents = async (): Promise<string> => {
@@ -9,9 +11,12 @@ function Dashboard(): React.ReactNode {
 	}
 
 	return (
-		<Suspense fallback={"Loading ...."}>
+		<>
+		<Sidebar />
+		<Suspense fallback={<DashboardSkeleton />}>
 			{ loadComponents() }
 		</Suspense>
+		</>
 	);
 }
 
