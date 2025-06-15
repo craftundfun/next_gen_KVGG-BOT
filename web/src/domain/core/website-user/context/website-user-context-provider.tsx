@@ -2,6 +2,7 @@ import {useQuery} from "@tanstack/react-query";
 import {useEffect} from "react";
 import * as React from "react";
 import {useNavigate} from "react-router-dom";
+import CenterLoading from "../../../common/component/center-loading.tsx";
 import fetchWebsiteUser from "../http/fetch-user.ts";
 import {websiteUserContext} from "./website-user-context";
 
@@ -11,7 +12,6 @@ function WebsiteUserContextProvider({children}: React.PropsWithChildren): React.
 	const {data: websiteUser, isError, isFetching} = useQuery({
 		queryKey: ['websiteUser'],
 		queryFn: fetchWebsiteUser,
-		refetchOnWindowFocus: false,
 		retry: false,
 	});
 
@@ -26,7 +26,7 @@ function WebsiteUserContextProvider({children}: React.PropsWithChildren): React.
 	}, [isError, websiteUser, isFetching, navigate]);
 
 	if (isFetching) {
-		return <>Loading</>;
+		return <CenterLoading/>;
 	}
 
 	return <websiteUserContext.Provider value={{websiteUser: websiteUser ?? null}}>
