@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import {useState} from "react";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -31,7 +31,7 @@ function Login(): React.ReactNode {
 				justifyContent: "space-between",
 			}}
 		>
-			<Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+			<Box sx={{flex: 1, display: "flex", alignItems: "center", justifyContent: "center"}}>
 				<Paper
 					elevation={8}
 					sx={{
@@ -59,14 +59,14 @@ function Login(): React.ReactNode {
 							boxShadow: "0 4px 20px 0 rgba(88,101,242,0.3)",
 						}}
 					/>
-					<Typography variant="h4" color="primary" sx={{ fontWeight: 700, mb: 1 }}>
+					<Typography variant="h4" color="primary" sx={{fontWeight: 700, mb: 1}}>
 						KVGG
 					</Typography>
 					<Typography
 						variant="h6"
 						color="white"
 						align="center"
-						sx={{ fontWeight: 500, mb: 3, letterSpacing: 1 }}
+						sx={{fontWeight: 500, mb: 3, letterSpacing: 1}}
 					>
 						Login mit Discord
 					</Typography>
@@ -74,7 +74,7 @@ function Login(): React.ReactNode {
 						variant="body1"
 						color="grey.300"
 						align="center"
-						sx={{ mb: 3, lineHeight: 1.6 }}
+						sx={{mb: 3, lineHeight: 1.6}}
 					>
 						Melde dich mit deinem Discord-Account an, um Zugriff auf unsere Plattform zu erhalten.
 					</Typography>
@@ -93,9 +93,10 @@ function Login(): React.ReactNode {
 							textTransform: "none",
 						}}
 						startIcon={
-							<Avatar
-								src="https://cdn.jsdelivr.net/gh/PKief/vscode-material-icon-theme@main/icons/discord.svg"
-								sx={{ width: 28, height: 28, bgcolor: "transparent" }}
+							<img
+								src="Discord/Clyde.svg"
+								style={{width: 28, height: 28, background: "transparent"}}
+								alt="Clyde"
 							/>
 						}
 					>
@@ -107,7 +108,7 @@ function Login(): React.ReactNode {
 								checked={remindMe}
 								onChange={() => setRemindMe(!remindMe)}
 								color="primary"
-								sx={{ color: "#94a3b8" }}
+								sx={{color: "#94a3b8"}}
 							/>
 						}
 						label={
@@ -115,11 +116,11 @@ function Login(): React.ReactNode {
 								Erinnern für 14 Tage?
 							</Typography>
 						}
-						sx={{ mb: 1 }}
+						sx={{mb: 1}}
 					/>
 				</Paper>
 			</Box>
-			<Copyright />
+			<Copyright/>
 		</Box>
 	);
 }
