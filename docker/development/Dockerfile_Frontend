@@ -11,6 +11,6 @@ RUN chown 1000:1000 /app/package.json /app/package-lock.json
 RUN chown 1000:1000 /app
 USER 1000:1000
 
-RUN npm install
+RUN npm install -D
 
 CMD ["npm", "run", "dev", "--" ,"--host"]
