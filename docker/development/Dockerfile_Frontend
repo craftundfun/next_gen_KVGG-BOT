@@ -2,8 +2,14 @@ FROM node
 
 WORKDIR /app
 
-COPY ../../web .
-COPY ../../.env .
+COPY ../../web/package.json .
+COPY ../../web/package-lock.json .
+
+RUN rm -rf /app/node_modules
+RUN chown 1000:1000 /app/package.json /app/package-lock.json
+
+RUN chown 1000:1000 /app
+USER 1000:1000
 
 RUN npm install
 
