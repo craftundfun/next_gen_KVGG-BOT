@@ -1,102 +1,73 @@
-import React from 'react';
-import {
-	Box,
-	Drawer,
-	List,
-	ListItem,
-	ListItemIcon,
-	ListItemText,
-	Typography,
-	Divider,
-	LinearProgress,
-	Select,
-	MenuItem,
-	FormControl,
-	InputLabel,
-} from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-
-const drawerWidth = 260;
+import {Button} from "@/domain/ui/component/button";
+import {Drawer, DrawerContent, DrawerHeader, DrawerTitle,} from "@/domain/ui/component/drawer";
+import {Progress} from "@/domain/ui/component/progress";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/domain/ui/component/select";
+import {Separator} from "@/domain/ui/component/separator";
+import {LayoutDashboard} from "lucide-react";
+import * as React from "react";
 
 const Sidebar: React.FC = () => {
 	return (
-		<Drawer
-			variant="permanent"
-			sx={{
-				width: drawerWidth,
-				flexShrink: 0,
-				'& .MuiDrawer-paper': {
-					width: drawerWidth,
-					boxSizing: 'border-box',
-					backgroundColor: '#0f172a',
-					color: '#fff',
-					borderRight: 'none',
-				},
-			}}
-		>
-			<Box sx={{ padding: 2 }}>
-				<Typography variant="h6" sx={{ mb: 2 }}>
-					Discord Dashboard
-				</Typography>
-
-				<FormControl fullWidth variant="outlined" size="small" sx={{ mb: 2 }}>
-					<InputLabel sx={{ color: '#fff' }}>Discord-User auswählen</InputLabel>
-					<Select defaultValue="Alex" label="Discord-User auswählen" sx={{ color: '#fff' }}>
-						<MenuItem value="Alex">Alex</MenuItem>
+		<Drawer open={true} direction="left">
+			<DrawerContent>
+				<DrawerHeader>
+					<DrawerTitle className="mb-4">Discord Dashboard</DrawerTitle>
+					<Select defaultValue="Alex">
+						<SelectTrigger className="mb-4 text-white bg-slate-800 border-slate-700">
+							<SelectValue placeholder="Discord-User auswählen"/>
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="Alex">Alex</SelectItem>
+						</SelectContent>
 					</Select>
-				</FormControl>
-
-				<List>
-					<ListItem>
-						<ListItemIcon>
-							<DashboardIcon />
-						</ListItemIcon>
-						<ListItemText primary="Overview" secondary="Deine Statistiken pro Server"/>
-					</ListItem>
-					<ListItem>
-						<ListItemIcon>
-							<DashboardIcon />
-						</ListItemIcon>
-						<ListItemText primary="Online-Statistik" />
-					</ListItem>
-					<ListItem>
-						<ListItemIcon>
-							<DashboardIcon />
-						</ListItemIcon>
-						<ListItemText primary="Historische Aktivität" />
-					</ListItem>
-					<ListItem>
-						<ListItemIcon>
-							<DashboardIcon />
-						</ListItemIcon>
-						<ListItemText primary="Top Beziehungen" />
-					</ListItem>
-					<ListItem>
-						<ListItemIcon>
-							<DashboardIcon />
-						</ListItemIcon>
-						<ListItemText primary="Aktivitätenkalender" />
-					</ListItem>
-					<ListItem>
-						<ListItemIcon>
-							<DashboardIcon/>
-						</ListItemIcon>
-						<ListItemText primary="Badges" />
-					</ListItem>
-				</List>
-
-				<Divider sx={{ backgroundColor: '#334155', my: 2 }} />
-
-				<Box>
-					<Typography variant="body2" sx={{ mb: 1 }}>
-						Fortschritt Online-Ziel:
-					</Typography>
-					<LinearProgress variant="determinate" value={75} sx={{ height: 8, borderRadius: 5, backgroundColor: '#1e293b', '& .MuiLinearProgress-bar': { backgroundColor: '#6366f1' } }} />
-					<Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
-						75 / 100 Stunden
-					</Typography>
-				</Box>
-			</Box>
+				</DrawerHeader>
+				<nav className="px-4">
+					<ul className="space-y-2">
+						<li>
+							<Button variant="ghost" className="w-full justify-start text-white">
+								<LayoutDashboard className="mr-2"/>
+								Overview
+							</Button>
+						</li>
+						<li>
+							<Button variant="ghost" className="w-full justify-start text-white">
+								<LayoutDashboard className="mr-2"/>
+								Online-Statistik
+							</Button>
+						</li>
+						<li>
+							<Button variant="ghost" className="w-full justify-start text-white">
+								<LayoutDashboard className="mr-2"/>
+								Historische Aktivität
+							</Button>
+						</li>
+						<li>
+							<Button variant="ghost" className="w-full justify-start text-white">
+								<LayoutDashboard className="mr-2"/>
+								Top Beziehungen
+							</Button>
+						</li>
+						<li>
+							<Button variant="ghost" className="w-full justify-start text-white">
+								<LayoutDashboard className="mr-2"/>
+								Aktivitätenkalender
+							</Button>
+						</li>
+						<li>
+							<Button variant="ghost" className="w-full justify-start text-white">
+								<LayoutDashboard className="mr-2"/>
+								Badges
+							</Button>
+						</li>
+					</ul>
+				</nav>
+				<Separator className="my-6 bg-slate-700"/>
+				<div className="px-4">
+					<div className="mb-2 text-sm">Fortschritt Online-Ziel:</div>
+					<Progress value={75} className="h-2 rounded bg-slate-800"/>
+					<div className="mt-2 text-xs">75 / 100 Stunden</div>
+				</div>
+			</DrawerContent>
 		</Drawer>
 	);
 };
