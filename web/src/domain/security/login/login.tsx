@@ -1,12 +1,10 @@
 import * as React from "react";
-import {useState} from "react";
-import Avatar from "@mui/material/Avatar";
-import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
-import Typography from "@mui/material/Typography";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Paper from "@mui/material/Paper";
-import Box from "@mui/material/Box";
+import { useState } from "react";
+import { Button } from "@/domain/ui/component/button";
+import { Checkbox } from "@/domain/ui/component/checkbox";
+import { Card, CardContent } from "@/domain/ui/component/card";
+import { Avatar } from "@/domain/ui/component/avatar";
+import { Label } from "@/domain/ui/component/label";
 import Copyright from "../../common/component/copyright.tsx";
 
 function Login(): React.ReactNode {
@@ -21,107 +19,48 @@ function Login(): React.ReactNode {
 	};
 
 	return (
-		<Box
-			sx={{
-				minHeight: "100dvh",
-				minWidth: "100dvw",
-				background: "linear-gradient(135deg, #232526 0%, #414345 100%)",
-				display: "flex",
-				flexDirection: "column",
-				justifyContent: "space-between",
-			}}
-		>
-			<Box sx={{flex: 1, display: "flex", alignItems: "center", justifyContent: "center"}}>
-				<Paper
-					elevation={8}
-					sx={{
-						p: 5,
-						borderRadius: 4,
-						minWidth: 350,
-						maxWidth: 400,
-						background: "rgba(30, 41, 59, 0.95)",
-						boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
-						backdropFilter: "blur(6px)",
-						border: "1px solid rgba(255,255,255,0.08)",
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "center",
-					}}
-				>
-					<Avatar
-						alt="Discord"
-						src="/KVGG/KVGG Logo Icon.png"
-						sx={{
-							width: 72,
-							height: 72,
-							mb: 2,
-							bgcolor: "#5865F2",
-							boxShadow: "0 4px 20px 0 rgba(88,101,242,0.3)",
-						}}
-					/>
-					<Typography variant="h4" color="primary" sx={{fontWeight: 700, mb: 1}}>
-						KVGG
-					</Typography>
-					<Typography
-						variant="h6"
-						color="white"
-						align="center"
-						sx={{fontWeight: 500, mb: 3, letterSpacing: 1}}
-					>
-						Login mit Discord
-					</Typography>
-					<Typography
-						variant="body1"
-						color="grey.300"
-						align="center"
-						sx={{mb: 3, lineHeight: 1.6}}
-					>
-						Melde dich mit deinem Discord-Account an, um Zugriff auf unsere Plattform zu erhalten.
-					</Typography>
-					<Button
-						onClick={handleLogin}
-						variant="contained"
-						color="primary"
-						fullWidth
-						sx={{
-							py: 1.5,
-							fontWeight: 600,
-							fontSize: "1.1rem",
-							borderRadius: 2,
-							boxShadow: "0 2px 8px 0 rgba(88,101,242,0.15)",
-							mb: 2,
-							textTransform: "none",
-						}}
-						startIcon={
+		<div className="min-h-screen min-w-screen bg-gradient-to-br from-[rgba(30,41,59,0.85)] to-primary/30 flex flex-col justify-between">
+			<div className="flex flex-1 items-center justify-center">
+				<Card className="min-w-[350px] max-w-[400px] p-8 rounded-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] bg-[rgba(30,41,59,0.95)] backdrop-blur-[6px] flex flex-col items-center">
+					<CardContent className="flex flex-col items-center gap-5 py-8 h-full justify-center">
+						<Avatar className="w-20 h-20 mb-2 bg-primary shadow-lg">
+							<img
+								src="/KVGG/KVGG Logo Icon.png"
+								alt="Discord"
+								className="w-full h-full object-cover"
+							/>
+						</Avatar>
+						<h4 className="font-bold text-primary">KVGG</h4>
+						<p className="text-muted-foreground text-center">
+							Melde dich mit deinem Discord-Account an, um Zugriff auf unsere Plattform zu erhalten.
+						</p>
+						<Button
+							onClick={handleLogin}
+							className="w-full flex text-base text-foreground light:text-secondary-foreground"
+							variant="default"
+						>
 							<img
 								src="Discord/Clyde.svg"
-								style={{width: 28, height: 28, background: "transparent"}}
 								alt="Clyde"
+								className="w-6 h-6"
 							/>
-						}
-					>
-						Login mit Discord
-					</Button>
-					<FormControlLabel
-						control={
+							Login mit Discord
+						</Button>
+						<div className="flex items-center w-full justify-center">
 							<Checkbox
+								id="remindMe"
 								checked={remindMe}
-								onChange={() => setRemindMe(!remindMe)}
-								color="primary"
-								sx={{color: "#94a3b8"}}
+								onCheckedChange={() => setRemindMe(!remindMe)}
 							/>
-						}
-						label={
-							<Typography variant="body2" color="grey.300">
+							<Label htmlFor="remindMe" className="ml-2 text-muted-foreground">
 								Erinnern für 14 Tage?
-							</Typography>
-						}
-						sx={{mb: 1}}
-					/>
-				</Paper>
-			</Box>
-			<Copyright/>
-		</Box>
+							</Label>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+			<Copyright />
+		</div>
 	);
 }
 

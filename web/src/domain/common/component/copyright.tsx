@@ -1,18 +1,15 @@
+import {Button} from "@/domain/ui/component/button.tsx";
 import * as React from "react";
-import {Typography} from "@mui/material";
-import Link from '@mui/material/Link';
 
-
-function Copyright(props: any): React.ReactNode {
+function Copyright(): React.ReactNode {
 	return (
-		<Typography variant="body2" color="secondary" align="center" {...props}>
-			{'Copyright © '}
-			<Link color="inherit" href="https://kvgg.axellotl.de/">
+		<p className="text-center text-muted-foreground">
+			{'Copyright ©'}
+			<Button variant="link" onClick={() => window.open('https://kvgg.axellotl.de', '_blank')}>
 				KVGG
-			</Link>{' '}
+			</Button>
 			{new Date().getFullYear()}
-			{'.'}
-		</Typography>
+		</p>
 	);
 }
 

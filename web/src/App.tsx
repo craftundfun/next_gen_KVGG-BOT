@@ -1,10 +1,9 @@
-import {CssBaseline, ThemeProvider} from "@mui/material";
-import Box from "@mui/material/Box";
+import {ThemeProvider} from "@/domain/ui/component/theme-provider.tsx";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
-import {BrowserRouter} from "react-router-dom";
-import kvggTheme from "./domain/common/config/kvgg-theme.ts";
+import {BrowserRouter} from "react-router";
 import WebsiteUserContextProvider from "./domain/core/website-user/context/website-user-context-provider.tsx";
-import Routes from "./domain/router/component/routes.tsx";
+import KvggRoutes from "@/domain/router/component/kvggRoutes.tsx";
+import Layout from "@/domain/ui/component/layout.tsx";
 
 function App() {
 	const queryClient = new QueryClient();
@@ -12,14 +11,12 @@ function App() {
 	return (
 		<BrowserRouter>
 			<QueryClientProvider client={queryClient}>
-				<ThemeProvider theme={kvggTheme}>
-					<CssBaseline>
-						<Box style={{width: "100dvw", height: "100dvh"}}>
-							<WebsiteUserContextProvider>
-								<Routes/>
-							</WebsiteUserContextProvider>
-						</Box>
-					</CssBaseline>
+				<ThemeProvider defaultTheme="system">
+					<WebsiteUserContextProvider>
+						<Layout>
+							<KvggRoutes/>
+						</Layout>
+					</WebsiteUserContextProvider>
 				</ThemeProvider>
 			</QueryClientProvider>
 		</BrowserRouter>

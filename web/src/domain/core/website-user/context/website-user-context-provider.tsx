@@ -1,4 +1,4 @@
-import {useQuery} from "@tanstack/react-query";
+import {useQuery, useQueryClient} from "@tanstack/react-query";
 import {useEffect} from "react";
 import * as React from "react";
 import {useNavigate} from "react-router-dom";
@@ -9,6 +9,7 @@ import {websiteUserContext} from "./website-user-context";
 
 function WebsiteUserContextProvider({children}: React.PropsWithChildren): React.ReactNode {
 	const navigate = useNavigate();
+	const queryClient = useQueryClient()
 	const {data: websiteUser, isError, isFetching} = useQuery({
 		queryKey: ['websiteUser'],
 		queryFn: fetchWebsiteUser,
@@ -16,14 +17,14 @@ function WebsiteUserContextProvider({children}: React.PropsWithChildren): React.
 	});
 
 	useEffect(() => {
-		if (websiteUser) {
-			navigate('/dashboard');
+		if (isError) {
+			queryClient.setQueryData(['websiteUser'], () => null);
 		}
 
-		if ((isError || !websiteUser) && !isFetching) {
+		if ((isError || !websiteUser?.email) && !isFetching) {
 			navigate('/login');
 		}
-	}, [isError, websiteUser, isFetching, navigate]);
+	}, [isError, websiteUser?.email, isFetching, navigate, queryClient]);
 
 	if (isFetching) {
 		return <CenterLoading/>;

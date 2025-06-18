@@ -1,11 +1,11 @@
 import * as React from "react";
 import {lazy, Suspense} from "react";
-import {Navigate, Route, Routes,} from "react-router-dom";
+import {Navigate, Route, Routes} from "react-router-dom";
 import CenterLoading from "../../common/component/center-loading.tsx";
 import Login from "../../security/login/login.tsx";
 
 
-function Router(): React.ReactNode {
+function KvggRoutes(): React.ReactNode {
 	const Dashboard = lazy(() => import("../../dashboard/component/dashboard.tsx"));
 
 	return (
@@ -21,4 +21,4 @@ function Router(): React.ReactNode {
 	);
 }
 
-export default Router;
+export default KvggRoutes;

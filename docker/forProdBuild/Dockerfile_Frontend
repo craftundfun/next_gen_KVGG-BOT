@@ -6,4 +6,4 @@ ENV VITE_DISCORD_OAUTH_URL=https://discord.com/oauth2/authorize?client_id=107651
 
 COPY ../../web .
 
-RUN npm install
+RUN npm install -D
