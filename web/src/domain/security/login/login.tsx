@@ -1,13 +1,17 @@
+import useWebsiteUserContext from "@/domain/core/website-user/hook/use-website-user-context.ts";
 import * as React from "react";
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { Button } from "@/domain/ui/component/button";
 import { Checkbox } from "@/domain/ui/component/checkbox";
 import { Card, CardContent } from "@/domain/ui/component/card";
 import { Avatar } from "@/domain/ui/component/avatar";
 import { Label } from "@/domain/ui/component/label";
+import {useNavigate} from "react-router-dom";
 import Copyright from "../../common/component/copyright.tsx";
 
 function Login(): React.ReactNode {
+	const { websiteUser } = useWebsiteUserContext();
+	const navigate = useNavigate();
 	const [remindMe, setRemindMe] = useState<boolean>(false);
 
 	const handleLogin = () => {
@@ -17,6 +21,14 @@ function Login(): React.ReactNode {
 			"_parent"
 		);
 	};
+
+	useEffect(() => {
+		if (!websiteUser?.email) {
+			return;
+		}
+
+		navigate('/dashboard');
+	}, [websiteUser?.email, navigate]);
 
 	return (
 		<div className="min-h-screen min-w-screen bg-gradient-to-br from-[rgba(30,41,59,0.85)] to-primary/30 flex flex-col justify-between">
