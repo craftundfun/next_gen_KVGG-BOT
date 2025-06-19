@@ -6,7 +6,7 @@ function useDiscordGuildUserContext(): DiscordGuildUserContext {
 	const context = useContext<DiscordGuildUserContext | undefined>(discordGuildUserContext);
 
 	if (!context) {
-		throw new Error("useWebsiteUser must be used within a WebsiteUserProvider");
+		throw new Error("useDiscordGuildUser must be used within a DiscordGuildUserProvider");
 	}
 
 	return context;

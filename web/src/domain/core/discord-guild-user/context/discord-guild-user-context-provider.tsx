@@ -6,7 +6,7 @@ import * as React from "react";
 
 function DiscordGuildUserContextProvider({children}: React.PropsWithChildren): React.ReactNode {
 	const {websiteUser} = useWebsiteUserContext();
-	const discordUserId = websiteUser?.discord_id;
+	const discordUserId = websiteUser?.discord_id ?? null;
 
 	const {data} = useQuery({
 		queryKey: ['discordGuildUser', discordUserId],

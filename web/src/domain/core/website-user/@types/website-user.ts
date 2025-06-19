@@ -1,5 +1,5 @@
 export default interface WebsiteUser {
-	discord_id: number;
+	discord_id: string;
 	created_at: string;
 	email: string;
 }
