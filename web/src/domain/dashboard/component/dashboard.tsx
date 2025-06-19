@@ -1,3 +1,4 @@
+import useDiscordGuildUserContext from "@/domain/core/discord-guild-user/hook/use-discord-guild-user-context.ts";
 import * as React from "react";
 import {Suspense} from "react";
 import sleep from "../../common/util/sleep.ts";
@@ -8,10 +9,12 @@ function Dashboard(): React.ReactNode {
 		await sleep(3_000);
 		return 'Dashboard';
 	}
+	const {discordGuildUser} = useDiscordGuildUserContext();
 
 	return (
 			<Suspense fallback={<DashboardSkeleton/>}>
 				{loadComponents()}
+				{null !== discordGuildUser && <div>{discordGuildUser.global_name}</div>}
 			</Suspense>
 	);
 }
